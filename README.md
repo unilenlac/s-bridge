@@ -60,6 +60,7 @@ Le programme doit comporter les fonctions suivantes :
 ### resources utiles
 - [DTS Specifications](https://distributed-text-services.github.io/specifications/)
 - [DTS API demo (collection endpoint)](https://py-dts-demo.onrender.com/api/dts/v1/collection?id=1-1)
+- [Implementation DTS en Python](https://github.com/rerouj/py-dts)
 - [Repo Stemmarest (API Tradition Repo)](https://github.com/unilenlac/tradition_repo)
 - [documentation Stemmarest API](https://dhuniwien.github.io/tradition_repo/)
 - [Repo Stemmaweb (interface Web)](https://github.com/unilenlac/stemmaweb)
