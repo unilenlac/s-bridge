@@ -35,11 +35,11 @@ Le programme doit comporter les fonctions suivantes :
 |1|Étendre l’interface web Stemmaweb avec un composant graphique “importer via DTS"  : le composant permet d'indiquer le lien d'une collection DTS et de définir une série de paramètres pour l'importation.|Module web|Non||
 |2|Développer un système σ en charge de récupérer des traditions manuscrites via un lien DTS, de produire des sections (set de versions), de lemmatiser et de tokenizer le contenu des versions, de produire des collations via Collatex et de générer des traditions via Stemmarest.|Backend app / backend feature|Non||
 |2.1|Intégrer dans σ un processus de transformation des documents XML en données de type Text|module|non||
-|2.2|Intégrer dans σ un pipeline de tâches NLP de base (tokenization, lemmatisation, POS) spécialisées pour le grec ancien (choix libre des algos/modèles). |Module|Non|La chaîne peut mobiliser un LLM en local, si utile/disponible.|
+|[2.2](./design/DESIGN.md#analysisclient-specifications)|Intégrer dans σ un pipeline de tâches NLP de base (tokenization, lemmatisation, POS) spécialisées pour le grec ancien (choix libre des algos/modèles). |Module|Non|La chaîne peut mobiliser un LLM en local, si utile/disponible.|
 |2.3|Intégrer dans σ la capacité de communiquer avec l’application CollateX pour générer et récupérer des collations.|Module|Non||
 |2.4|Intégrer dans σ la capacité de communiquer avec l’API Stemmarest et (directement ou indirectement) pour y importer ou mettre à jour des Collations. |Module|Non||
 |2.5|Prévoir dans σ la possibilité de mémoriser des set de versions, de les enrichir avec de nouveaux textes et de mettre à jour les graphs existants sur l’API Stemmarest.|Module|Oui||
-|7|Créer une image Docker de σ et fournir la documentation technique nécessaire à son déploiement et à son utilisation.|DevOps / Documentation|Non||
+|3|Créer une image Docker de σ et fournir la documentation technique nécessaire à son déploiement et à son utilisation.|DevOps / Documentation|Non||
 
 ### Stack demandée
 
@@ -61,6 +61,7 @@ Le programme doit comporter les fonctions suivantes :
 - [DTS Specifications](https://distributed-text-services.github.io/specifications/)
 - [DTS API demo (collection endpoint)](https://py-dts-demo.onrender.com/api/dts/v1/collection?id=1-1)
 - [Repo Stemmarest (API Tradition Repo)](https://github.com/unilenlac/tradition_repo)
+- [documentation Stemmarest API](https://dhuniwien.github.io/tradition_repo/)
 - [Repo Stemmaweb (interface Web)](https://github.com/unilenlac/stemmaweb)
 - [Repo xml2stemmarest (ancienne version de σ-Bridge)](https://github.com/unilenlac/xml2stemmarest)
 - [CollateX Documentation](https://collatex.net/documentation/)
