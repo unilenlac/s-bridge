@@ -1,5 +1,15 @@
+# σ-Bridge Design Document
+
+Table of Contents:
+- [σ-Bridge design overview](#σ-bridge-design-overview)
+- [Design breakdown](#design-breakdown)
+- [AnalysisClient Specifications](#analysisclient-specifications)
+
+# σ-Bridge design overview
+
 ## Architecture
 The actual and primary service request to be implemented is from the client to the Sigma API.
+
 ```mermaid
 architecture-beta
     group Gateway[Portail API]
@@ -73,6 +83,9 @@ architecture-beta
 - n = list[CiteStructure] = navigation
 - section = n[x]
 - docRef = main document in collection, serve as a reference
+
+---
+# Design breakdown
 
 ## Interaction Diagrams
 #### General entities interaction (overview)
@@ -372,8 +385,9 @@ classDiagram
     PipelineSelector --> PipelineBuilder
     PipelineBuilder <|.. DTSPipelineBuilder
 ```
+---
+# AnalysisClient Specifications
 
-## AnalysisClient Specifications
 The Analysis Client is a module that allows interaction with an AI agent server to perform NLP tasks such as tokenization, lemmatization, and POS tagging. It is designed to be used within the σ-Bridge application to process text versions retrieved from DTS collections.
 
 Ideally the client should also rely on a local nlp processor in case that a remote server is not available.
