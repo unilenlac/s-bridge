@@ -5,5 +5,8 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
-    "cltk[ollama]>=2.5.0",
+    "bs4>=0.0.2",
+    "cltk[ollama,stanza]>=2.5.0",
+    "lxml>=6.0.2",
+    "requests>=2.32.5",
 ]
