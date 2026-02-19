@@ -11,15 +11,12 @@ def collatex_token_from_doc(doc):
         # We use .tag based on the object structure you revealed.
         pos_tag = word.upos.tag if word.upos else "UNKNOWN"
 
-        # 2. Intercept and merge punctuation
+        # 1. Punctuation Handling
         if pos_tag == "PUNCT":
             if collatex_payloads:
-                # Append the punctuation directly to the previous word's 'original' string
-                # We use .strip() to remove the trailing space we add below, attach the punctuation,
-                # and then put the space back so the next word doesn't collide with it.
-                prev_orig = collatex_payloads[-1]["original"].strip()
-                collatex_payloads[-1]["original"] = f"{prev_orig}{word.string} "
-            # Skip the rest of the loop. Do not create a JSON object for this punctuation mark.
+                # We simply append the punctuation directly to the previous word.
+                # No space stripping or padding required.
+                collatex_payloads[-1]["original"] += word.string
             continue
 
             # 3. Process standard words
@@ -27,11 +24,10 @@ def collatex_token_from_doc(doc):
 
         token_data = {
             "t": word.string,
-            # We add a trailing space here so when CollateX reconstructs the text, words are separated.
-            "original": f"{word.string} ",
+            "n": f"{word.lemma}+{pos_tag}",
+            "original": word.string,
             "lem": word.lemma,
             "pos": pos_tag,
-            "n": f"{word.lemma}+{pos_tag}",
             "case": feats_dict.get("Case"),
             "gender": feats_dict.get("Gender"),
             "num": feats_dict.get("Number")
