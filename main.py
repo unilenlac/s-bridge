@@ -1,62 +1,127 @@
 from cltk import NLP
 import requests
 from bs4 import BeautifulSoup
+import json
 
-def keep_metadata(void):
-    # Here is an attempt at storing TEI meta data so that the intel is not lost to
-    # the nlp analysis. Each line is read, analysed and metadata stored.
-    # I am not yet sure it is usefull. Maybe nlp + collate is enough.
+def collatex_token_from_doc(doc):
+    collatex_payloads = []
 
-    all_docs: list = []
+    for word in doc.words:
+        # 1. Safely extract the clean POS string (e.g., "NOUN", "PUNCT", "VERB")
+        # We use .tag based on the object structure you revealed.
+        pos_tag = word.upos.tag if word.upos else "UNKNOWN"
 
-    for l_tag in soup.find_all("l"):
-        # Create a Doc for a specific TEI line
-        line_doc = nlp.analyze(l_tag.get_text())
+        # 2. Intercept and merge punctuation
+        if pos_tag == "PUNCT":
+            if collatex_payloads:
+                # Append the punctuation directly to the previous word's 'original' string
+                # We use .strip() to remove the trailing space we add below, attach the punctuation,
+                # and then put the space back so the next word doesn't collide with it.
+                prev_orig = collatex_payloads[-1]["original"].strip()
+                collatex_payloads[-1]["original"] = f"{prev_orig}{word.string} "
+            # Skip the rest of the loop. Do not create a JSON object for this punctuation mark.
+            continue
 
-        # Store the TEI line number at the Doc level (where metadata IS allowed)
-        line_doc.metadata = {"tei_ref": l_tag.get("n")}  #
+            # 3. Process standard words
+        feats_dict = {tag.key: tag.value for tag in word.features.features} if getattr(word, 'features', None) else {}
 
-        for word in line_doc.words:
-            # Use 'enrichment' for token-specific TEI info like <unclear> or <supplied>
-            if l_tag.find("supplied"):
-                word.enrichment = {"tei_status": "supplied"}  #
+        token_data = {
+            "t": word.string,
+            # We add a trailing space here so when CollateX reconstructs the text, words are separated.
+            "original": f"{word.string} ",
+            "lem": word.lemma,
+            "pos": pos_tag,
+            "n": f"{word.lemma}+{pos_tag}",
+            "case": feats_dict.get("Case"),
+            "gender": feats_dict.get("Gender"),
+            "num": feats_dict.get("Number")
+        }
 
-            # Use 'annotation_sources' to track that this token came from a DTS fragment
-            word.annotation_sources = {"source": "DTS_Response"}  #
+        collatex_payloads.append(token_data)
 
-        all_docs.append(line_doc)
 
-    # url: str = "https://dts.perseids.org/documents"
-    # params: str = {
-    #     "id": "urn:cts:greekLit:tlg0012.tlg001.perseus-grc2",
-    #     "start": "1.1",
-    #     "end": "1.9"
-    # }
+    return collatex_payloads
+
+
+def clear_breaks(soup):
+    # 1. Resolve hyphenated breaks (<lb break="no"/>)
+    for lb in soup.find_all('lb', attrs={'break': 'no'}):
+
+        # A. Clean the preceding text and delete the physical hyphen
+        prev_node = lb.previous_sibling
+        if prev_node and prev_node.name is None:  # Ensures it's a text node
+            clean_text = prev_node.rstrip()
+            # Check for and remove the trailing hyphen
+            if clean_text.endswith('-'):
+                clean_text = clean_text[:-1]
+            prev_node.replace_with(clean_text)
+
+        # B. Clean the following text
+        next_node = lb.next_sibling
+        if next_node and next_node.name is None:
+            next_node.replace_with(next_node.lstrip())
+
+        # C. Destroy the <lb> tag now that the surrounding text is pulled together
+        lb.decompose()
+
+    # 2. Handle normal <lb> and <pb> tags
+    # We replace them with a space so words don't get accidentally crushed together
+    # when we extract the text.
+    for break_tag in soup.find_all(['lb', 'pb']):
+        break_tag.replace_with(' ')
+
+    # 3. Unwrap inline editorial tags like <unclear>
+    # .unwrap() removes the <unclear> tags but leaves the text inside them completely intact.
+    for unclear in soup.find_all('unclear'):
+        unclear.unwrap()
+
+    # 4. Extract and normalize the final string
+    raw_text = soup.get_text()
+    clean_cltk_string = ' '.join(raw_text.split())
+
+    return clean_cltk_string
 
 def main():
+    nlp = NLP("grc", backend="stanza", suppress_banner=True)
+
     url: str = "http://ftsr-dev.unil.ch:8000/api/dts/v1/document"
-    params: str = {"resource": "athous-iviron-450"}
-    headers: str = {"accept": "application/xml"}
-    response: str = requests.get(url, params=params, headers=headers)
+    params: dict[str, str] = {"resource": "athous-iviron-450"}
+    headers: dict[str, str] = {"accept": "application/xml"}
+    response: requests.Response = requests.get(url, params=params, headers=headers)
 
     text_to_process: str = response.text
-
     # print(text_to_process)
 
     # Use the 'xml' parser specifically for TEI
-    soup : bs4.BeautifulSoup = BeautifulSoup(text_to_process, features="xml")
-    # print(soup.body.prettify())
-    nlp = NLP("grc", backend="stanza", suppress_banner=True)
+    soup : BeautifulSoup.BeautifulSoup = BeautifulSoup(text_to_process, features="xml")
+    # print(soup.prettify())
 
     # greek_text = soup.body.get_text(separator=" ", strip=True)
     # doc = nlp.analyze(greek_text)
-    test_punct = nlp.analyze("ὁ δὲ, φίλιππος εἶπεν·")
-
     # for word in doc.words:
-    #     print(f"Token: {word.string:<15} | Lemma: {word.lemma:<15} | POS: {word.upos} | IDSEN : {word.index_sentence}")
-    for word in test_punct.words:
-        print(f"Token: {word.string:<15} | Lemma: {word.lemma:<15} | POS: {word.upos} | IDSEN : {word.index_sentence}")
+    #     print(f"Token: {word.string:<15} | Lemma: {word.lemma:<15} | POS: {word.upos} | FEAT {str(word.features):<40} | IDSEN : {word.index_sentence}")
 
+    # test_punct = nlp.analyze("ὁ δὲ, φίλιππος εἶπεν·")
+    # for word in test_punct.words:
+    #     print(f"Token: {word.string:<15} | Lemma: {word.lemma:<15} | POS: {word.upos} | IDSEN : {word.index_sentence}")
+
+
+    clean_cltk_string = clear_breaks(soup)
+    # print(text_to_process)
+    # print("CLEAN TEXT FOR CLTK:")
+    # print(clean_cltk_string)
+    doc = nlp.analyze(clean_cltk_string)
+    # for word in doc.words:
+    #     print(f"Token: {word.string:<15} | Lemma: {word.lemma:<15} | POS: {word.upos} | FEAT {str(word.features):<40} | IDSEN : {word.index_sentence}")
+    collatex_payloads = collatex_token_from_doc(doc)
+
+    # Print a formatted sample
+    print(json.dumps(collatex_payloads[100:110], indent=2, ensure_ascii=False))
+
+# first_para = soup.p.get_text()
+    # first_para_doc = nlp.analyze(first_para)
+    # for word in first_para_doc.words:
+    #     print(f"Token: {word.string:<15} | Lemma: {word.lemma:<15} | POS: {word.upos} | IDSEN : {word.index_sentence}")
 
 if __name__ == "__main__":
     main()
