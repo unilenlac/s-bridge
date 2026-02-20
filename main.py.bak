@@ -2,61 +2,19 @@ from cltk import NLP
 import requests
 from bs4 import BeautifulSoup
 import json
-from bs4.element import NavigableString, Tag
 
-
-def build_char_metadata_map(element, char_offset=0, metadata_map=None):
-    """Recursively build a map of character ranges to editorial metadata."""
-    if metadata_map is None:
-        metadata_map = []
-
-    if isinstance(element, NavigableString):
-        text_len = len(str(element))
-        return char_offset + text_len, metadata_map
-
-    if isinstance(element, Tag):
-        tag_metadata = {}
-
-        if element.name == 'unclear':
-            tag_metadata['unclear'] = True
-            if element.get('reason'):
-                tag_metadata['unclear_reason'] = element.get('reason')
-
-        if element.name == 'add':
-            tag_metadata['add'] = True
-            if element.get('hand'):
-                tag_metadata['add_hand'] = element.get('hand')
-
-        start_offset = char_offset
-
-        for child in element.children:
-            char_offset, metadata_map = build_char_metadata_map(child, char_offset, metadata_map)
-
-        if tag_metadata:
-            metadata_map.append((start_offset, char_offset, tag_metadata))
-
-    return char_offset, metadata_map
-
-
-def get_metadata_for_token(char_start, char_stop, metadata_map):
-    """Find all metadata that applies to a token's character range."""
-    token_metadata = {}
-
-    for map_start, map_stop, metadata in metadata_map:
-        if char_start < map_stop and char_stop > map_start:
-            token_metadata.update(metadata)
-
-    return token_metadata
-
-
-def collatex_token_from_doc(doc, metadata_map):
+def collatex_token_from_doc(doc):
     collatex_payloads = []
 
     for word in doc.words:
+        # 1. Safely extract the clean POS string (e.g., "NOUN", "PUNCT", "VERB")
+        # We use .tag based on the object structure you revealed.
         pos_tag = word.upos.tag if word.upos else "UNKNOWN"
 
         if pos_tag == "PUNCT":
             if collatex_payloads:
+                # We simply append the punctuation directly to the previous word.
+                # No space stripping or padding required.
                 collatex_payloads[-1]["original"] += word.string
             continue
 
@@ -73,10 +31,8 @@ def collatex_token_from_doc(doc, metadata_map):
             "num": feats_dict.get("Number")
         }
 
-        editorial_metadata = get_metadata_for_token(word.index_char_start, word.index_char_stop, metadata_map)
-        token_data.update(editorial_metadata)
-
         collatex_payloads.append(token_data)
+
 
     return collatex_payloads
 
@@ -108,27 +64,16 @@ def clear_breaks(soup):
     for break_tag in soup.find_all(['lb', 'pb']):
         break_tag.replace_with(' ')
 
-    # 3. Extract and normalize the final string
+    # 3. Unwrap inline editorial tags like <unclear>
+    # .unwrap() removes the <unclear> tags but leaves the text inside them completely intact.
+    for unclear in soup.find_all('unclear'):
+        unclear.unwrap()
+
+    # 4. Extract and normalize the final string
     raw_text = soup.get_text()
     clean_cltk_string = ' '.join(raw_text.split())
 
     return clean_cltk_string
-
-
-def process_tei_to_collatex(soup):
-    """Process TEI soup to extract both metadata map and clean text."""
-    _, metadata_map = build_char_metadata_map(soup)
-
-    for unclear in soup.find_all('unclear'):
-        unclear.unwrap()
-
-    for add in soup.find_all('add'):
-        add.unwrap()
-
-    clean_text = clear_breaks(soup)
-
-    return clean_text, metadata_map
-
 
 def main():
     nlp = NLP("grc", backend="stanza", suppress_banner=True)
@@ -139,18 +84,38 @@ def main():
     response: requests.Response = requests.get(url, params=params, headers=headers)
 
     text_to_process: str = response.text
+    # print(text_to_process)
 
     # Use the 'xml' parser specifically for TEI
-    soup = BeautifulSoup(text_to_process, features="xml")
+    soup : BeautifulSoup.BeautifulSoup = BeautifulSoup(text_to_process, features="xml")
+    # print(soup.prettify())
 
-    clean_cltk_string, metadata_map = process_tei_to_collatex(soup)
+    # greek_text = soup.body.get_text(separator=" ", strip=True)
+    # doc = nlp.analyze(greek_text)
+    # for word in doc.words:
+    #     print(f"Token: {word.string:<15} | Lemma: {word.lemma:<15} | POS: {word.upos} | FEAT {str(word.features):<40} | IDSEN : {word.index_sentence}")
 
+    # test_punct = nlp.analyze("ὁ δὲ, φίλιππος εἶπεν·")
+    # for word in test_punct.words:
+    #     print(f"Token: {word.string:<15} | Lemma: {word.lemma:<15} | POS: {word.upos} | IDSEN : {word.index_sentence}")
+
+
+    clean_cltk_string = clear_breaks(soup)
+    print(text_to_process)
+    # print("CLEAN TEXT FOR CLTK:")
+    # print(clean_cltk_string)
     doc = nlp.analyze(clean_cltk_string)
-
-    collatex_payloads = collatex_token_from_doc(doc, metadata_map)
+    # for word in doc.words:
+    #     print(f"Token: {word.string:<15} | Lemma: {word.lemma:<15} | POS: {word.upos} | FEAT {str(word.features):<40} | IDSEN : {word.index_sentence}")
+    collatex_payloads = collatex_token_from_doc(doc)
 
     # Print a formatted sample
-    print(json.dumps(collatex_payloads, indent=2, ensure_ascii=False))
+    # print(json.dumps(collatex_payloads[100:110], indent=2, ensure_ascii=False))
+
+# first_para = soup.p.get_text()
+    # first_para_doc = nlp.analyze(first_para)
+    # for word in first_para_doc.words:
+    #     print(f"Token: {word.string:<15} | Lemma: {word.lemma:<15} | POS: {word.upos} | IDSEN : {word.index_sentence}")
 
 if __name__ == "__main__":
     main()
