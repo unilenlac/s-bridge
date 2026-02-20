@@ -36,13 +36,15 @@ def clear_breaks(soup):
         break_tag.replace_with(' ')
 
 
-def extract_text_with_metadata(element, metadata_stack=None, results=None):
+def extract_text_with_metadata(element, metadata_stack=None, pending_metadata=None, results=None):
     """
     Extract text segments with their associated metadata.
     Returns list of (text_segment, metadata_dict) tuples.
     """
     if metadata_stack is None:
         metadata_stack = []
+    if pending_metadata is None:
+        pending_metadata = {}
     if results is None:
         results = []
     
@@ -53,8 +55,10 @@ def extract_text_with_metadata(element, metadata_stack=None, results=None):
             current_metadata = {}
             for meta in metadata_stack:
                 current_metadata.update(meta)
+            current_metadata.update(pending_metadata)
             results.append((text, current_metadata))
-        return results
+            pending_metadata.clear()
+        return results, pending_metadata
     
     if isinstance(element, Tag):
         # Build metadata for this tag
@@ -74,15 +78,22 @@ def extract_text_with_metadata(element, metadata_stack=None, results=None):
         if tag_metadata:
             metadata_stack.append(tag_metadata)
         
+        has_children = False
         # Process children
         for child in element.children:
-            extract_text_with_metadata(child, metadata_stack, results)
+            has_children = True
+            extract_text_with_metadata(child, metadata_stack, pending_metadata, results)
         
+        # If the tag is empty but has metadata, apply it to pending_metadata
+        # so it attaches to the next valid text node
+        if not has_children and tag_metadata:
+            pending_metadata.update(tag_metadata)
+            
         # Pop metadata from stack
         if tag_metadata:
             metadata_stack.pop()
     
-    return results
+    return results, pending_metadata
 
 
 def build_normalized_metadata_map(text_segments):
@@ -100,14 +111,16 @@ def build_normalized_metadata_map(text_segments):
         words = text.split()
         
         for i, word in enumerate(words):
+            word = word.strip("-")
+            if not word:
+                continue
+                
             # Add space before word (except first word overall)
             if normalized_parts:
                 char_offset += 1  # space
             
             start_offset = char_offset
-            word = word.strip("-")
-            if word:
-                normalized_parts.append(word)
+            normalized_parts.append(word)
             char_offset += len(word)
             end_offset = char_offset
             
@@ -169,7 +182,7 @@ def process_tei_to_collatex(soup):
     clear_breaks(soup)
     
     # Step 2: Extract text segments with their metadata (after clearing breaks)
-    text_segments = extract_text_with_metadata(soup)
+    text_segments, _ = extract_text_with_metadata(soup)
     
     # Step 3: Build normalized text and metadata map
     clean_text, metadata_map = build_normalized_metadata_map(text_segments)
