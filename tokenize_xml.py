@@ -14,8 +14,13 @@ _original_input = builtins.input
 builtins.input = lambda prompt='': 'y'
 print("Patched builtins.input to auto-answer 'y' to avoid CLTK hangs.", flush=True)
 
-# Configure basic logging level
-logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
+# Setup custom logger to avoid double logging issues with cltk/stanza
+logger = logging.getLogger('tokenize_xml')
+logger.setLevel(logging.INFO)
+_ch = logging.StreamHandler()
+_ch.setFormatter(logging.Formatter('%(levelname)s: %(message)s'))
+logger.addHandler(_ch)
+logger.propagate = False
 
 # Type Aliases for clearer signatures
 MetadataMap = List[Tuple[int, int, Dict[str, Any]]]
@@ -95,6 +100,17 @@ def extract_text_with_metadata(
             tag_metadata['add'] = True
             if element.get('hand'):
                 tag_metadata['add_hand'] = element.get('hand')
+
+        if getattr(element, 'name', None) == 'del':
+            tag_metadata['del'] = True
+            rend = element.get('rend')
+            tag_metadata['del_reason'] = rend if rend else 'other'
+
+        if getattr(element, 'name', None) == 'abbr':
+            tag_metadata['abbr'] = True
+            abbr_type = element.get('type')
+            if abbr_type:
+                tag_metadata['abbr_type'] = abbr_type
         
         # Push metadata onto stack if this tag has any
         if tag_metadata:
@@ -121,34 +137,56 @@ def extract_text_with_metadata(
 def build_normalized_metadata_map(text_segments: List[TextSegment]) -> Tuple[str, MetadataMap]:
     """
     Build a character position map for normalized text.
-    text_segments: list of (text, metadata) tuples
-    Returns: (normalized_text, metadata_map)
+    Handles words that are split across text segments without whitespace.
     """
     normalized_parts: List[str] = []
     metadata_map: MetadataMap = []
     char_offset = 0
     
+    raw_chars = []
+    raw_meta = []
     for text, metadata in text_segments:
-        # Normalize this segment's whitespace
-        words = text.split()
-        
-        for word in words:
-            word = word.strip("-")
-            if not word:
-                continue
-                
-            # Add space before word (except first word overall)
+        for ch in text:
+            raw_chars.append(ch)
+            raw_meta.append(metadata)
+            
+    current_word_chars = []
+    current_word_metas = []
+    
+    def process_word():
+        nonlocal char_offset
+        if not current_word_chars:
+            return
+        word_str = "".join(current_word_chars)
+        word_str = word_str.strip("-")
+        if word_str:
             if normalized_parts:
                 char_offset += 1  # space
             
             start_offset = char_offset
-            normalized_parts.append(word)
-            char_offset += len(word)
+            normalized_parts.append(word_str)
+            char_offset += len(word_str)
             end_offset = char_offset
             
-            # Record metadata for this word if it has any
-            if metadata:
-                metadata_map.append((start_offset, end_offset, metadata.copy()))
+            merged_meta = {}
+            for m in current_word_metas:
+                if m:
+                    merged_meta.update(m)
+            
+            if merged_meta:
+                metadata_map.append((start_offset, end_offset, merged_meta))
+                
+        current_word_chars.clear()
+        current_word_metas.clear()
+
+    for ch, meta in zip(raw_chars, raw_meta):
+        if ch.isspace():
+            process_word()
+        else:
+            current_word_chars.append(ch)
+            current_word_metas.append(meta)
+            
+    process_word()
     
     normalized_text = ' '.join(normalized_parts)
     return normalized_text, metadata_map
@@ -231,6 +269,7 @@ class XMLTokenizer:
     def __init__(self, nlp_backend: str = "stanza", lang: str = "grc"):
         # Suppress output from CLTK during initialization
         logging.getLogger('cltk').setLevel(logging.ERROR)
+        logging.getLogger('stanza').setLevel(logging.ERROR)
         self.nlp = NLP(lang, backend=nlp_backend, suppress_banner=True)
 
     def tokenize_file(self, file_path: str) -> Union[List[TokenData], Dict[str, Any]]:
@@ -266,7 +305,7 @@ class XMLTokenizer:
                     })
                 return collatex_payload
             except json.JSONDecodeError as e:
-                logging.error(f"Invalid JSON in {file_path}: {e}")
+                logger.error(f"Invalid JSON in {file_path}: {e}")
                 return []
                 
         else:
@@ -311,21 +350,28 @@ def main() -> None:
     args = parser.parse_args()
     
     try:
-        logging.info("Initializing NLP pipeline (this may take a moment)...")
+        logger.info("Initializing NLP pipeline (this may take a moment)...")
         tokenizer = XMLTokenizer()
         
-        logging.info(f"Processing file: {args.input_file}")
+        logger.info(f"Processing file: {args.input_file}")
         tokens = tokenizer.tokenize_file(args.input_file)
         
         if args.output:
             with open(args.output, 'w', encoding='utf-8') as f:
                 json.dump(tokens, f, indent=2, ensure_ascii=False)
-            logging.info(f"Successfully saved {len(tokens)} tokens to {args.output}")
+                
+            # Calculate total tokens properly if it's the witnesses dict
+            if isinstance(tokens, dict) and "witnesses" in tokens:
+                total_tokens = sum(len(w.get("tokens", [])) for w in tokens["witnesses"])
+            else:
+                total_tokens = len(tokens)
+                
+            logger.info(f"Successfully saved {total_tokens} tokens to {args.output}")
         else:
             print(json.dumps(tokens, indent=2, ensure_ascii=False))
             
     except Exception as e:
-        logging.error(f"An error occurred while processing the file: {e}")
+        logger.error(f"An error occurred while processing the file: {e}")
         import traceback
         traceback.print_exc()
 
