@@ -223,7 +223,7 @@ def get_metadata_for_token(char_start: int, char_stop: int, metadata_map: Metada
     return token_metadata
 
 
-def collatex_token_from_doc(doc: Any, metadata_map: MetadataMap) -> List[TokenData]:
+def collatex_token_from_doc(doc: Any, metadata_map: MetadataMap, n_format: str = "lemma+pos") -> List[TokenData]:
     """
     Creates tokens suitable for CollateX from a CLTK Doc object and metadata map.
     """
@@ -244,9 +244,35 @@ def collatex_token_from_doc(doc: Any, metadata_map: MetadataMap) -> List[TokenDa
         
         lemma = word.lemma if getattr(word, 'lemma', None) is not None else word.string
         
+        if n_format == "original":
+            n_val = word.string
+        elif n_format == "lemma":
+            n_val = lemma
+        else: # Handle all + configurations
+            parts = n_format.split('+')
+            n_components = []
+            
+            if "lemma" in parts:
+                n_components.append(lemma)
+            elif "original" in parts:
+                n_components.append(word.string)
+                
+            if "pos" in parts:
+                n_components.append(pos_tag)
+                
+            if "cgn" in parts:
+                case = feats_dict.get("Case")
+                gender = feats_dict.get("Gender")
+                num = feats_dict.get("Number")
+                if case: n_components.append(case)
+                if gender: n_components.append(gender)
+                if num: n_components.append(num)
+                
+            n_val = "+".join(n_components)
+        
         token_data: TokenData = {
             "t": word.string,
-            "n": f"{lemma}+{pos_tag}",
+            "n": n_val,
             "original": word.string,
             "lem": lemma,
             "pos": pos_tag,
@@ -263,6 +289,15 @@ def collatex_token_from_doc(doc: Any, metadata_map: MetadataMap) -> List[TokenDa
         if start is not None and stop is not None:
             editorial_metadata = get_metadata_for_token(start, stop, metadata_map)
             token_data.update(editorial_metadata)
+            
+            if "editorial" in getattr(n_format, "split", lambda x: [])('+'):
+                ed_tags = []
+                for tag in ["unclear", "add", "del", "abbr"]:
+                    if editorial_metadata.get(tag):
+                        ed_tags.append(tag)
+                if ed_tags:
+                    # Append strictly at the end of whatever n_val currently is
+                    token_data["n"] = f"{token_data['n']}+{'+'.join(ed_tags)}"
         
         collatex_payloads.append(token_data)
     
@@ -285,92 +320,73 @@ def process_tei_to_collatex(soup: BeautifulSoup) -> Tuple[str, MetadataMap]:
 
 class XMLTokenizer:
     """Class to manage the NLP pipeline and XML parsing together."""
-    def __init__(self, nlp_backend: str = "stanza", lang: str = "grc"):
+    def __init__(self, nlp_backend: str = "stanza", lang: str = "grc", normalization: str = "lemma+pos"):
         # Suppress output from CLTK during initialization
         logging.getLogger('cltk').setLevel(logging.ERROR)
         logging.getLogger('stanza').setLevel(logging.ERROR)
         self.nlp = NLP(lang, backend=nlp_backend, suppress_banner=True)
+        self.normalization = normalization
 
     def tokenize_file(self, file_path: str) -> Union[List[TokenData], Dict[str, Any]]:
-        """Reads an XML or JSON file and tokenizes its text according to the internal logic."""
-        import json
-        
+        """Reads an XML file and tokenizes its text according to the internal logic."""
         with open(file_path, 'r', encoding='utf-8') as f:
             content = f.read()
             
-        if file_path.endswith('.json'):
-            try:
-                data = json.loads(content)
-                key = list(data.keys())[0]  # e.g., "milestone n='108'"
-                fragments = data[key]
-                
-                collatex_payload = {"witnesses": []}
-                for fragment in fragments:
-                    wid = fragment.get("id")
-                    frag_content = fragment.get("content", "")
-                    
-                    soup = BeautifulSoup(f"<root>{frag_content}</root>", features="xml")
-                    clean_cltk_string, metadata_map = process_tei_to_collatex(soup)
-                    
-                    if not clean_cltk_string.strip():
-                        continue
-                        
-                    doc = self.nlp.analyze(clean_cltk_string)
-                    tokens = collatex_token_from_doc(doc, metadata_map)
-                    
-                    collatex_payload["witnesses"].append({
-                        "id": wid,
-                        "tokens": tokens
-                    })
-                return collatex_payload
-            except json.JSONDecodeError as e:
-                logger.error(f"Invalid JSON in {file_path}: {e}")
-                return []
-                
-        else:
-            # Assume XML
-            soup = BeautifulSoup(content, features="xml")
-            
-            # Check if there are witness tags
-            witnesses = soup.find_all('witness')
-            if witnesses:
-                collatex_payload = {"witnesses": []}
-                for w in witnesses:
-                    wid = w.get('id', 'unknown')
-                    clean_cltk_string, metadata_map = process_tei_to_collatex(w)
-                    if not clean_cltk_string.strip():
-                        continue
-                    
-                    doc = self.nlp.analyze(clean_cltk_string)
-                    tokens = collatex_token_from_doc(doc, metadata_map)
-                    
-                    collatex_payload["witnesses"].append({
-                        "id": wid,
-                        "tokens": tokens
-                    })
-                return collatex_payload
-            else:
-                # Standard single document TEI XML parsing
-                clean_cltk_string, metadata_map = process_tei_to_collatex(soup)
-                
+        soup = BeautifulSoup(content, features="xml")
+        
+        # Check if there are witness tags
+        witnesses = soup.find_all('witness')
+        if witnesses:
+            collatex_payload = {"witnesses": []}
+            for w in witnesses:
+                wid = w.get('id', 'unknown')
+                clean_cltk_string, metadata_map = process_tei_to_collatex(w)
                 if not clean_cltk_string.strip():
-                    raise ValueError(f"Input text in {file_path} is empty or parsing failed.")
+                    continue
                 
                 doc = self.nlp.analyze(clean_cltk_string)
-                collatex_payloads = collatex_token_from_doc(doc, metadata_map)
+                tokens = collatex_token_from_doc(doc, metadata_map, n_format=self.normalization)
                 
-                return collatex_payloads
+                collatex_payload["witnesses"].append({
+                    "id": wid,
+                    "tokens": tokens
+                })
+            return collatex_payload
+        else:
+            # Standard single document TEI XML parsing
+            clean_cltk_string, metadata_map = process_tei_to_collatex(soup)
+            
+            if not clean_cltk_string.strip():
+                raise ValueError(f"Input text in {file_path} is empty or parsing failed.")
+            
+            doc = self.nlp.analyze(clean_cltk_string)
+            collatex_payloads = collatex_token_from_doc(doc, metadata_map, n_format=self.normalization)
+            
+            return collatex_payloads
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Parse XML file and generate CollateX token payload.")
     parser.add_argument("input_file", help="Path to the .xml file to parse.")
     parser.add_argument("--output", "-o", help="Optional output JSON file path.", default=None)
+    parser.add_argument(
+        "--normalization", "-n", 
+        choices=[
+            "lemma", 
+            "lemma+pos", 
+            "lemma+pos+cgn", 
+            "lemma+pos+editorial", 
+            "lemma+pos+cgn+editorial", 
+            "original"
+        ], 
+        default="lemma+pos", 
+        help="Strictness configuration for the CollateX token 'n' field (default: lemma+pos)"
+    )
     args = parser.parse_args()
     
     try:
         logger.info("Initializing NLP pipeline (this may take a moment)...")
-        tokenizer = XMLTokenizer()
+        tokenizer = XMLTokenizer(normalization=args.normalization)
         
         logger.info(f"Processing file: {args.input_file}")
         tokens = tokenizer.tokenize_file(args.input_file)
