@@ -10,9 +10,9 @@ import builtins
 
 # Auto-answer 'y' to any interactive prompts (e.g., from CLTK downloading models)
 # to prevent the script from hanging when run via automated tools or uv.
-_original_input = builtins.input
-builtins.input = lambda prompt='': 'y'
-print("Patched builtins.input to auto-answer 'y' to avoid CLTK hangs.", flush=True)
+# _original_input = builtins.input
+# builtins.input = lambda prompt='': 'y'
+# print("Patched builtins.input to auto-answer 'y' to avoid CLTK hangs.", flush=True)
 
 # Setup custom logger to avoid double logging issues with cltk/stanza
 logger = logging.getLogger('tokenize_xml')
@@ -223,7 +223,7 @@ def get_metadata_for_token(char_start: int, char_stop: int, metadata_map: Metada
     return token_metadata
 
 
-def collatex_token_from_doc(doc: Any, metadata_map: MetadataMap, n_format: str = "lemma+pos") -> List[TokenData]:
+def build_collatex_tokens(doc: Any, metadata_map: MetadataMap, n_format: str = "lemma+pos") -> List[TokenData]:
     """
     Creates tokens suitable for CollateX from a CLTK Doc object and metadata map.
     """
@@ -304,7 +304,7 @@ def collatex_token_from_doc(doc: Any, metadata_map: MetadataMap, n_format: str =
     return collatex_payloads
 
 
-def process_tei_to_collatex(soup: BeautifulSoup) -> Tuple[str, MetadataMap]:
+def extract_normalized_text_and_metadata(soup: BeautifulSoup) -> Tuple[str, MetadataMap]:
     """Process TEI soup to extract both metadata map and clean text."""
     # Step 1: Clear breaks first (modifies soup in place, keeps editorial tags)
     clear_breaks(soup)
@@ -337,15 +337,16 @@ class XMLTokenizer:
         # Check if there are witness tags
         witnesses = soup.find_all('witness')
         if witnesses:
+            print(f"Found {len(witnesses)} witnesses")
             collatex_payload = {"witnesses": []}
             for w in witnesses:
                 wid = w.get('id', 'unknown')
-                clean_cltk_string, metadata_map = process_tei_to_collatex(w)
+                clean_cltk_string, metadata_map = extract_normalized_text_and_metadata(w)
                 if not clean_cltk_string.strip():
                     continue
                 
                 doc = self.nlp.analyze(clean_cltk_string)
-                tokens = collatex_token_from_doc(doc, metadata_map, n_format=self.normalization)
+                tokens = build_collatex_tokens(doc, metadata_map, n_format=self.normalization)
                 
                 collatex_payload["witnesses"].append({
                     "id": wid,
@@ -354,20 +355,26 @@ class XMLTokenizer:
             return collatex_payload
         else:
             # Standard single document TEI XML parsing
-            clean_cltk_string, metadata_map = process_tei_to_collatex(soup)
+            clean_cltk_string, metadata_map = extract_normalized_text_and_metadata(soup)
             
             if not clean_cltk_string.strip():
                 raise ValueError(f"Input text in {file_path} is empty or parsing failed.")
             
             doc = self.nlp.analyze(clean_cltk_string)
-            collatex_payloads = collatex_token_from_doc(doc, metadata_map, n_format=self.normalization)
+            collatex_payloads = build_collatex_tokens(doc, metadata_map, n_format=self.normalization)
             
             return collatex_payloads
 
 
+def validate_file_path(path: str) -> str:
+    import os
+    if not os.path.isfile(path):
+        raise argparse.ArgumentTypeError(f"File '{path}' does not exist.")
+    return path
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Parse XML file and generate CollateX token payload.")
-    parser.add_argument("input_file", help="Path to the .xml file to parse.")
+    parser.add_argument("input_file", type=validate_file_path, help="Path to the .xml file to parse.")
     parser.add_argument("--output", "-o", help="Optional output JSON file path.", default=None)
     parser.add_argument(
         "--normalization", "-n", 
@@ -385,10 +392,10 @@ def main() -> None:
     args = parser.parse_args()
     
     try:
-        logger.info("Initializing NLP pipeline (this may take a moment)...")
+        logger.info("Initializing NLP pipeline (this may take a moment)..., for optimization")
         tokenizer = XMLTokenizer(normalization=args.normalization)
         
-        logger.info(f"Processing file: {args.input_file}")
+        logger.info(f"Now processing file: {args.input_file}")
         tokens = tokenizer.tokenize_file(args.input_file)
         
         if args.output:
