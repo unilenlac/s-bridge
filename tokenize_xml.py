@@ -35,27 +35,40 @@ def clear_breaks(soup: BeautifulSoup) -> None:
         
         # A. Clean the preceding text and delete the physical hyphen
         prev_node = lb.previous_sibling
-        if prev_node and prev_node.name is None:  # Ensures it's a text node
+        # Look backwards to find actual text if there's an enclosing tag like <unclear>
+        while prev_node and not isinstance(prev_node, NavigableString) and getattr(prev_node, 'name', None) is not None:
+            # Simple assumption: if the previous sibling is a tag, the text we want to modify is inside it
+            if list(prev_node.children):
+                prev_node = list(prev_node.children)[-1]
+            else:
+                break
+                
+        if isinstance(prev_node, NavigableString):
             text = str(prev_node)
-            # Remove trailing whitespace and hyphen
             text = text.rstrip()
             if text.endswith('-'):
                 text = text[:-1]
-            prev_node.replace_with(text)
+            prev_node.replace_with(NavigableString(text))
         
         # B. Clean the following text (remove leading whitespace)
         next_node = lb.next_sibling
-        if next_node and next_node.name is None:
+        while next_node and not isinstance(next_node, NavigableString) and getattr(next_node, 'name', None) is not None:
+            if list(next_node.children):
+                next_node = list(next_node.children)[0]
+            else:
+                break
+                
+        if isinstance(next_node, NavigableString):
             text = str(next_node)
             text = text.lstrip()
-            next_node.replace_with(text)
+            next_node.replace_with(NavigableString(text))
         
         # C. Destroy the <lb> tag
         lb.decompose()
     
     # 2. Handle normal <lb> and <pb> tags - replace with space
     for break_tag in soup.find_all(['lb', 'pb']):
-        break_tag.replace_with(' ')
+        break_tag.replace_with(NavigableString(' '))
 
 
 def extract_text_with_metadata(
@@ -77,14 +90,20 @@ def extract_text_with_metadata(
     
     if isinstance(element, NavigableString):
         text = str(element)
-        if text.strip():  # Only add non-empty text
+        if text:  # Add all text including structural whitespace
             # Copy current metadata stack
             current_metadata: Dict[str, Any] = {}
             for meta in metadata_stack:
                 current_metadata.update(meta)
-            current_metadata.update(pending_metadata)
+                
+            if text.strip():
+                current_metadata.update(pending_metadata)
+                pending_metadata.clear()
+            elif pending_metadata:
+                # Still attach pending metadata to these spaces, but don't clear it
+                current_metadata.update(pending_metadata)
+                
             results.append((text, current_metadata))
-            pending_metadata.clear()
         return results, pending_metadata
     
     if isinstance(element, (Tag, BeautifulSoup)):
