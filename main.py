@@ -193,19 +193,19 @@ def process_tei_to_collatex(soup):
 def main():
     nlp = NLP("grc", backend="stanza", suppress_banner=True)
     
-    url: str = "http://ftsr-dev.unil.ch:8000/api/dts/v1/document"
-    params: dict[str, str] = {"resource": "bonnet_er"}
-    headers: dict[str, str] = {"accept": "application/xml"}
-    response: requests.Response = requests.get(url, params=params, headers=headers)
+    # url: str = "http://ftsr-dev.unil.ch:8000/api/dts/v1/document"
+    # params: dict[str, str] = {"resource": "bonnet_er"}
+    # headers: dict[str, str] = {"accept": "application/xml"}
+    # response: requests.Response = requests.get(url, params=params, headers=headers)
     
-    text_to_process: str = response.text
+    # text_to_process: str = response.text
 
     # Write the output to a file
     # file_path = "bonnet_er.xml"
     # with open(file_path, "w", encoding="utf-8") as file:
     #     file.write(text_to_process)
 
-    print(text_to_process)
+    # print(text_to_process)
     
     # Use the 'xml' parser specifically for TEI
     soup = BeautifulSoup(text_to_process, features="xml")
