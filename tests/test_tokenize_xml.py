@@ -150,3 +150,10 @@ def test_abbr_expansion_logic():
     assert word_meta.get("abbr") is True
     assert word_meta.get("abbr_original") == "κς"
     assert word_meta.get("abbr_type") == "nom_sac"
+
+def test_aggressive_hyphenation():
+    # Test our aggressive merging: a hyphen before a normal <lb/> (no break="no")
+    xml = "<root>This is completely a hy-<lb/>\n     phenated word.</root>"
+    soup = BeautifulSoup(xml, "xml")
+    clean_text, meta = extract_normalized_text_and_metadata(soup, {})
+    assert clean_text == "This is completely a hyphenated word."

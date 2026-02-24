@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
     "bs4>=0.0.2",
-    "cltk[ollama,stanza]>=2.5.0",
+    "cltk[stanza]>=2.5.0",
     "lxml>=6.0.2",
     "pytest>=9.0.2",
     "requests>=2.32.5",

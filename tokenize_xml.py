@@ -31,15 +31,16 @@ TokenData = Dict[str, Any]
 
 
 def resolve_hyphenation_and_breaks(soup: BeautifulSoup) -> None:
-    """Remove line/page breaks from soup (modifies in place)."""
-    # 1. Resolve hyphenated breaks (<lb break="no"/>)
-    for lb in soup.find_all('lb', attrs={'break': 'no'}):
+    """Remove line/page breaks from soup, joining hyphenated words aggressively (modifies in place)."""
+    
+    # Process all <lb> and <pb> tags
+    for break_tag in soup.find_all(['lb', 'pb']):
+        is_hyphenated = False
         
-        # A. Clean the preceding text and delete the physical hyphen
-        prev_node = lb.previous_sibling
+        # A. Inspect preceding text logic
+        prev_node = break_tag.previous_sibling
         # Look backwards to find actual text if there's an enclosing tag like <unclear>
         while prev_node and not isinstance(prev_node, NavigableString) and getattr(prev_node, 'name', None) is not None:
-            # Simple assumption: if the previous sibling is a tag, the text we want to modify is inside it
             if list(prev_node.children):
                 prev_node = list(prev_node.children)[-1]
             else:
@@ -47,30 +48,32 @@ def resolve_hyphenation_and_breaks(soup: BeautifulSoup) -> None:
                 
         if isinstance(prev_node, NavigableString):
             text = str(prev_node)
-            text = text.rstrip()
-            if text.endswith('-'):
-                text = text[:-1]
-            prev_node.replace_with(NavigableString(text))
-        
-        # B. Clean the following text (remove leading whitespace)
-        next_node = lb.next_sibling
-        while next_node and not isinstance(next_node, NavigableString) and getattr(next_node, 'name', None) is not None:
-            if list(next_node.children):
-                next_node = list(next_node.children)[0]
-            else:
-                break
+            clean_text = text.rstrip()
+            if clean_text.endswith('-'):
+                is_hyphenated = True
+                # Delete the physical hyphen
+                text = clean_text[:-1]
+                prev_node.replace_with(NavigableString(text))
                 
-        if isinstance(next_node, NavigableString):
-            text = str(next_node)
-            text = text.lstrip()
-            next_node.replace_with(NavigableString(text))
-        
-        # C. Destroy the <lb> tag
-        lb.decompose()
-    
-    # 2. Handle normal <lb> and <pb> tags - replace with space
-    for break_tag in soup.find_all(['lb', 'pb']):
-        break_tag.replace_with(NavigableString(' '))
+        if is_hyphenated:
+            # B. Clean the following text (remove leading whitespace because we are merging)
+            next_node = break_tag.next_sibling
+            while next_node and not isinstance(next_node, NavigableString) and getattr(next_node, 'name', None) is not None:
+                if list(next_node.children):
+                    next_node = list(next_node.children)[0]
+                else:
+                    break
+                    
+            if isinstance(next_node, NavigableString):
+                text = str(next_node)
+                text = text.lstrip()
+                next_node.replace_with(NavigableString(text))
+            
+            # C. Destroy the break tag entirely so words merge without spaces
+            break_tag.decompose()
+        else:
+            # Not a hyphenated word, just replace the break block with a space
+            break_tag.replace_with(NavigableString(' '))
 
 
 def extract_text_with_metadata(
