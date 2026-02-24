@@ -28,7 +28,7 @@ TextSegment = Tuple[str, Dict[str, Any]]
 TokenData = Dict[str, Any]
 
 
-def clear_breaks(soup: BeautifulSoup) -> None:
+def resolve_hyphenation_and_breaks(soup: BeautifulSoup) -> None:
     """Remove line/page breaks from soup (modifies in place)."""
     # 1. Resolve hyphenated breaks (<lb break="no"/>)
     for lb in soup.find_all('lb', attrs={'break': 'no'}):
@@ -307,7 +307,7 @@ def build_collatex_tokens(doc: Any, metadata_map: MetadataMap, n_format: str = "
 def extract_normalized_text_and_metadata(soup: BeautifulSoup) -> Tuple[str, MetadataMap]:
     """Process TEI soup to extract both metadata map and clean text."""
     # Step 1: Clear breaks first (modifies soup in place, keeps editorial tags)
-    clear_breaks(soup)
+    resolve_hyphenation_and_breaks(soup)
     
     # Step 2: Extract text segments with their metadata (after clearing breaks)
     text_segments, _ = extract_text_with_metadata(soup)
