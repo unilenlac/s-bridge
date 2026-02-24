@@ -1,6 +1,8 @@
 import argparse
 import json
 import logging
+import csv
+import os
 from typing import List, Dict, Tuple, Any, Optional, Union
 
 from bs4 import BeautifulSoup
@@ -73,6 +75,7 @@ def resolve_hyphenation_and_breaks(soup: BeautifulSoup) -> None:
 
 def extract_text_with_metadata(
     element: Union[Tag, NavigableString, BeautifulSoup], 
+    abbr_dict: Dict[str, str],
     metadata_stack: Optional[List[Dict[str, Any]]] = None, 
     pending_metadata: Optional[Dict[str, Any]] = None, 
     results: Optional[List[TextSegment]] = None
@@ -103,6 +106,13 @@ def extract_text_with_metadata(
                 # Still attach pending metadata to these spaces, but don't clear it
                 current_metadata.update(pending_metadata)
                 
+            if current_metadata.get('abbr'):
+                raw_abbr = text.strip()
+                if raw_abbr in abbr_dict:
+                    # Expand the abbreviation text
+                    text = text.replace(raw_abbr, abbr_dict[raw_abbr])
+                    current_metadata['abbr_original'] = raw_abbr
+            
             results.append((text, current_metadata))
         return results, pending_metadata
     
@@ -126,10 +136,17 @@ def extract_text_with_metadata(
             tag_metadata['del_reason'] = rend if rend else 'other'
 
         if getattr(element, 'name', None) == 'abbr':
+            # Abbreviation expansion is handled at the text node level,
+            # but we record that we are inside an abbr tag
             tag_metadata['abbr'] = True
             abbr_type = element.get('type')
             if abbr_type:
                 tag_metadata['abbr_type'] = abbr_type
+                
+            # For elongation later: check text inside this specific tag
+            # If the entire element has a single text string, we can intercept it
+            # But the most robust way in BS4 recursive extraction is to handle it
+            # right before the text is appended if 'abbr' is in the stack.
         
         # Push metadata onto stack if this tag has any
         if tag_metadata:
@@ -139,7 +156,7 @@ def extract_text_with_metadata(
         # Process children
         for child in getattr(element, 'children', []):
             has_children = True
-            extract_text_with_metadata(child, metadata_stack, pending_metadata, results)
+            extract_text_with_metadata(child, abbr_dict, metadata_stack, pending_metadata, results)
         
         # If the tag is empty but has metadata, apply it to pending_metadata
         # so it attaches to the next valid text node
@@ -304,13 +321,13 @@ def build_collatex_tokens(doc: Any, metadata_map: MetadataMap, n_format: str = "
     return collatex_payloads
 
 
-def extract_normalized_text_and_metadata(soup: BeautifulSoup) -> Tuple[str, MetadataMap]:
+def extract_normalized_text_and_metadata(soup: BeautifulSoup, abbr_dict: Dict[str, str]) -> Tuple[str, MetadataMap]:
     """Process TEI soup to extract both metadata map and clean text."""
     # Step 1: Clear breaks first (modifies soup in place, keeps editorial tags)
     resolve_hyphenation_and_breaks(soup)
     
     # Step 2: Extract text segments with their metadata (after clearing breaks)
-    text_segments, _ = extract_text_with_metadata(soup)
+    text_segments, _ = extract_text_with_metadata(soup, abbr_dict)
     
     # Step 3: Build normalized text and metadata map
     clean_text, metadata_map = build_normalized_metadata_map(text_segments)
@@ -320,12 +337,27 @@ def extract_normalized_text_and_metadata(soup: BeautifulSoup) -> Tuple[str, Meta
 
 class XMLTokenizer:
     """Class to manage the NLP pipeline and XML parsing together."""
-    def __init__(self, nlp_backend: str = "stanza", lang: str = "grc", normalization: str = "lemma+pos"):
+    def __init__(self, nlp_backend: str = "stanza", lang: str = "grc", normalization: str = "lemma+pos", abbr_file: Optional[str] = None):
         # Suppress output from CLTK during initialization
         logging.getLogger('cltk').setLevel(logging.ERROR)
         logging.getLogger('stanza').setLevel(logging.ERROR)
         self.nlp = NLP(lang, backend=nlp_backend, suppress_banner=True)
         self.normalization = normalization
+        
+        # Load abbreviations lookup
+        self.abbr_dict: Dict[str, str] = {}
+        if abbr_file and os.path.isfile(abbr_file):
+            logger.info(f"Loading abbreviations from {abbr_file}")
+            with open(abbr_file, 'r', encoding='utf-8') as f:
+                # Read csv. Skip header row depending on dialect or exactly if we know it
+                reader = csv.reader(f, delimiter='\t')
+                next(reader, None) # skip header 'abbr  expan'
+                for row in reader:
+                    if len(row) >= 2:
+                        self.abbr_dict[row[0].strip()] = row[1].strip()
+            logger.info(f"Successfully loaded {len(self.abbr_dict)} abbreviations.")
+        elif abbr_file:
+             logger.warning(f"Abbreviation file '{abbr_file}' was specified but not found. Skipping abbreviation expansion.")
 
     def tokenize_file(self, file_path: str) -> Union[List[TokenData], Dict[str, Any]]:
         """Reads an XML file and tokenizes its text according to the internal logic."""
@@ -341,7 +373,7 @@ class XMLTokenizer:
             collatex_payload = {"witnesses": []}
             for w in witnesses:
                 wid = w.get('id', 'unknown')
-                clean_cltk_string, metadata_map = extract_normalized_text_and_metadata(w)
+                clean_cltk_string, metadata_map = extract_normalized_text_and_metadata(w, self.abbr_dict)
                 if not clean_cltk_string.strip():
                     continue
                 
@@ -355,7 +387,7 @@ class XMLTokenizer:
             return collatex_payload
         else:
             # Standard single document TEI XML parsing
-            clean_cltk_string, metadata_map = extract_normalized_text_and_metadata(soup)
+            clean_cltk_string, metadata_map = extract_normalized_text_and_metadata(soup, self.abbr_dict)
             
             if not clean_cltk_string.strip():
                 raise ValueError(f"Input text in {file_path} is empty or parsing failed.")
@@ -389,11 +421,12 @@ def main() -> None:
         default="lemma+pos", 
         help="Strictness configuration for the CollateX token 'n' field (default: lemma+pos)"
     )
+    parser.add_argument("--abbr-file", help="Path to TSV/CSV dictionary for <abbr> elongation.", default="utils/abbr.csv")
     args = parser.parse_args()
     
     try:
         logger.info("Initializing NLP pipeline (this may take a moment)..., for optimization")
-        tokenizer = XMLTokenizer(normalization=args.normalization)
+        tokenizer = XMLTokenizer(normalization=args.normalization, abbr_file=args.abbr_file)
         
         logger.info(f"Now processing file: {args.input_file}")
         tokens = tokenizer.tokenize_file(args.input_file)
