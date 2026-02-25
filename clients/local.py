@@ -40,8 +40,8 @@ class LocalCltkClient(AnalysisClient):
             
             # Safely extract linguistic features (like Case, Gender, Number) if they exist
             feats_dict = {}
-            if hasattr(word, 'features') and word.features:
-                for tag in word.features:
+            if hasattr(word, 'features') and word.features and hasattr(word.features, 'features'):
+                for tag in word.features.features:
                     feats_dict[tag.key] = tag.value
             
             lemma = word.lemma if getattr(word, 'lemma', None) is not None else word.string
