@@ -7,7 +7,10 @@ from typing import List, Dict, Tuple, Any, Optional, Union
 
 from bs4 import BeautifulSoup
 from bs4.element import NavigableString, Tag
-from cltk import NLP
+# Removed direct CLTK import
+from s_bridge.clients.analysis import AnalysisClient
+from s_bridge.clients.local import LocalCltkClient
+from s_bridge.clients.remote import RemoteAnalysisClient
 import builtins
 
 # Auto-answer 'y' to any interactive prompts (e.g., from CLTK downloading models)
@@ -243,84 +246,46 @@ def get_metadata_for_token(char_start: int, char_stop: int, metadata_map: Metada
     return token_metadata
 
 
-def build_collatex_tokens(doc: Any, metadata_map: MetadataMap, n_format: str = "lemma+pos") -> List[TokenData]:
+def build_collatex_tokens(json_tokens: List[Dict[str, Any]], metadata_map: MetadataMap, n_format: str = "lemma+pos") -> List[TokenData]:
     """
-    Creates tokens suitable for CollateX from a CLTK Doc object and metadata map.
+    Applies editorial metadata and string formatting to tokens returned by the AnalysisClient.
+    The `json_tokens` should be dictionaries matching the token output specification.
     """
     collatex_payloads: List[TokenData] = []
     
-    for word in doc.words:
-        pos_tag = word.upos.tag if word.upos else "UNKNOWN"
+    # We need to track the character offsets to apply the metadata map correctly.
+    # We rebuild the index based on string lengths.
+    current_char_offset = 0
+    
+    for token in json_tokens:
+        # Create a copy so we don't modify the client's output directly
+        token_data = dict(token)
+        t_val = token_data.get("t", "")
         
-        if pos_tag == "PUNCT":
-            if collatex_payloads:
-                collatex_payloads[-1]["original"] += word.string
-            continue
+        # Calculate char offsets for editorial metadata matching
+        char_start = current_char_offset
+        char_stop = current_char_offset + len(t_val)
         
-        feat_obj = getattr(word, 'features', None)
-        feats_dict = {}
-        if feat_obj and hasattr(feat_obj, 'features'):
-             feats_dict = {tag.key: tag.value for tag in getattr(feat_obj, 'features', [])}
+        # Increment offset for next token + space (assuming single space split)
+        # Note: This is an approximation. If exact character offsets are needed,
+        # the client should ideally return index_char_start and index_char_stop.
+        current_char_offset += len(t_val) + 1 
         
-        lemma = word.lemma if getattr(word, 'lemma', None) is not None else word.string
-        
-        if n_format == "original":
-            n_val = word.string
-        elif n_format == "lemma":
-            n_val = lemma
-        else: # Handle all + configurations
-            parts = n_format.split('+')
-            n_components = []
+        # Apply editorial metadata if offset matches
+        editorial_metadata = get_metadata_for_token(char_start, char_stop, metadata_map)
+        token_data.update(editorial_metadata)
             
-            if "lemma" in parts:
-                n_components.append(lemma)
-            elif "original" in parts:
-                n_components.append(word.string)
-                
-            if "pos" in parts:
-                n_components.append(pos_tag)
-                
-            if "cgn" in parts:
-                case = feats_dict.get("Case")
-                gender = feats_dict.get("Gender")
-                num = feats_dict.get("Number")
-                if case: n_components.append(case)
-                if gender: n_components.append(gender)
-                if num: n_components.append(num)
-                
-            n_val = "+".join(n_components)
-        
-        token_data: TokenData = {
-            "t": word.string,
-            "n": n_val,
-            "original": word.string,
-            "lem": lemma,
-            "pos": pos_tag,
-            "case": feats_dict.get("Case"),
-            "gender": feats_dict.get("Gender"),
-            "num": feats_dict.get("Number")
-        }
-        
-        # Word object in cltk usually has index_char_start and index_char_stop
-        # Only assign editorial metadata if we have character offsets for the word
-        start = getattr(word, 'index_char_start', None)
-        stop = getattr(word, 'index_char_stop', None)
-        
-        if start is not None and stop is not None:
-            editorial_metadata = get_metadata_for_token(start, stop, metadata_map)
-            token_data.update(editorial_metadata)
-            
-            if "editorial" in getattr(n_format, "split", lambda x: [])('+'):
-                ed_tags = []
-                for tag in ["unclear", "add", "del", "abbr"]:
-                    if editorial_metadata.get(tag):
-                        ed_tags.append(tag)
-                if ed_tags:
-                    # Append strictly at the end of whatever n_val currently is
-                    token_data["n"] = f"{token_data['n']}+{'+'.join(ed_tags)}"
+        if "editorial" in getattr(n_format, "split", lambda x: [])('+'):
+            ed_tags = []
+            for tag in ["unclear", "add", "del", "abbr"]:
+                if editorial_metadata.get(tag):
+                    ed_tags.append(tag)
+            if ed_tags:
+                # Append strictly at the end of whatever n_val currently is
+                token_data["n"] = f"{token_data.get('n', '')}+{'+'.join(ed_tags)}"
         
         collatex_payloads.append(token_data)
-    
+        
     return collatex_payloads
 
 
@@ -340,11 +305,8 @@ def extract_normalized_text_and_metadata(soup: BeautifulSoup, abbr_dict: Dict[st
 
 class XMLTokenizer:
     """Class to manage the NLP pipeline and XML parsing together."""
-    def __init__(self, nlp_backend: str = "stanza", lang: str = "grc", normalization: str = "lemma+pos", abbr_file: Optional[str] = None):
-        # Suppress output from CLTK during initialization
-        logging.getLogger('cltk').setLevel(logging.ERROR)
-        logging.getLogger('stanza').setLevel(logging.ERROR)
-        self.nlp = NLP(lang, backend=nlp_backend, suppress_banner=True)
+    def __init__(self, analysis_client: AnalysisClient, normalization: str = "lemma+pos", abbr_file: Optional[str] = None):
+        self.analysis_client = analysis_client
         self.normalization = normalization
         
         # Load abbreviations lookup
@@ -380,8 +342,8 @@ class XMLTokenizer:
                 if not clean_cltk_string.strip():
                     continue
                 
-                doc = self.nlp.analyze(clean_cltk_string)
-                tokens = build_collatex_tokens(doc, metadata_map, n_format=self.normalization)
+                json_tokens = self.analysis_client.analyze_text(clean_cltk_string)
+                tokens = build_collatex_tokens(json_tokens, metadata_map, n_format=self.normalization)
                 
                 collatex_payload["witnesses"].append({
                     "id": wid,
@@ -395,8 +357,8 @@ class XMLTokenizer:
             if not clean_cltk_string.strip():
                 raise ValueError(f"Input text in {file_path} is empty or parsing failed.")
             
-            doc = self.nlp.analyze(clean_cltk_string)
-            collatex_payloads = build_collatex_tokens(doc, metadata_map, n_format=self.normalization)
+            json_tokens = self.analysis_client.analyze_text(clean_cltk_string)
+            collatex_payloads = build_collatex_tokens(json_tokens, metadata_map, n_format=self.normalization)
             
             return collatex_payloads
 
@@ -424,12 +386,20 @@ def main() -> None:
         default="lemma+pos", 
         help="Strictness configuration for the CollateX token 'n' field (default: lemma+pos)"
     )
+    parser.add_argument("--remote-host", help="Hostname of the NLP server (if using remote)", default=None)
+    parser.add_argument("--remote-port", type=int, help="Port of the NLP server (if using remote)", default=8000)
     parser.add_argument("--abbr-file", help="Path to TSV/CSV dictionary for <abbr> elongation.", default="utils/abbr.csv")
     args = parser.parse_args()
     
     try:
-        logger.info("Initializing NLP pipeline (this may take a moment)..., for optimization")
-        tokenizer = XMLTokenizer(normalization=args.normalization, abbr_file=args.abbr_file)
+        if args.remote_host:
+            logger.info(f"Connecting to remote NLP server at {args.remote_host}:{args.remote_port}")
+            client = RemoteAnalysisClient(host=args.remote_host, port=args.remote_port)
+        else:
+            logger.info("Initializing Local NLP pipeline (this may take a moment)...")
+            client = LocalCltkClient(n_format=args.normalization)
+            
+        tokenizer = XMLTokenizer(analysis_client=client, normalization=args.normalization, abbr_file=args.abbr_file)
         
         logger.info(f"Now processing file: {args.input_file}")
         tokens = tokenizer.tokenize_file(args.input_file)

@@ -114,20 +114,10 @@
           "num": "Sing"
         },
         {
-          "t": "ὑ",
-          "n": "ὑν+PART",
-          "original": "ὑ",
-          "lem": "ὑν",
-          "pos": "PART",
-          "case": null,
-          "gender": null,
-          "num": null
-        },
-        {
-          "t": "πό",
-          "n": "πο+ADP",
-          "original": "πό",
-          "lem": "πο",
+          "t": "ὑπό",
+          "n": "ὑπό+ADP",
+          "original": "ὑπό",
+          "lem": "ὑπό",
           "pos": "ADP",
           "case": null,
           "gender": null,
@@ -150,7 +140,7 @@
           "lem": "πιστός",
           "pos": "ADJ",
           "case": "Gen",
-          "gender": "Masc",
+          "gender": "Neut",
           "num": "Sing"
         },
         {
@@ -294,20 +284,10 @@
           "num": "Sing"
         },
         {
-          "t": "ἀ",
-          "n": "ἀ+NOUN",
-          "original": "ἀ",
-          "lem": "ἀ",
-          "pos": "NOUN",
-          "case": "Nom",
-          "gender": "Fem",
-          "num": "Sing"
-        },
-        {
-          "t": "δελφοὶ",
-          "n": "δελφός+NOUN",
-          "original": "δελφοὶ",
-          "lem": "δελφός",
+          "t": "ἀδελφοὶ",
+          "n": "ἀδελφός+NOUN",
+          "original": "ἀδελφοὶ",
+          "lem": "ἀδελφός",
           "pos": "NOUN",
           "case": "Nom",
           "gender": "Masc",
@@ -415,13 +395,13 @@
         },
         {
           "t": "dmg",
-          "n": "ὁ+DET",
+          "n": "γόξ+NOUN",
           "original": "dmg",
-          "lem": "ὁ",
-          "pos": "DET",
+          "lem": "γόξ",
+          "pos": "NOUN",
           "case": "Gen",
           "gender": "Masc",
-          "num": "Plur"
+          "num": "Sing"
         },
         {
           "t": "ἀχθέντων",
@@ -464,24 +444,14 @@
           "num": "Plur"
         },
         {
-          "t": "ἀν",
-          "n": "εἷς+NOUN",
-          "original": "ἀν",
-          "lem": "εἷς",
+          "t": "ἀνδρῶν",
+          "n": "ἀνήρ+NOUN",
+          "original": "ἀνδρῶν",
+          "lem": "ἀνήρ",
           "pos": "NOUN",
           "case": "Gen",
           "gender": "Masc",
           "num": "Plur"
-        },
-        {
-          "t": "δρῶν",
-          "n": "δράω+VERB",
-          "original": "δρῶν",
-          "lem": "δράω",
-          "pos": "VERB",
-          "case": "Nom",
-          "gender": "Masc",
-          "num": "Sing"
         },
         {
           "t": "τε",
@@ -574,21 +544,11 @@
           "num": "Sing"
         },
         {
-          "t": "φί",
-          "n": "φία+NOUN",
-          "original": "φί",
-          "lem": "φία",
-          "pos": "NOUN",
-          "case": "Nom",
-          "gender": "Masc",
-          "num": "Sing"
-        },
-        {
-          "t": "λιππος",
-          "n": "λιππος+NOUN",
-          "original": "λιππος",
-          "lem": "λιππος",
-          "pos": "NOUN",
+          "t": "φίλιππος",
+          "n": "φίλιππος+ADJ",
+          "original": "φίλιππος",
+          "lem": "φίλιππος",
+          "pos": "ADJ",
           "case": "Nom",
           "gender": "Masc",
           "num": "Sing"
@@ -605,10 +565,10 @@
         },
         {
           "t": "τῶ",
-          "n": "ὃς+ADJ",
+          "n": "ὃς+PRON",
           "original": "τῶ",
           "lem": "ὃς",
-          "pos": "ADJ",
+          "pos": "PRON",
           "case": "Dat",
           "gender": "Masc",
           "num": "Sing"
