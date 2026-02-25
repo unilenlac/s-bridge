@@ -16,11 +16,13 @@ class RemoteAnalysisClient(AnalysisClient):
                 json={"text": text},
                 timeout=60 # NLP parsing can take a bit of time
             )
-            response.raise_function_error_for_status() # Raise exception for 4xx/5xx
+            response.raise_for_status() # Raise exception for 4xx/5xx
             
             data = response.json()
             return data.get("tokens", [])
             
+        except requests.exceptions.HTTPError as e:
+            raise e
         except requests.exceptions.RequestException as e:
-            # Re-raise or handle specific connection errors here
+            # Handle specific connection errors here
             raise ConnectionError(f"Failed to connect to NLP server at {self.base_url}. Error: {e}")

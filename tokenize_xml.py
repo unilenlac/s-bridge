@@ -8,9 +8,9 @@ from typing import List, Dict, Tuple, Any, Optional, Union
 from bs4 import BeautifulSoup
 from bs4.element import NavigableString, Tag
 # Removed direct CLTK import
-from s_bridge.clients.analysis import AnalysisClient
-from s_bridge.clients.local import LocalCltkClient
-from s_bridge.clients.remote import RemoteAnalysisClient
+from clients.analysis import AnalysisClient
+from clients.local import LocalCltkClient
+from clients.remote import RemoteAnalysisClient
 import builtins
 
 # Auto-answer 'y' to any interactive prompts (e.g., from CLTK downloading models)

@@ -920,7 +920,9 @@
           "pos": "DET",
           "case": "Gen",
           "gender": "Masc",
-          "num": "Sing"
+          "num": "Sing",
+          "del": true,
+          "del_reason": "strike"
         },
         {
           "t": "κυρίου",
@@ -943,7 +945,10 @@
           "pos": "ADV",
           "case": null,
           "gender": null,
-          "num": null
+          "num": null,
+          "abbr": true,
+          "abbr_type": "ns",
+          "abbr_original": "κυ"
         },
         {
           "t": "ἡ",
@@ -1273,9 +1278,7 @@
           "pos": "NOUN",
           "case": "Gen",
           "gender": "Masc",
-          "num": "Sing",
-          "abbr": true,
-          "abbr_type": "ns"
+          "num": "Sing"
         }
       ]
     },
