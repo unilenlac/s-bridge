@@ -157,3 +157,35 @@ def test_aggressive_hyphenation():
     soup = BeautifulSoup(xml, "xml")
     clean_text, meta = extract_normalized_text_and_metadata(soup, {})
     assert clean_text == "This is completely a hyphenated word."
+
+def test_seg_tag_metadata():
+    xml = '<root>Here is a <seg type="rubric" part="I">heading segment</seg>.</root>'
+    soup = BeautifulSoup(xml, "xml")
+    clean_text, meta = extract_normalized_text_and_metadata(soup, {})
+    
+    start, end = find_word_range(clean_text, "heading segment")
+    word_meta = get_metadata_for_word(start, end, meta)
+    
+    assert word_meta.get("seg_type") == "rubric"
+    assert word_meta.get("seg_part") == "I"
+
+def test_note_tag_metadata():
+    xml = '<root>Text with a <note type="scribal">scribal note</note> in it.</root>'
+    soup = BeautifulSoup(xml, "xml")
+    clean_text, meta = extract_normalized_text_and_metadata(soup, {})
+    
+    start, end = find_word_range(clean_text, "scribal note")
+    word_meta = get_metadata_for_word(start, end, meta)
+    
+    assert word_meta.get("is_note") is True
+    assert word_meta.get("note_type") == "scribal"
+
+def test_head_tag_metadata():
+    xml = '<root><head>Chapter One</head></root>'
+    soup = BeautifulSoup(xml, "xml")
+    clean_text, meta = extract_normalized_text_and_metadata(soup, {})
+    
+    start, end = find_word_range(clean_text, "Chapter One")
+    word_meta = get_metadata_for_word(start, end, meta)
+    
+    assert word_meta.get("is_head") is True

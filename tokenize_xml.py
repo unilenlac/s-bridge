@@ -7,17 +7,10 @@ from typing import List, Dict, Tuple, Any, Optional, Union
 
 from bs4 import BeautifulSoup
 from bs4.element import NavigableString, Tag
-# Removed direct CLTK import
 from clients.analysis import AnalysisClient
 from clients.local import LocalCltkClient
 from clients.remote import RemoteAnalysisClient
-import builtins
 
-# Auto-answer 'y' to any interactive prompts (e.g., from CLTK downloading models)
-# to prevent the script from hanging when run via automated tools or uv.
-# _original_input = builtins.input
-# builtins.input = lambda prompt='': 'y'
-# print("Patched builtins.input to auto-answer 'y' to avoid CLTK hangs.", flush=True)
 
 # Setup custom logger to avoid double logging issues with cltk/stanza
 logger = logging.getLogger('tokenize_xml')
@@ -148,6 +141,24 @@ def extract_text_with_metadata(
             abbr_type = element.get('type')
             if abbr_type:
                 tag_metadata['abbr_type'] = abbr_type
+                
+        # ENLAC Semantic tags handling
+        if getattr(element, 'name', None) == 'seg':
+            seg_type = element.get('type')
+            if seg_type:
+                tag_metadata['seg_type'] = seg_type
+            seg_part = element.get('part')
+            if seg_part:
+                tag_metadata['seg_part'] = seg_part
+                
+        if getattr(element, 'name', None) == 'note':
+            tag_metadata['is_note'] = True
+            note_type = element.get('type')
+            if note_type:
+                tag_metadata['note_type'] = note_type
+                
+        if getattr(element, 'name', None) == 'head':
+            tag_metadata['is_head'] = True
                 
             # For elongation later: check text inside this specific tag
             # If the entire element has a single text string, we can intercept it
@@ -285,6 +296,14 @@ def build_collatex_tokens(json_tokens: List[Dict[str, Any]], metadata_map: Metad
             for tag in ["unclear", "add", "del", "abbr"]:
                 if editorial_metadata.get(tag):
                     ed_tags.append(tag)
+                    
+            # Add semantic tags to the n_format if they exist
+            if editorial_metadata.get('seg_type'):
+                ed_tags.append(f"seg={editorial_metadata['seg_type']}")
+            if editorial_metadata.get('is_note'):
+                ed_tags.append("note")
+            if editorial_metadata.get('is_head'):
+                ed_tags.append("head")
             
             if ed_tags:
                 # Append strictly at the end of whatever n_val currently is
