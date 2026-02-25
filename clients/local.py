@@ -38,10 +38,11 @@ class LocalCltkClient(AnalysisClient):
                     collatex_payloads[-1]["original"] += word.string
                 continue
             
-            feat_obj = getattr(word, 'features', None)
+            # Safely extract linguistic features (like Case, Gender, Number) if they exist
             feats_dict = {}
-            if feat_obj and hasattr(feat_obj, 'features'):
-                 feats_dict = {tag.key: tag.value for tag in getattr(feat_obj, 'features', [])}
+            if hasattr(word, 'features') and word.features:
+                for tag in word.features:
+                    feats_dict[tag.key] = tag.value
             
             lemma = word.lemma if getattr(word, 'lemma', None) is not None else word.string
             

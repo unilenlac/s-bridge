@@ -275,14 +275,22 @@ def build_collatex_tokens(json_tokens: List[Dict[str, Any]], metadata_map: Metad
         editorial_metadata = get_metadata_for_token(char_start, char_stop, metadata_map)
         token_data.update(editorial_metadata)
             
-        if "editorial" in getattr(n_format, "split", lambda x: [])('+'):
+        # Split n_format (e.g., 'lemma+pos+editorial') into a clean list of components
+        n_format_parts = []
+        if isinstance(n_format, str) and n_format:
+            n_format_parts = n_format.split('+')
+            
+        if "editorial" in n_format_parts:
             ed_tags = []
             for tag in ["unclear", "add", "del", "abbr"]:
                 if editorial_metadata.get(tag):
                     ed_tags.append(tag)
+            
             if ed_tags:
                 # Append strictly at the end of whatever n_val currently is
-                token_data["n"] = f"{token_data.get('n', '')}+{'+'.join(ed_tags)}"
+                current_n = token_data.get('n', '')
+                editorial_suffix = '+'.join(ed_tags)
+                token_data["n"] = f"{current_n}+{editorial_suffix}"
         
         collatex_payloads.append(token_data)
         
