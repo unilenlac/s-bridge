@@ -1,99 +1,52 @@
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-from typing import List, Dict, Any
+from cltk import NLP
+from fastapi import FastAPI
+import xml.etree.ElementTree as ET
 import logging
 
-app = FastAPI(title="σ-Bridge NLP Server", description="Remote NLP parsing service using CLTK")
-logger = logging.getLogger("nlp_server")
+import uvicorn
+from nlp_server.cls.Processors import ClassicalProcessor, ModernProcessor
+from nlp_server.dep.processor_dep import *
+import stanza
+from contextlib import asynccontextmanager
 
-# Global NLP instance
-nlp = None
+from nlp_server.settings.settings import Settings
 
-class AnalyzeRequest(BaseModel):
-    text: str
-    lang: str = "grc"
-    # Optional parameters for token format (e.g. lemma+pos)
-    n_format: str = "lemma+pos"
 
-@app.on_event("startup")
-async def startup_event():
-    global nlp
-    logger.info("Initializing CLTK NLP engine...")
-    from cltk import NLP
-    from contextlib import redirect_stdout, redirect_stderr
-    import io
+settings = Settings()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    logger.info("Initializing NLP engine...")
     
     # Suppress CLTK startup noise
-    f = io.StringIO()
-    with redirect_stdout(f), redirect_stderr(f):
-         nlp = NLP("grc", backend="stanza", suppress_banner=True)
+    if settings.pipeline == "modern":
+        proc = ModernProcessor(stanza.Pipeline(settings.language, processors="tokenize,pos,lemma"))
+    else:
+        proc = ClassicalProcessor(NLP(settings.language, backend="stanza", suppress_banner=True))
+    app.state.proc = proc  # Replace with actual NLP engine instance
     logger.info("CLTK NLP engine initialized successfully.")
-
-def build_tokens_json(doc, n_format: str) -> List[Dict[str, Any]]:
-    tokens = []
     
-    for word in doc.words:
-        pos_tag = word.upos.tag if word.upos else "UNKNOWN"
-        
-        if pos_tag == "PUNCT":
-            if tokens:
-                tokens[-1]["original"] += word.string
-            continue
-            
-        # Safely extract linguistic features (like Case, Gender, Number) if they exist
-        feats_dict = {}
-        if hasattr(word, 'features') and word.features and hasattr(word.features, 'features'):
-            for tag in word.features.features:
-                feats_dict[tag.key] = tag.value
-            
-        lemma = word.lemma if getattr(word, 'lemma', None) is not None else word.string
-        
-        if n_format == "original":
-            n_val = word.string
-        elif n_format == "lemma":
-            n_val = lemma
-        else: # Handle all + configurations
-            parts = n_format.split('+')
-            n_components = []
-            if "lemma" in parts: n_components.append(lemma)
-            elif "original" in parts: n_components.append(word.string)
-            if "pos" in parts: n_components.append(pos_tag)
-            if "cgn" in parts:
-                if feats_dict.get("Case"): n_components.append(feats_dict.get("Case"))
-                if feats_dict.get("Gender"): n_components.append(feats_dict.get("Gender"))
-                if feats_dict.get("Number"): n_components.append(feats_dict.get("Number"))
-            n_val = "+".join(n_components)
-            
-        tokens.append({
-            "t": word.string,
-            "n": n_val,
-            "original": word.string,
-            "lem": lemma,
-            "pos": pos_tag,
-            "case": feats_dict.get("Case"),
-            "gender": feats_dict.get("Gender"),
-            "num": feats_dict.get("Number")
-        })
-        
-    return tokens
+    yield
 
-@app.post("/analyze")
-async def analyze_text(request: AnalyzeRequest):
-    if not request.text.strip():
-        return {"tokens": []}
-        
-    if request.lang != "grc":
-        raise HTTPException(status_code=400, detail="Only 'grc' (Ancient Greek) is currently supported on this server instance.")
-        
-    try:
-        # Run synchronous CLTK analysis
-        doc = nlp.analyze(request.text)
-        tokens = build_tokens_json(doc, request.n_format)
-        return {"tokens": tokens}
-    except Exception as e:
-        logger.error(f"NLP analysis failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Internal NLP Error: {str(e)}")
+app = FastAPI(title="σ-Bridge NLP Server", description="Remote NLP parsing service using CLTK", lifespan=lifespan)
+logger = logging.getLogger("nlp_server")
 
-@app.get("/health")
-async def health_check():
-    return {"status": "ok", "engine": "cltk", "lang": "grc"}
+dummy_data = """<div> """ \
+            """<pb n="f.193v"/>""" \
+            """<lb n="1"/>""" \
+            """<hi>κ</hi>ατὰ τὸν καιρὸν ἐκεῖνον τραϊανοῦ τοῦ βασιλέως παρειληφότος τῆν τῶν ρω-""" \
+            """<lb n="2" break="no"/>μαίων ἀρχὴν· μετὰ τὸ μαρτυρῆσαι ἐν ὀγδόω ἔτει τῆς βασιλείας αὐτοῦ σίμω-""" \
+            """<lb n="3" break="no"/>να τὸν τοῦ κλωπᾶ <seg>ἐπίσκοπον</seg> ὄντα ϊεροσολύμων· δεύτερον γενόμενον""" \
+            """<lb n="4"/>ἐπίσης τοῦ μετὰ ἰάκωβον τὸν χρηματίσαντα ἀδελφὸν τοῦ κυρίου· τῆς""" \
+            """<lb n="5"/>ἐκεῖσε ἐκκλησίας· φίλιππος ὁ ἀπόστολος διἐρχόμενος τὰ τῆς λυδίας καὶ ἀσίας""" \
+            """<lb n="6"/>πόλεις καὶ χώρας κατήγγειλεν πάσιν τὸ εὐαγγέλιον τοῦ χριστοῦ· """ \
+        """</div>"""
+
+@app.get("/convert", response_model=list[Token] | str, description="Convert input text using the specified converter")
+async def convert(*, text: str, converter: converter):
+    parsed_data = ET.fromstring(dummy_data)
+    return converter.run(parsed_data)  # Replace with actual conversion logic
+
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)
