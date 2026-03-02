@@ -31,7 +31,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="σ-Bridge NLP Server", description="Remote NLP parsing service using CLTK", lifespan=lifespan)
 logger = logging.getLogger("nlp_server")
 
-dummy_data =    """<div>""" \
+dummy_data = """<div>""" \
             """<pb n="f.193v"/>""" \
             """<lb n="1"/>""" \
             """<hi>κ</hi>ατὰ τὸν καιρὸν ἐκεῖνον τραϊανοῦ τοῦ βασιλέως παρειληφότος τῆν τῶν ρω-""" \
