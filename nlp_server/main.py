@@ -31,7 +31,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="σ-Bridge NLP Server", description="Remote NLP parsing service using CLTK", lifespan=lifespan)
 logger = logging.getLogger("nlp_server")
 
-dummy_data = """<div> """ \
+dummy_data = """<div>""" \
             """<pb n="f.193v"/>""" \
             """<lb n="1"/>""" \
             """<hi>κ</hi>ατὰ τὸν καιρὸν ἐκεῖνον τραϊανοῦ τοῦ βασιλέως παρειληφότος τῆν τῶν ρω-""" \
@@ -40,7 +40,7 @@ dummy_data = """<div> """ \
             """<lb n="4"/>ἐπίσης τοῦ μετὰ ἰάκωβον τὸν χρηματίσαντα ἀδελφὸν τοῦ κυρίου· τῆς""" \
             """<lb n="5"/>ἐκεῖσε ἐκκλησίας· φίλιππος ὁ ἀπόστολος διἐρχόμενος τὰ τῆς λυδίας καὶ ἀσίας""" \
             """<lb n="6"/>πόλεις καὶ χώρας κατήγγειλεν πάσιν τὸ εὐαγγέλιον τοῦ χριστοῦ· """ \
-        """</div>"""
+            """</div>"""
 
 @app.get("/convert", response_model=list[Token] | str, description="Convert input text using the specified converter")
 async def convert(*, text: str, converter: converter):
