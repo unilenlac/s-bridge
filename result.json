@@ -1,0 +1,2506 @@
+{
+  "witnesses": [
+    {
+      "id": "ebe_346",
+      "tokens": [
+        {
+          "t": "φθάσας",
+          "n": "φθάνω+VERB",
+          "original": "φθάσας",
+          "lem": "φθάνω",
+          "pos": "VERB",
+          "case": "Nom",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "δὲ",
+          "n": "δέ+ADV",
+          "original": "δὲ",
+          "lem": "δέ",
+          "pos": "ADV",
+          "case": null,
+          "gender": null,
+          "num": null
+        },
+        {
+          "t": "ἐν",
+          "n": "ἐν+ADP",
+          "original": "ἐν",
+          "lem": "ἐν",
+          "pos": "ADP",
+          "case": null,
+          "gender": null,
+          "num": null
+        },
+        {
+          "t": "πόλει",
+          "n": "πόλις+NOUN",
+          "original": "πόλει",
+          "lem": "πόλις",
+          "pos": "NOUN",
+          "case": "Dat",
+          "gender": "Fem",
+          "num": "Sing"
+        },
+        {
+          "t": "ὀφιορύμη",
+          "n": "ὀφιορέω+VERB",
+          "original": "ὀφιορύμη·",
+          "lem": "ὀφιορέω",
+          "pos": "VERB",
+          "case": null,
+          "gender": null,
+          "num": "Sing"
+        },
+        {
+          "t": "ἥτις",
+          "n": "ὅστις+PRON",
+          "original": "ἥτις",
+          "lem": "ὅστις",
+          "pos": "PRON",
+          "case": "Nom",
+          "gender": "Fem",
+          "num": "Sing"
+        },
+        {
+          "t": "καλεῖτε",
+          "n": "καλέω+VERB",
+          "original": "καλεῖτε",
+          "lem": "καλέω",
+          "pos": "VERB",
+          "case": null,
+          "gender": null,
+          "num": "Plur"
+        },
+        {
+          "t": "ἱεράπολις",
+          "n": "ἱεράπολις+NOUN",
+          "original": "ἱεράπολις",
+          "lem": "ἱεράπολις",
+          "pos": "NOUN",
+          "case": "Nom",
+          "gender": "Fem",
+          "num": "Sing"
+        },
+        {
+          "t": "τῆς",
+          "n": "ὁ+DET",
+          "original": "τῆς",
+          "lem": "ὁ",
+          "pos": "DET",
+          "case": "Gen",
+          "gender": "Fem",
+          "num": "Sing"
+        },
+        {
+          "t": "ἀσίας",
+          "n": "ἄσια+NOUN",
+          "original": "ἀσίας·",
+          "lem": "ἄσια",
+          "pos": "NOUN",
+          "case": "Gen",
+          "gender": "Fem",
+          "num": "Sing"
+        },
+        {
+          "t": "ὑπεδέχθη",
+          "n": "ὑποδέχομαι+VERB",
+          "original": "ὑπεδέχθη",
+          "lem": "ὑποδέχομαι",
+          "pos": "VERB",
+          "case": null,
+          "gender": null,
+          "num": "Sing"
+        },
+        {
+          "t": "ὑπό",
+          "n": "ὑπό+ADP",
+          "original": "ὑπό",
+          "lem": "ὑπό",
+          "pos": "ADP",
+          "case": null,
+          "gender": null,
+          "num": null
+        },
+        {
+          "t": "τινος",
+          "n": "τις+PRON",
+          "original": "τινος",
+          "lem": "τις",
+          "pos": "PRON",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "πιστοῦ",
+          "n": "πιστός+ADJ",
+          "original": "πιστοῦ·",
+          "lem": "πιστός",
+          "pos": "ADJ",
+          "case": "Gen",
+          "gender": "Neut",
+          "num": "Sing"
+        },
+        {
+          "t": "ὀνόματι",
+          "n": "ὄνομα+NOUN",
+          "original": "ὀνόματι",
+          "lem": "ὄνομα",
+          "pos": "NOUN",
+          "case": "Dat",
+          "gender": "Neut",
+          "num": "Sing"
+        },
+        {
+          "t": "στάχυος",
+          "n": "στάχυς+NOUN",
+          "original": "στάχυος·",
+          "lem": "στάχυς",
+          "pos": "NOUN",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "συνβῆν",
+          "n": "συνβαίνω+VERB",
+          "original": "συνβῆν",
+          "lem": "συνβαίνω",
+          "pos": "VERB",
+          "case": null,
+          "gender": null,
+          "num": "Sing"
+        },
+        {
+          "t": "δὲ",
+          "n": "δέ+PART",
+          "original": "δὲ",
+          "lem": "δέ",
+          "pos": "PART",
+          "case": null,
+          "gender": null,
+          "num": null
+        },
+        {
+          "t": "αὐτῶ",
+          "n": "αὐτός+ADJ",
+          "original": "αὐτῶ·",
+          "lem": "αὐτός",
+          "pos": "ADJ",
+          "case": "Acc",
+          "gender": "Masc",
+          "num": "Dual"
+        },
+        {
+          "t": "βαρθολομαῖος",
+          "n": "βαρθολομαῖος+ADJ",
+          "original": "βαρθολομαῖος·",
+          "lem": "βαρθολομαῖος",
+          "pos": "ADJ",
+          "case": "Nom",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "εἷς",
+          "n": "εἷς+NOUN",
+          "original": "εἷς",
+          "lem": "εἷς",
+          "pos": "NOUN",
+          "case": "Nom",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "ὢν",
+          "n": "εἰμί+AUX",
+          "original": "ὢν",
+          "lem": "εἰμί",
+          "pos": "AUX",
+          "case": "Nom",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "τῶν",
+          "n": "ὁ+DET",
+          "original": "τῶν",
+          "lem": "ὁ",
+          "pos": "DET",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Plur"
+        },
+        {
+          "t": "μαθητῶν",
+          "n": "μαθητής+NOUN",
+          "original": "μαθητῶν",
+          "lem": "μαθητής",
+          "pos": "NOUN",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Plur"
+        },
+        {
+          "t": "τοῦ",
+          "n": "ὁ+DET",
+          "original": "τοῦ",
+          "lem": "ὁ",
+          "pos": "DET",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "(κῦ)",
+          "n": "(κῦρ+NOUN",
+          "original": "(κῦ)·",
+          "lem": "(κῦρ",
+          "pos": "NOUN",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "καὶ",
+          "n": "καί+ADV",
+          "original": "καὶ",
+          "lem": "καί",
+          "pos": "ADV",
+          "case": null,
+          "gender": null,
+          "num": null
+        },
+        {
+          "t": "ἡ",
+          "n": "ὁ+DET",
+          "original": "ἡ",
+          "lem": "ὁ",
+          "pos": "DET",
+          "case": "Nom",
+          "gender": "Fem",
+          "num": "Sing"
+        },
+        {
+          "t": "ἀδελφοὶ",
+          "n": "ἀδελφός+NOUN",
+          "original": "ἀδελφοὶ",
+          "lem": "ἀδελφός",
+          "pos": "NOUN",
+          "case": "Nom",
+          "gender": "Masc",
+          "num": "Plur"
+        },
+        {
+          "t": "αὐτοῦ",
+          "n": "αὐτός+PRON",
+          "original": "αὐτοῦ",
+          "lem": "αὐτός",
+          "pos": "PRON",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "μαριάμνη",
+          "n": "μαριάμνη+NOUN",
+          "original": "μαριάμνη·",
+          "lem": "μαριάμνη",
+          "pos": "NOUN",
+          "case": "Nom",
+          "gender": "Fem",
+          "num": "Sing"
+        },
+        {
+          "t": "καὶ",
+          "n": "καί+ADV",
+          "original": "καὶ",
+          "lem": "καί",
+          "pos": "ADV",
+          "case": null,
+          "gender": null,
+          "num": null
+        },
+        {
+          "t": "οἱ",
+          "n": "ὁ+DET",
+          "original": "οἱ",
+          "lem": "ὁ",
+          "pos": "DET",
+          "case": "Nom",
+          "gender": "Masc",
+          "num": "Plur"
+        },
+        {
+          "t": "ἀκολουθοῦντες",
+          "n": "ἀκολουθέω+VERB",
+          "original": "ἀκολουθοῦντες",
+          "lem": "ἀκολουθέω",
+          "pos": "VERB",
+          "case": "Nom",
+          "gender": "Masc",
+          "num": "Plur"
+        },
+        {
+          "t": "αὐτῶ",
+          "n": "αὐτός+ADJ",
+          "original": "αὐτῶ",
+          "lem": "αὐτός",
+          "pos": "ADJ",
+          "case": "Nom",
+          "gender": "Masc",
+          "num": "Plur"
+        },
+        {
+          "t": "μαθηταὶ",
+          "n": "μαθητής+NOUN",
+          "original": "μαθηταὶ",
+          "lem": "μαθητής",
+          "pos": "NOUN",
+          "case": "Nom",
+          "gender": "Masc",
+          "num": "Plur"
+        },
+        {
+          "t": "αὐτοῦ",
+          "n": "αὐτός+PRON",
+          "original": "αὐτοῦ·",
+          "lem": "αὐτός",
+          "pos": "PRON",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "συν",
+          "n": "σύν+ADV",
+          "original": "συν",
+          "lem": "σύν",
+          "pos": "ADV",
+          "case": null,
+          "gender": null,
+          "num": null
+        },
+        {
+          "t": "papier",
+          "n": "οἴaγω+VERB",
+          "original": "papier",
+          "lem": "οἴaγω",
+          "pos": "VERB",
+          "case": null,
+          "gender": null,
+          "num": "Sing"
+        },
+        {
+          "t": "dmg",
+          "n": "γόξ+NOUN",
+          "original": "dmg",
+          "lem": "γόξ",
+          "pos": "NOUN",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "ἀχθέντων",
+          "n": "ἄχθομαι+VERB",
+          "original": "ἀχθέντων",
+          "lem": "ἄχθομαι",
+          "pos": "VERB",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Plur"
+        },
+        {
+          "t": "τῶν",
+          "n": "ὁ+DET",
+          "original": "τῶν",
+          "lem": "ὁ",
+          "pos": "DET",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Plur"
+        },
+        {
+          "t": "δὲ",
+          "n": "δέ+PART",
+          "original": "δὲ",
+          "lem": "δέ",
+          "pos": "PART",
+          "case": null,
+          "gender": null,
+          "num": null
+        },
+        {
+          "t": "πολλῶν",
+          "n": "πολύς+ADJ",
+          "original": "πολλῶν",
+          "lem": "πολύς",
+          "pos": "ADJ",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Plur"
+        },
+        {
+          "t": "ἀνδρῶν",
+          "n": "ἀνήρ+NOUN",
+          "original": "ἀνδρῶν",
+          "lem": "ἀνήρ",
+          "pos": "NOUN",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Plur"
+        },
+        {
+          "t": "τε",
+          "n": "τε+PART",
+          "original": "τε",
+          "lem": "τε",
+          "pos": "PART",
+          "case": null,
+          "gender": null,
+          "num": null
+        },
+        {
+          "t": "καὶ",
+          "n": "καί+CCONJ",
+          "original": "καὶ",
+          "lem": "καί",
+          "pos": "CCONJ",
+          "case": null,
+          "gender": null,
+          "num": null
+        },
+        {
+          "t": "γυναικῶν",
+          "n": "γυνή+NOUN",
+          "original": "γυναικῶν",
+          "lem": "γυνή",
+          "pos": "NOUN",
+          "case": "Gen",
+          "gender": "Fem",
+          "num": "Plur"
+        },
+        {
+          "t": "ἐν",
+          "n": "ἐν+ADP",
+          "original": "ἐν",
+          "lem": "ἐν",
+          "pos": "ADP",
+          "case": null,
+          "gender": null,
+          "num": null
+        },
+        {
+          "t": "τῆ",
+          "n": "τῆ+ADJ",
+          "original": "τῆ",
+          "lem": "τῆ",
+          "pos": "ADJ",
+          "case": "Dat",
+          "gender": "Fem",
+          "num": "Sing"
+        },
+        {
+          "t": "οἰκία",
+          "n": "οἰκίον+NOUN",
+          "original": "οἰκία",
+          "lem": "οἰκίον",
+          "pos": "NOUN",
+          "case": "Acc",
+          "gender": "Neut",
+          "num": "Plur"
+        },
+        {
+          "t": "στάχυος",
+          "n": "στάχυς+NOUN",
+          "original": "στάχυος·",
+          "lem": "στάχυς",
+          "pos": "NOUN",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "ἣν",
+          "n": "ὅς+PRON",
+          "original": "ἣν",
+          "lem": "ὅς",
+          "pos": "PRON",
+          "case": "Acc",
+          "gender": "Fem",
+          "num": "Sing"
+        },
+        {
+          "t": "ὁ",
+          "n": "ὁ+DET",
+          "original": "ὁ",
+          "lem": "ὁ",
+          "pos": "DET",
+          "case": "Nom",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "φίλιππος",
+          "n": "φίλιππος+ADJ",
+          "original": "φίλιππος",
+          "lem": "φίλιππος",
+          "pos": "ADJ",
+          "case": "Nom",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "ἅμα",
+          "n": "ἅμα+ADV",
+          "original": "ἅμα",
+          "lem": "ἅμα",
+          "pos": "ADV",
+          "case": null,
+          "gender": null,
+          "num": null
+        },
+        {
+          "t": "τῶ",
+          "n": "ὃς+PRON",
+          "original": "τῶ",
+          "lem": "ὃς",
+          "pos": "PRON",
+          "case": "Dat",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "βαρθολομαίω",
+          "n": "βαρθολαμαῖον+VERB",
+          "original": "βαρθολομαίω",
+          "lem": "βαρθολαμαῖον",
+          "pos": "VERB",
+          "case": null,
+          "gender": null,
+          "num": "Sing"
+        },
+        {
+          "t": "διδάσκοντες",
+          "n": "διδάσκω+VERB",
+          "original": "διδάσκοντες",
+          "lem": "διδάσκω",
+          "pos": "VERB",
+          "case": "Nom",
+          "gender": "Masc",
+          "num": "Plur"
+        },
+        {
+          "t": "τὰ",
+          "n": "ὁ+DET",
+          "original": "τὰ",
+          "lem": "ὁ",
+          "pos": "DET",
+          "case": "Acc",
+          "gender": "Neut",
+          "num": "Plur"
+        },
+        {
+          "t": "περὶ",
+          "n": "περί+ADP",
+          "original": "περὶ",
+          "lem": "περί",
+          "pos": "ADP",
+          "case": null,
+          "gender": null,
+          "num": null
+        },
+        {
+          "t": "τοῦ",
+          "n": "ὁ+DET",
+          "original": "τοῦ",
+          "lem": "ὁ",
+          "pos": "DET",
+          "case": "Gen",
+          "gender": "Neut",
+          "num": "Sing"
+        },
+        {
+          "t": "(ἰῦ)",
+          "n": "(ἰῦ)+NOUN",
+          "original": "(ἰῦ)·",
+          "lem": "(ἰῦ)",
+          "pos": "NOUN",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Sing"
+        }
+      ]
+    },
+    {
+      "id": "brescia-A-III-3-72",
+      "tokens": [
+        {
+          "t": "φθάσας",
+          "n": "φθάνω+VERB",
+          "original": "φθάσας",
+          "lem": "φθάνω",
+          "pos": "VERB",
+          "case": "Nom",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "δὲ",
+          "n": "δέ+ADV",
+          "original": "δὲ",
+          "lem": "δέ",
+          "pos": "ADV",
+          "case": null,
+          "gender": null,
+          "num": null
+        },
+        {
+          "t": "ἐν",
+          "n": "ἐν+ADP",
+          "original": "ἐν",
+          "lem": "ἐν",
+          "pos": "ADP",
+          "case": null,
+          "gender": null,
+          "num": null
+        },
+        {
+          "t": "πόλει",
+          "n": "πόλις+NOUN",
+          "original": "πόλει",
+          "lem": "πόλις",
+          "pos": "NOUN",
+          "case": "Dat",
+          "gender": "Fem",
+          "num": "Sing"
+        },
+        {
+          "t": "ὀφειορίμει",
+          "n": "ὀφειοράω+VERB",
+          "original": "ὀφειορίμει·",
+          "lem": "ὀφειοράω",
+          "pos": "VERB",
+          "case": null,
+          "gender": null,
+          "num": "Sing"
+        },
+        {
+          "t": "ἤτις",
+          "n": "ἤτις+NOUN",
+          "original": "ἤτις",
+          "lem": "ἤτις",
+          "pos": "NOUN",
+          "case": "Nom",
+          "gender": "Fem",
+          "num": "Sing"
+        },
+        {
+          "t": "καλεῖται",
+          "n": "καλέω+VERB",
+          "original": "καλεῖται",
+          "lem": "καλέω",
+          "pos": "VERB",
+          "case": null,
+          "gender": null,
+          "num": "Sing"
+        },
+        {
+          "t": "ἱεράπολϊς",
+          "n": "ἱεράπωλις+NOUN",
+          "original": "ἱεράπολϊς",
+          "lem": "ἱεράπωλις",
+          "pos": "NOUN",
+          "case": "Nom",
+          "gender": "Fem",
+          "num": "Sing"
+        },
+        {
+          "t": "τῆς",
+          "n": "ὁ+DET",
+          "original": "τῆς",
+          "lem": "ὁ",
+          "pos": "DET",
+          "case": "Gen",
+          "gender": "Fem",
+          "num": "Sing"
+        },
+        {
+          "t": "ἀσίας",
+          "n": "ἄσια+NOUN",
+          "original": "ἀσίας·",
+          "lem": "ἄσια",
+          "pos": "NOUN",
+          "case": "Gen",
+          "gender": "Fem",
+          "num": "Sing"
+        },
+        {
+          "t": "ὑπε",
+          "n": "ὑπε+ADV",
+          "original": "ὑπε",
+          "lem": "ὑπε",
+          "pos": "ADV",
+          "case": null,
+          "gender": null,
+          "num": null
+        },
+        {
+          "t": "δέχθη",
+          "n": "δέχομαι+VERB",
+          "original": "δέχθη",
+          "lem": "δέχομαι",
+          "pos": "VERB",
+          "case": null,
+          "gender": null,
+          "num": "Sing"
+        },
+        {
+          "t": "ὑπό",
+          "n": "ὑπό+ADP",
+          "original": "ὑπό",
+          "lem": "ὑπό",
+          "pos": "ADP",
+          "case": null,
+          "gender": null,
+          "num": null
+        },
+        {
+          "t": "τϊνος",
+          "n": "τίς+PRON",
+          "original": "τϊνος",
+          "lem": "τίς",
+          "pos": "PRON",
+          "case": "Gen",
+          "gender": "Neut",
+          "num": "Sing"
+        },
+        {
+          "t": "πιστοῦ",
+          "n": "πιστός+ADJ",
+          "original": "πιστοῦ",
+          "lem": "πιστός",
+          "pos": "ADJ",
+          "case": "Gen",
+          "gender": "Neut",
+          "num": "Sing"
+        },
+        {
+          "t": "ὀνόματι",
+          "n": "ὄνομα+NOUN",
+          "original": "ὀνόματι",
+          "lem": "ὄνομα",
+          "pos": "NOUN",
+          "case": "Dat",
+          "gender": "Neut",
+          "num": "Sing"
+        },
+        {
+          "t": "στάχυος",
+          "n": "στάχυς+NOUN",
+          "original": "στάχυος·",
+          "lem": "στάχυς",
+          "pos": "NOUN",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "συνβῆν",
+          "n": "συνβαίνω+VERB",
+          "original": "συνβῆν",
+          "lem": "συνβαίνω",
+          "pos": "VERB",
+          "case": null,
+          "gender": null,
+          "num": "Sing"
+        },
+        {
+          "t": "δὲ",
+          "n": "δέ+ADV",
+          "original": "δὲ",
+          "lem": "δέ",
+          "pos": "ADV",
+          "case": null,
+          "gender": null,
+          "num": null
+        },
+        {
+          "t": "αὐτῶ",
+          "n": "αὐτός+PRON",
+          "original": "αὐτῶ",
+          "lem": "αὐτός",
+          "pos": "PRON",
+          "case": "Dat",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "βαρθολωμαῖος",
+          "n": "βαρθολωμαῖος+ADJ",
+          "original": "βαρθολωμαῖος",
+          "lem": "βαρθολωμαῖος",
+          "pos": "ADJ",
+          "case": "Nom",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "εἶς",
+          "n": "εἶμι+VERB",
+          "original": "εἶς",
+          "lem": "εἶμι",
+          "pos": "VERB",
+          "case": null,
+          "gender": null,
+          "num": "Sing"
+        },
+        {
+          "t": "τῶν",
+          "n": "ὁ+DET",
+          "original": "τῶν",
+          "lem": "ὁ",
+          "pos": "DET",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Plur"
+        },
+        {
+          "t": "δώ",
+          "n": "δώ+NOUN",
+          "original": "δώ",
+          "lem": "δώ",
+          "pos": "NOUN",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Plur"
+        },
+        {
+          "t": "δεκα",
+          "n": "δεκόν+NOUN",
+          "original": "δεκα",
+          "lem": "δεκόν",
+          "pos": "NOUN",
+          "case": "Nom",
+          "gender": "Masc",
+          "num": "Plur"
+        },
+        {
+          "t": "μαθηταὶ",
+          "n": "μαθητής+NOUN",
+          "original": "μαθηταὶ",
+          "lem": "μαθητής",
+          "pos": "NOUN",
+          "case": "Nom",
+          "gender": "Masc",
+          "num": "Plur",
+          "del": true,
+          "del_reason": "strike"
+        },
+        {
+          "t": "αὐτοῦτῶν",
+          "n": "αὐτοῦτος+ADJ",
+          "original": "αὐτοῦτῶν",
+          "lem": "αὐτοῦτος",
+          "pos": "ADJ",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Plur",
+          "del": true,
+          "del_reason": "strike"
+        },
+        {
+          "t": "τοῦ",
+          "n": "ὁ+DET",
+          "original": "τοῦ",
+          "lem": "ὁ",
+          "pos": "DET",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Sing",
+          "del": true,
+          "del_reason": "strike"
+        },
+        {
+          "t": "κυρίου",
+          "n": "κύριος+NOUN",
+          "original": "κυρίου·",
+          "lem": "κύριος",
+          "pos": "NOUN",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Sing",
+          "abbr": true,
+          "abbr_type": "ns",
+          "abbr_original": "κυ"
+        },
+        {
+          "t": "καὶ",
+          "n": "καί+ADV",
+          "original": "καὶ",
+          "lem": "καί",
+          "pos": "ADV",
+          "case": null,
+          "gender": null,
+          "num": null,
+          "abbr": true,
+          "abbr_type": "ns",
+          "abbr_original": "κυ"
+        },
+        {
+          "t": "ἡ",
+          "n": "ὁ+DET",
+          "original": "ἡ",
+          "lem": "ὁ",
+          "pos": "DET",
+          "case": "Nom",
+          "gender": "Fem",
+          "num": "Sing"
+        },
+        {
+          "t": "ἀδελφὴ",
+          "n": "ἀδελφή+NOUN",
+          "original": "ἀδελφὴ",
+          "lem": "ἀδελφή",
+          "pos": "NOUN",
+          "case": "Nom",
+          "gender": "Fem",
+          "num": "Sing"
+        },
+        {
+          "t": "αὐτοῦ",
+          "n": "αὐτός+PRON",
+          "original": "αὐτοῦ",
+          "lem": "αὐτός",
+          "pos": "PRON",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "μαριάμνη",
+          "n": "μαριάμνη+NOUN",
+          "original": "μαριάμνη·",
+          "lem": "μαριάμνη",
+          "pos": "NOUN",
+          "case": "Nom",
+          "gender": "Fem",
+          "num": "Sing"
+        },
+        {
+          "t": "καὶ",
+          "n": "καί+ADV",
+          "original": "καὶ",
+          "lem": "καί",
+          "pos": "ADV",
+          "case": null,
+          "gender": null,
+          "num": null
+        },
+        {
+          "t": "οἱ",
+          "n": "ὁ+DET",
+          "original": "οἱ",
+          "lem": "ὁ",
+          "pos": "DET",
+          "case": "Nom",
+          "gender": "Masc",
+          "num": "Plur"
+        },
+        {
+          "t": "ἀκολουθοῦντες",
+          "n": "ἀκολουθέω+VERB",
+          "original": "ἀκολουθοῦντες",
+          "lem": "ἀκολουθέω",
+          "pos": "VERB",
+          "case": "Nom",
+          "gender": "Masc",
+          "num": "Plur"
+        },
+        {
+          "t": "αὐτῶ",
+          "n": "αὐτός+PRON",
+          "original": "αὐτῶ",
+          "lem": "αὐτός",
+          "pos": "PRON",
+          "case": "Nom",
+          "gender": "Masc",
+          "num": "Plur"
+        },
+        {
+          "t": "μα",
+          "n": "ἐγφάνω+VERB",
+          "original": "μα",
+          "lem": "ἐγφάνω",
+          "pos": "VERB",
+          "case": null,
+          "gender": null,
+          "num": "Plur"
+        },
+        {
+          "t": "θηταὶ",
+          "n": "θητή+NOUN",
+          "original": "θηταὶ",
+          "lem": "θητή",
+          "pos": "NOUN",
+          "case": "Nom",
+          "gender": "Fem",
+          "num": "Plur"
+        },
+        {
+          "t": "αὐτοῦ",
+          "n": "αὐτός+PRON",
+          "original": "αὐτοῦ·",
+          "lem": "αὐτός",
+          "pos": "PRON",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "συναχθέντων",
+          "n": "συνάγω+VERB",
+          "original": "συναχθέντων",
+          "lem": "συνάγω",
+          "pos": "VERB",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Plur"
+        },
+        {
+          "t": "δὲ",
+          "n": "δέ+PART",
+          "original": "δὲ",
+          "lem": "δέ",
+          "pos": "PART",
+          "case": null,
+          "gender": null,
+          "num": null
+        },
+        {
+          "t": "ἀνδρῶν",
+          "n": "ἀνήρ+NOUN",
+          "original": "ἀνδρῶν",
+          "lem": "ἀνήρ",
+          "pos": "NOUN",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Plur"
+        },
+        {
+          "t": "πολλῶν",
+          "n": "πολύς+ADJ",
+          "original": "πολλῶν",
+          "lem": "πολύς",
+          "pos": "ADJ",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Plur"
+        },
+        {
+          "t": "καὶ",
+          "n": "καί+CCONJ",
+          "original": "καὶ",
+          "lem": "καί",
+          "pos": "CCONJ",
+          "case": null,
+          "gender": null,
+          "num": null
+        },
+        {
+          "t": "γυναικῶν",
+          "n": "γυνή+NOUN",
+          "original": "γυναικῶν·",
+          "lem": "γυνή",
+          "pos": "NOUN",
+          "case": "Gen",
+          "gender": "Fem",
+          "num": "Plur"
+        },
+        {
+          "t": "ἐν",
+          "n": "ἐν+ADP",
+          "original": "ἐν",
+          "lem": "ἐν",
+          "pos": "ADP",
+          "case": null,
+          "gender": null,
+          "num": null
+        },
+        {
+          "t": "τῆ",
+          "n": "τῆ+ADJ",
+          "original": "τῆ",
+          "lem": "τῆ",
+          "pos": "ADJ",
+          "case": "Dat",
+          "gender": "Fem",
+          "num": "Sing"
+        },
+        {
+          "t": "οἰκία",
+          "n": "οἰκίον+NOUN",
+          "original": "οἰκία",
+          "lem": "οἰκίον",
+          "pos": "NOUN",
+          "case": "Acc",
+          "gender": "Neut",
+          "num": "Plur"
+        },
+        {
+          "t": "στάχϊος",
+          "n": "σταχός+ADJ",
+          "original": "στάχϊος,",
+          "lem": "σταχός",
+          "pos": "ADJ",
+          "case": "Nom",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "ἧν",
+          "n": "ἐάω+VERB",
+          "original": "ἧν",
+          "lem": "ἐάω",
+          "pos": "VERB",
+          "case": null,
+          "gender": null,
+          "num": "Sing"
+        },
+        {
+          "t": "ὁ",
+          "n": "ὁ+DET",
+          "original": "ὁ",
+          "lem": "ὁ",
+          "pos": "DET",
+          "case": "Nom",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "φίλι",
+          "n": "φίλος+ADJ",
+          "original": "φίλι",
+          "lem": "φίλος",
+          "pos": "ADJ",
+          "case": "Dat",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "ππος",
+          "n": "ππος+NOUN",
+          "original": "ππος",
+          "lem": "ππος",
+          "pos": "NOUN",
+          "case": "Nom",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "ἅμα",
+          "n": "ἅμα+ADV",
+          "original": "ἅμα",
+          "lem": "ἅμα",
+          "pos": "ADV",
+          "case": null,
+          "gender": null,
+          "num": null
+        },
+        {
+          "t": "τῶ",
+          "n": "ὃς+ADJ",
+          "original": "τῶ",
+          "lem": "ὃς",
+          "pos": "ADJ",
+          "case": "Dat",
+          "gender": "Neut",
+          "num": "Sing"
+        },
+        {
+          "t": "βαρθολομαίω",
+          "n": "βαρθολαμαῖον+VERB",
+          "original": "βαρθολομαίω·",
+          "lem": "βαρθολαμαῖον",
+          "pos": "VERB",
+          "case": null,
+          "gender": null,
+          "num": "Sing"
+        },
+        {
+          "t": "διδάσκων",
+          "n": "διδάσκω+VERB",
+          "original": "διδάσκων",
+          "lem": "διδάσκω",
+          "pos": "VERB",
+          "case": "Nom",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "αὐτοὺς",
+          "n": "αὐτός+PRON",
+          "original": "αὐτοὺς",
+          "lem": "αὐτός",
+          "pos": "PRON",
+          "case": "Acc",
+          "gender": "Masc",
+          "num": "Plur"
+        },
+        {
+          "t": "περὶ",
+          "n": "περί+ADP",
+          "original": "περὶ",
+          "lem": "περί",
+          "pos": "ADP",
+          "case": null,
+          "gender": null,
+          "num": null
+        },
+        {
+          "t": "τοῦ",
+          "n": "ὁ+DET",
+          "original": "τοῦ",
+          "lem": "ὁ",
+          "pos": "DET",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "ιῦ",
+          "n": "εύς+NOUN",
+          "original": "ιῦ·",
+          "lem": "εύς",
+          "pos": "NOUN",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Sing"
+        }
+      ]
+    },
+    {
+      "id": "bonnet_er",
+      "tokens": [
+        {
+          "t": "φθάσας",
+          "n": "φθάνω+VERB",
+          "original": "φθάσας",
+          "lem": "φθάνω",
+          "pos": "VERB",
+          "case": "Nom",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "δὲ",
+          "n": "δέ+ADV",
+          "original": "δὲ",
+          "lem": "δέ",
+          "pos": "ADV",
+          "case": null,
+          "gender": null,
+          "num": null
+        },
+        {
+          "t": "ἐν",
+          "n": "ἐν+ADP",
+          "original": "ἐν",
+          "lem": "ἐν",
+          "pos": "ADP",
+          "case": null,
+          "gender": null,
+          "num": null
+        },
+        {
+          "t": "πόλει",
+          "n": "πόλις+NOUN",
+          "original": "πόλει",
+          "lem": "πόλις",
+          "pos": "NOUN",
+          "case": "Dat",
+          "gender": "Fem",
+          "num": "Sing"
+        },
+        {
+          "t": "ὀφιορύμῃ",
+          "n": "ὀφιόρυμος+ADJ",
+          "original": "ὀφιορύμῃ,",
+          "lem": "ὀφιόρυμος",
+          "pos": "ADJ",
+          "case": "Dat",
+          "gender": "Fem",
+          "num": "Sing"
+        },
+        {
+          "t": "ἥτις",
+          "n": "ὅστις+PRON",
+          "original": "ἥτις",
+          "lem": "ὅστις",
+          "pos": "PRON",
+          "case": "Nom",
+          "gender": "Fem",
+          "num": "Sing"
+        },
+        {
+          "t": "καλεῖται",
+          "n": "καλέω+VERB",
+          "original": "καλεῖται",
+          "lem": "καλέω",
+          "pos": "VERB",
+          "case": null,
+          "gender": null,
+          "num": "Sing"
+        },
+        {
+          "t": "ἱεράπολις",
+          "n": "ἱεράπολις+NOUN",
+          "original": "ἱεράπολις",
+          "lem": "ἱεράπολις",
+          "pos": "NOUN",
+          "case": "Nom",
+          "gender": "Fem",
+          "num": "Sing"
+        },
+        {
+          "t": "τῆς",
+          "n": "ὁ+DET",
+          "original": "τῆς",
+          "lem": "ὁ",
+          "pos": "DET",
+          "case": "Gen",
+          "gender": "Fem",
+          "num": "Sing"
+        },
+        {
+          "t": "ἀσίας",
+          "n": "ἄσια+NOUN",
+          "original": "ἀσίας,",
+          "lem": "ἄσια",
+          "pos": "NOUN",
+          "case": "Gen",
+          "gender": "Fem",
+          "num": "Sing"
+        },
+        {
+          "t": "ὑπεδέχθη",
+          "n": "ὑποδέχομαι+VERB",
+          "original": "ὑπεδέχθη",
+          "lem": "ὑποδέχομαι",
+          "pos": "VERB",
+          "case": null,
+          "gender": null,
+          "num": "Sing"
+        },
+        {
+          "t": "ὑπό",
+          "n": "ὑπό+ADP",
+          "original": "ὑπό",
+          "lem": "ὑπό",
+          "pos": "ADP",
+          "case": null,
+          "gender": null,
+          "num": null
+        },
+        {
+          "t": "τινος",
+          "n": "τις+PRON",
+          "original": "τινος",
+          "lem": "τις",
+          "pos": "PRON",
+          "case": "Gen",
+          "gender": "Neut",
+          "num": "Sing"
+        },
+        {
+          "t": "πιστοῦ",
+          "n": "πιστός+ADJ",
+          "original": "πιστοῦ",
+          "lem": "πιστός",
+          "pos": "ADJ",
+          "case": "Gen",
+          "gender": "Neut",
+          "num": "Sing"
+        },
+        {
+          "t": "ὀνόματι",
+          "n": "ὄνομα+NOUN",
+          "original": "ὀνόματι",
+          "lem": "ὄνομα",
+          "pos": "NOUN",
+          "case": "Dat",
+          "gender": "Neut",
+          "num": "Sing"
+        },
+        {
+          "t": "στάχυος",
+          "n": "στάχυς+NOUN",
+          "original": "στάχυος.",
+          "lem": "στάχυς",
+          "pos": "NOUN",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "συνῆν",
+          "n": "συνάω+VERB",
+          "original": "συνῆν",
+          "lem": "συνάω",
+          "pos": "VERB",
+          "case": null,
+          "gender": null,
+          "num": "Sing"
+        },
+        {
+          "t": "δὲ",
+          "n": "δέ+ADV",
+          "original": "δὲ",
+          "lem": "δέ",
+          "pos": "ADV",
+          "case": null,
+          "gender": null,
+          "num": null
+        },
+        {
+          "t": "αὐτῷ",
+          "n": "αὐτός+PRON",
+          "original": "αὐτῷ",
+          "lem": "αὐτός",
+          "pos": "PRON",
+          "case": "Dat",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "καὶ",
+          "n": "καί+ADV",
+          "original": "καὶ",
+          "lem": "καί",
+          "pos": "ADV",
+          "case": null,
+          "gender": null,
+          "num": null
+        },
+        {
+          "t": "βαρθολομαῖος",
+          "n": "βαρθολομαῖος+ADJ",
+          "original": "βαρθολομαῖος",
+          "lem": "βαρθολομαῖος",
+          "pos": "ADJ",
+          "case": "Nom",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "εἷς",
+          "n": "εἷς+NOUN",
+          "original": "εἷς",
+          "lem": "εἷς",
+          "pos": "NOUN",
+          "case": "Nom",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "τῶν",
+          "n": "ὁ+DET",
+          "original": "τῶν",
+          "lem": "ὁ",
+          "pos": "DET",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Plur"
+        },
+        {
+          "t": "ἑβδο",
+          "n": "ἑβδώς+NOUN",
+          "original": "ἑβδο",
+          "lem": "ἑβδώς",
+          "pos": "NOUN",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Plur"
+        },
+        {
+          "t": "μήκοντα",
+          "n": "μήκος+ADJ",
+          "original": "μήκοντα",
+          "lem": "μήκος",
+          "pos": "ADJ",
+          "case": "Acc",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "μαθητῶν",
+          "n": "μαθητής+NOUN",
+          "original": "μαθητῶν",
+          "lem": "μαθητής",
+          "pos": "NOUN",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Plur"
+        },
+        {
+          "t": "τοῦ",
+          "n": "ὁ+DET",
+          "original": "τοῦ",
+          "lem": "ὁ",
+          "pos": "DET",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "κυρίου",
+          "n": "κύριος+NOUN",
+          "original": "κυρίου",
+          "lem": "κύριος",
+          "pos": "NOUN",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "καὶ",
+          "n": "καί+CCONJ",
+          "original": "καὶ",
+          "lem": "καί",
+          "pos": "CCONJ",
+          "case": null,
+          "gender": null,
+          "num": null
+        },
+        {
+          "t": "ἡ",
+          "n": "ὁ+DET",
+          "original": "ἡ",
+          "lem": "ὁ",
+          "pos": "DET",
+          "case": "Nom",
+          "gender": "Fem",
+          "num": "Sing"
+        },
+        {
+          "t": "ἀδελφὴ",
+          "n": "ἀδελφή+NOUN",
+          "original": "ἀδελφὴ",
+          "lem": "ἀδελφή",
+          "pos": "NOUN",
+          "case": "Nom",
+          "gender": "Fem",
+          "num": "Sing"
+        },
+        {
+          "t": "αὐτοῦ",
+          "n": "αὐτός+PRON",
+          "original": "αὐτοῦ",
+          "lem": "αὐτός",
+          "pos": "PRON",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "μαριάμνη",
+          "n": "μαριάμνη+NOUN",
+          "original": "μαριάμνη",
+          "lem": "μαριάμνη",
+          "pos": "NOUN",
+          "case": "Nom",
+          "gender": "Fem",
+          "num": "Sing"
+        },
+        {
+          "t": "καὶ",
+          "n": "καί+CCONJ",
+          "original": "καὶ",
+          "lem": "καί",
+          "pos": "CCONJ",
+          "case": null,
+          "gender": null,
+          "num": null
+        },
+        {
+          "t": "οἱ",
+          "n": "ὁ+DET",
+          "original": "οἱ",
+          "lem": "ὁ",
+          "pos": "DET",
+          "case": "Nom",
+          "gender": "Masc",
+          "num": "Plur"
+        },
+        {
+          "t": "ἀκολουθοῦντες",
+          "n": "ἀκολουθέω+VERB",
+          "original": "ἀκολουθοῦντες",
+          "lem": "ἀκολουθέω",
+          "pos": "VERB",
+          "case": "Nom",
+          "gender": "Masc",
+          "num": "Plur"
+        },
+        {
+          "t": "αὐτῷ",
+          "n": "αὐτός+PRON",
+          "original": "αὐτῷ",
+          "lem": "αὐτός",
+          "pos": "PRON",
+          "case": "Dat",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "μαθηταὶ",
+          "n": "μαθητός+ADJ",
+          "original": "μαθηταὶ",
+          "lem": "μαθητός",
+          "pos": "ADJ",
+          "case": "Nom",
+          "gender": "Masc",
+          "num": "Plur"
+        },
+        {
+          "t": "αὐτοῦ",
+          "n": "αὐτός+PRON",
+          "original": "αὐτοῦ.",
+          "lem": "αὐτός",
+          "pos": "PRON",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "συναχθέντων",
+          "n": "συνάγω+VERB",
+          "original": "συναχθέντων",
+          "lem": "συνάγω",
+          "pos": "VERB",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Plur"
+        },
+        {
+          "t": "δὲ",
+          "n": "δέ+ADV",
+          "original": "δὲ",
+          "lem": "δέ",
+          "pos": "ADV",
+          "case": null,
+          "gender": null,
+          "num": null
+        },
+        {
+          "t": "πολλῶν",
+          "n": "πολύς+ADJ",
+          "original": "πολλῶν",
+          "lem": "πολύς",
+          "pos": "ADJ",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Plur"
+        },
+        {
+          "t": "ἀνδρῶν",
+          "n": "ἀνήρ+NOUN",
+          "original": "ἀνδρῶν",
+          "lem": "ἀνήρ",
+          "pos": "NOUN",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Plur"
+        },
+        {
+          "t": "τε",
+          "n": "τε+ADV",
+          "original": "τε",
+          "lem": "τε",
+          "pos": "ADV",
+          "case": null,
+          "gender": null,
+          "num": null
+        },
+        {
+          "t": "καὶ",
+          "n": "καί+CCONJ",
+          "original": "καὶ",
+          "lem": "καί",
+          "pos": "CCONJ",
+          "case": null,
+          "gender": null,
+          "num": null
+        },
+        {
+          "t": "γυναικῶν",
+          "n": "γυνή+NOUN",
+          "original": "γυναικῶν",
+          "lem": "γυνή",
+          "pos": "NOUN",
+          "case": "Gen",
+          "gender": "Fem",
+          "num": "Plur"
+        },
+        {
+          "t": "ἐν",
+          "n": "ἐν+ADP",
+          "original": "ἐν",
+          "lem": "ἐν",
+          "pos": "ADP",
+          "case": null,
+          "gender": null,
+          "num": null
+        },
+        {
+          "t": "τῇ",
+          "n": "ὁ+DET",
+          "original": "τῇ",
+          "lem": "ὁ",
+          "pos": "DET",
+          "case": "Dat",
+          "gender": "Fem",
+          "num": "Sing"
+        },
+        {
+          "t": "οἰκίᾳ",
+          "n": "οἰκία+NOUN",
+          "original": "οἰκίᾳ",
+          "lem": "οἰκία",
+          "pos": "NOUN",
+          "case": "Dat",
+          "gender": "Fem",
+          "num": "Sing"
+        },
+        {
+          "t": "τοῦ",
+          "n": "ὁ+DET",
+          "original": "τοῦ",
+          "lem": "ὁ",
+          "pos": "DET",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "στάχυος",
+          "n": "στάχυς+NOUN",
+          "original": "στάχυος",
+          "lem": "στάχυς",
+          "pos": "NOUN",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "ἦν",
+          "n": "εἰμί+AUX",
+          "original": "ἦν",
+          "lem": "εἰμί",
+          "pos": "AUX",
+          "case": null,
+          "gender": null,
+          "num": "Sing"
+        },
+        {
+          "t": "ὁ",
+          "n": "ὁ+DET",
+          "original": "ὁ",
+          "lem": "ὁ",
+          "pos": "DET",
+          "case": "Nom",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "φίλιππος",
+          "n": "φίλιππος+ADJ",
+          "original": "φίλιππος",
+          "lem": "φίλιππος",
+          "pos": "ADJ",
+          "case": "Nom",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "ἅμα",
+          "n": "ἅμα+ADP",
+          "original": "ἅμα",
+          "lem": "ἅμα",
+          "pos": "ADP",
+          "case": null,
+          "gender": null,
+          "num": null
+        },
+        {
+          "t": "τῷ",
+          "n": "ὁ+DET",
+          "original": "τῷ",
+          "lem": "ὁ",
+          "pos": "DET",
+          "case": "Dat",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "βαρθολομαίῳ",
+          "n": "βαρθολόμαιος+ADJ",
+          "original": "βαρθολομαίῳ",
+          "lem": "βαρθολόμαιος",
+          "pos": "ADJ",
+          "case": "Dat",
+          "gender": "Neut",
+          "num": "Sing"
+        },
+        {
+          "t": "διδάσκων",
+          "n": "διδάσκω+VERB",
+          "original": "διδάσκων",
+          "lem": "διδάσκω",
+          "pos": "VERB",
+          "case": "Nom",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "αὐτοὺς",
+          "n": "αὐτός+PRON",
+          "original": "αὐτοὺς",
+          "lem": "αὐτός",
+          "pos": "PRON",
+          "case": "Acc",
+          "gender": "Masc",
+          "num": "Plur"
+        },
+        {
+          "t": "τὰ",
+          "n": "ὁ+DET",
+          "original": "τὰ",
+          "lem": "ὁ",
+          "pos": "DET",
+          "case": "Acc",
+          "gender": "Neut",
+          "num": "Plur"
+        },
+        {
+          "t": "περὶ",
+          "n": "περί+ADP",
+          "original": "περὶ",
+          "lem": "περί",
+          "pos": "ADP",
+          "case": null,
+          "gender": null,
+          "num": null
+        },
+        {
+          "t": "τοῦ",
+          "n": "ὁ+DET",
+          "original": "τοῦ",
+          "lem": "ὁ",
+          "pos": "DET",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "ἰησοῦ",
+          "n": "ἰασός+NOUN",
+          "original": "ἰησοῦ.",
+          "lem": "ἰασός",
+          "pos": "NOUN",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Sing"
+        }
+      ]
+    },
+    {
+      "id": "athous-iviron-450",
+      "tokens": [
+        {
+          "t": "φθάσας",
+          "n": "φθάνω+VERB",
+          "original": "φθάσας",
+          "lem": "φθάνω",
+          "pos": "VERB",
+          "case": "Nom",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "δὲ",
+          "n": "δέ+ADV",
+          "original": "δὲ",
+          "lem": "δέ",
+          "pos": "ADV",
+          "case": null,
+          "gender": null,
+          "num": null
+        },
+        {
+          "t": "ἐν",
+          "n": "ἐν+ADP",
+          "original": "ἐν",
+          "lem": "ἐν",
+          "pos": "ADP",
+          "case": null,
+          "gender": null,
+          "num": null
+        },
+        {
+          "t": "πόλει",
+          "n": "πόλις+NOUN",
+          "original": "πόλει",
+          "lem": "πόλις",
+          "pos": "NOUN",
+          "case": "Dat",
+          "gender": "Fem",
+          "num": "Sing"
+        },
+        {
+          "t": "ὀφιορύμη",
+          "n": "ὀφιορέω+VERB",
+          "original": "ὀφιορύμη·",
+          "lem": "ὀφιορέω",
+          "pos": "VERB",
+          "case": null,
+          "gender": null,
+          "num": "Sing"
+        },
+        {
+          "t": "ἤτις",
+          "n": "ἤτις+NOUN",
+          "original": "ἤτις",
+          "lem": "ἤτις",
+          "pos": "NOUN",
+          "case": "Nom",
+          "gender": "Fem",
+          "num": "Sing"
+        },
+        {
+          "t": "καλεῖται",
+          "n": "καλέω+VERB",
+          "original": "καλεῖται",
+          "lem": "καλέω",
+          "pos": "VERB",
+          "case": null,
+          "gender": null,
+          "num": "Sing"
+        },
+        {
+          "t": "ἱεράπολις",
+          "n": "ἱεράπολις+NOUN",
+          "original": "ἱεράπολις·",
+          "lem": "ἱεράπολις",
+          "pos": "NOUN",
+          "case": "Nom",
+          "gender": "Fem",
+          "num": "Sing"
+        },
+        {
+          "t": "ὐπεδέχθη",
+          "n": "ὐποδέχομαι+VERB",
+          "original": "ὐπεδέχθη",
+          "lem": "ὐποδέχομαι",
+          "pos": "VERB",
+          "case": null,
+          "gender": null,
+          "num": "Sing"
+        },
+        {
+          "t": "ὐπότινος",
+          "n": "ὐπότινος+NOUN",
+          "original": "ὐπότινος",
+          "lem": "ὐπότινος",
+          "pos": "NOUN",
+          "case": "Nom",
+          "gender": "Fem",
+          "num": "Sing"
+        },
+        {
+          "t": "πιστοῦ",
+          "n": "πιστός+ADJ",
+          "original": "πιστοῦ",
+          "lem": "πιστός",
+          "pos": "ADJ",
+          "case": "Gen",
+          "gender": "Neut",
+          "num": "Sing"
+        },
+        {
+          "t": "ὁνόματι",
+          "n": "ὅνομα+NOUN",
+          "original": "ὁνόματι",
+          "lem": "ὅνομα",
+          "pos": "NOUN",
+          "case": "Dat",
+          "gender": "Neut",
+          "num": "Sing"
+        },
+        {
+          "t": "στάχυος",
+          "n": "στάχυς+NOUN",
+          "original": "στάχυος·",
+          "lem": "στάχυς",
+          "pos": "NOUN",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "συνῆν",
+          "n": "συνάω+VERB",
+          "original": "συνῆν",
+          "lem": "συνάω",
+          "pos": "VERB",
+          "case": null,
+          "gender": null,
+          "num": "Sing"
+        },
+        {
+          "t": "δὲ",
+          "n": "δέ+ADV",
+          "original": "δὲ",
+          "lem": "δέ",
+          "pos": "ADV",
+          "case": null,
+          "gender": null,
+          "num": null
+        },
+        {
+          "t": "αὐτῶ",
+          "n": "αὐτός+PRON",
+          "original": "αὐτῶ",
+          "lem": "αὐτός",
+          "pos": "PRON",
+          "case": "Dat",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "βαρθολομαίος",
+          "n": "βαρθολομαίος+ADJ",
+          "original": "βαρθολομαίος",
+          "lem": "βαρθολομαίος",
+          "pos": "ADJ",
+          "case": "Nom",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "εἰς",
+          "n": "εἰς+ADP",
+          "original": "εἰς",
+          "lem": "εἰς",
+          "pos": "ADP",
+          "case": null,
+          "gender": null,
+          "num": null
+        },
+        {
+          "t": "τῶν",
+          "n": "ὁ+DET",
+          "original": "τῶν",
+          "lem": "ὁ",
+          "pos": "DET",
+          "case": "Gen",
+          "gender": "Neut",
+          "num": "Plur"
+        },
+        {
+          "t": "εὐδομήκοντα",
+          "n": "εὐδομήκοντα+ADJ",
+          "original": "εὐδομήκοντα",
+          "lem": "εὐδομήκοντα",
+          "pos": "ADJ",
+          "case": "Acc",
+          "gender": "Neut",
+          "num": "Plur"
+        },
+        {
+          "t": "μαθητῶν",
+          "n": "μαθητής+NOUN",
+          "original": "μαθητῶν",
+          "lem": "μαθητής",
+          "pos": "NOUN",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Plur"
+        },
+        {
+          "t": "τοῦ",
+          "n": "ὁ+DET",
+          "original": "τοῦ",
+          "lem": "ὁ",
+          "pos": "DET",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "κυρίου",
+          "n": "κύριος+NOUN",
+          "original": "κυρίου·",
+          "lem": "κύριος",
+          "pos": "NOUN",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "καὶ",
+          "n": "καί+ADV",
+          "original": "καὶ",
+          "lem": "καί",
+          "pos": "ADV",
+          "case": null,
+          "gender": null,
+          "num": null
+        },
+        {
+          "t": "ἡ",
+          "n": "ὁ+DET",
+          "original": "ἡ",
+          "lem": "ὁ",
+          "pos": "DET",
+          "case": "Nom",
+          "gender": "Fem",
+          "num": "Sing"
+        },
+        {
+          "t": "ἀδελφὴ",
+          "n": "ἀδελφή+NOUN",
+          "original": "ἀδελφὴ",
+          "lem": "ἀδελφή",
+          "pos": "NOUN",
+          "case": "Nom",
+          "gender": "Fem",
+          "num": "Sing"
+        },
+        {
+          "t": "αὐτοῦ",
+          "n": "αὐτός+PRON",
+          "original": "αὐτοῦ",
+          "lem": "αὐτός",
+          "pos": "PRON",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "μαριάμνη",
+          "n": "μαριάμνη+NOUN",
+          "original": "μαριάμνη·",
+          "lem": "μαριάμνη",
+          "pos": "NOUN",
+          "case": "Nom",
+          "gender": "Fem",
+          "num": "Sing"
+        },
+        {
+          "t": "καὶ",
+          "n": "καί+ADV",
+          "original": "καὶ",
+          "lem": "καί",
+          "pos": "ADV",
+          "case": null,
+          "gender": null,
+          "num": null
+        },
+        {
+          "t": "οἱ",
+          "n": "ὁ+DET",
+          "original": "οἱ",
+          "lem": "ὁ",
+          "pos": "DET",
+          "case": "Nom",
+          "gender": "Masc",
+          "num": "Plur"
+        },
+        {
+          "t": "ἀκολουθοῦντες",
+          "n": "ἀκολουθέω+VERB",
+          "original": "ἀκολουθοῦντες",
+          "lem": "ἀκολουθέω",
+          "pos": "VERB",
+          "case": "Nom",
+          "gender": "Masc",
+          "num": "Plur"
+        },
+        {
+          "t": "αὐτῶ",
+          "n": "αὐτός+ADJ",
+          "original": "αὐτῶ",
+          "lem": "αὐτός",
+          "pos": "ADJ",
+          "case": "Nom",
+          "gender": "Masc",
+          "num": "Plur"
+        },
+        {
+          "t": "μαθηταὶ",
+          "n": "μαθητής+NOUN",
+          "original": "μαθηταὶ",
+          "lem": "μαθητής",
+          "pos": "NOUN",
+          "case": "Nom",
+          "gender": "Masc",
+          "num": "Plur"
+        },
+        {
+          "t": "αὐτοῦ",
+          "n": "αὐτός+PRON",
+          "original": "αὐτοῦ·",
+          "lem": "αὐτός",
+          "pos": "PRON",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "συναχθέντων",
+          "n": "συνάγω+VERB",
+          "original": "συναχθέντων",
+          "lem": "συνάγω",
+          "pos": "VERB",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Plur"
+        },
+        {
+          "t": "δὲ",
+          "n": "δέ+ADV",
+          "original": "δὲ",
+          "lem": "δέ",
+          "pos": "ADV",
+          "case": null,
+          "gender": null,
+          "num": null
+        },
+        {
+          "t": "πολλῶν",
+          "n": "πολύς+ADJ",
+          "original": "πολλῶν",
+          "lem": "πολύς",
+          "pos": "ADJ",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Plur"
+        },
+        {
+          "t": "ἀνδρῶν",
+          "n": "ἀνήρ+NOUN",
+          "original": "ἀνδρῶν",
+          "lem": "ἀνήρ",
+          "pos": "NOUN",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Plur"
+        },
+        {
+          "t": "τὲ",
+          "n": "τε+ADV",
+          "original": "τὲ",
+          "lem": "τε",
+          "pos": "ADV",
+          "case": null,
+          "gender": null,
+          "num": null
+        },
+        {
+          "t": "καὶ",
+          "n": "καί+CCONJ",
+          "original": "καὶ",
+          "lem": "καί",
+          "pos": "CCONJ",
+          "case": null,
+          "gender": null,
+          "num": null
+        },
+        {
+          "t": "γυναικῶν",
+          "n": "γυνή+NOUN",
+          "original": "γυναικῶν",
+          "lem": "γυνή",
+          "pos": "NOUN",
+          "case": "Gen",
+          "gender": "Fem",
+          "num": "Plur"
+        },
+        {
+          "t": "ἐν",
+          "n": "ἐν+ADP",
+          "original": "ἐν",
+          "lem": "ἐν",
+          "pos": "ADP",
+          "case": null,
+          "gender": null,
+          "num": null
+        },
+        {
+          "t": "τῆ",
+          "n": "τῆ+NOUN",
+          "original": "τῆ",
+          "lem": "τῆ",
+          "pos": "NOUN",
+          "case": "Dat",
+          "gender": "Fem",
+          "num": "Sing"
+        },
+        {
+          "t": "οἰκία",
+          "n": "οἰκίον+NOUN",
+          "original": "οἰκία",
+          "lem": "οἰκίον",
+          "pos": "NOUN",
+          "case": "Acc",
+          "gender": "Neut",
+          "num": "Plur"
+        },
+        {
+          "t": "τοῦ",
+          "n": "ὁ+DET",
+          "original": "τοῦ",
+          "lem": "ὁ",
+          "pos": "DET",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "στάχυος",
+          "n": "στάχυς+NOUN",
+          "original": "στάχυος·",
+          "lem": "στάχυς",
+          "pos": "NOUN",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "ἣν",
+          "n": "ὅς+PRON",
+          "original": "ἣν",
+          "lem": "ὅς",
+          "pos": "PRON",
+          "case": "Acc",
+          "gender": "Fem",
+          "num": "Sing"
+        },
+        {
+          "t": "ὁ",
+          "n": "ὁ+DET",
+          "original": "ὁ",
+          "lem": "ὁ",
+          "pos": "DET",
+          "case": "Nom",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "φίλιππος",
+          "n": "φίλιππος+ADJ",
+          "original": "φίλιππος",
+          "lem": "φίλιππος",
+          "pos": "ADJ",
+          "case": "Nom",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "ἄμα",
+          "n": "ἄμα+ADP",
+          "original": "ἄμα",
+          "lem": "ἄμα",
+          "pos": "ADP",
+          "case": null,
+          "gender": null,
+          "num": null
+        },
+        {
+          "t": "τῶ",
+          "n": "ὃς+ADJ",
+          "original": "τῶ",
+          "lem": "ὃς",
+          "pos": "ADJ",
+          "case": "Dat",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "βαρθολομαίω",
+          "n": "βαρθολαμαῖον+VERB",
+          "original": "βαρθολομαίω·",
+          "lem": "βαρθολαμαῖον",
+          "pos": "VERB",
+          "case": null,
+          "gender": null,
+          "num": "Sing"
+        },
+        {
+          "t": "διδάσκων",
+          "n": "διδάσκω+VERB",
+          "original": "διδάσκων",
+          "lem": "διδάσκω",
+          "pos": "VERB",
+          "case": "Nom",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "αὐτοὺς",
+          "n": "αὐτός+PRON",
+          "original": "αὐτοὺς",
+          "lem": "αὐτός",
+          "pos": "PRON",
+          "case": "Acc",
+          "gender": "Masc",
+          "num": "Plur"
+        },
+        {
+          "t": "τὰ",
+          "n": "ὁ+DET",
+          "original": "τὰ",
+          "lem": "ὁ",
+          "pos": "DET",
+          "case": "Acc",
+          "gender": "Neut",
+          "num": "Plur"
+        },
+        {
+          "t": "περὶ",
+          "n": "περί+ADP",
+          "original": "περὶ",
+          "lem": "περί",
+          "pos": "ADP",
+          "case": null,
+          "gender": null,
+          "num": null
+        },
+        {
+          "t": "τοῦ",
+          "n": "ὁ+DET",
+          "original": "τοῦ",
+          "lem": "ὁ",
+          "pos": "DET",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Sing"
+        },
+        {
+          "t": "ἰησοῦ",
+          "n": "ἰασός+NOUN",
+          "original": "ἰησοῦ·",
+          "lem": "ἰασός",
+          "pos": "NOUN",
+          "case": "Gen",
+          "gender": "Masc",
+          "num": "Sing"
+        }
+      ]
+    }
+  ]
+}

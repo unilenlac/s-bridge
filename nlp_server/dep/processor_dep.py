@@ -19,7 +19,8 @@ def converter_dep(request: Request, mode: str = "simple") -> Converter:
                 return converter
         case "full":
                 proc = request.app.state.proc
-                converter: Converter = FullConverter(proc=proc)
+                parser = TEIParser(abbr_file="utils/abbr.csv")
+                converter: Converter = FullConverter(proc=proc, parser=parser)
                 return converter
 
 

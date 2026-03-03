@@ -1,7 +1,48 @@
 # σ-Bridge
 Create a Tradition from a DTS Collection
 
-### Demande :
+## Getting Started
+
+The project processes XML transcriptions to prepare them for CollateX and Stemmarest via a decoupled microservice architecture:
+1.  **An NLP Microservice**: Runs a FastAPI server carrying the heavy linguistic tools (CLTK) in a Docker container.
+2.  **A Python parsing script**: Extracts XML cleanly and communicates with the NLP microservice to generate JSON tokens.
+
+### 1. Prerequisites
+- [Docker](https://docs.docker.com/engine/install/) and Docker Compose (for the NLP service).
+- Python 3.9+ 
+- [uv](https://docs.astral.sh/uv/) to manage Python dependencies seamlessly.
+
+### 2. Start the NLP Microservice
+The heavy natural language processing (specifically deep morphological analysis and lemmatization) runs as a dedicated API. You should spin this up via `docker-compose`:
+```bash
+docker-compose up -d
+```
+*This will pull down the required images and start a local FastAPI server on port 8000.*
+
+### 3. Setup your Local Python Environment
+Open another terminal. Create your virtual environment and install the parsing dependencies. Since this project uses `uv.lock`, executing the following command is fastest:
+```bash
+uv sync   # Downloads dependencies exactly as specified in the lockfile
+```
+
+### 4. Process an XML File
+Now you can parse an XML transcription and convert it into a tokenized CollateX payload (JSON).
+
+**Using the Remote Docker Service (Recommended)**
+By default, initializing CLTK inside a script takes time. Pass `--remote-host` to hand off the tokenization to the Docker container. With a file example:
+```bash
+uv run tokenize_xml.py Le\ Martyre\ de\ Philippe\ -\ Acta\ Philippi/milestone_108_pure.xml -o result.json --remote-host localhost
+```
+
+**Using Built-in Local Processing (Without Docker)**
+If you prefer not to use Docker, the tokenizer script can initiate its own local pipeline:
+```bash
+uv run tokenize_xml.py path/to/your/input.xml -o result.json
+```
+
+---
+
+### Contexte du Projet (Demande Originale) :
 
 Dans le cadre du projet ENLAC "Editer numériquement la littérature apocryphe chrétienne", nous utilisons actuellement un programme (https://github.com/unilenlac/xml2stemmarest) qui nous permet de charger des textes (concrètement des transcriptions de manuscrits) au format XML vers un programme complet d’analyse et d'édition critique qui s’appel Stemmaweb (https://github.com/unilenlac/stemmaweb).
 

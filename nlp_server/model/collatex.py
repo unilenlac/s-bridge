@@ -4,19 +4,31 @@ from typing import Optional
 class Token(BaseModel):
     text: str = Field(description="The original token text", serialization_alias="t")
     lemma: str = Field(description="The lemma of the token", serialization_alias="n")
-    original: Optional[str] = Field(description="The original token text", serialization_alias="o")
-    pos: Optional[str] = Field(description="The part of speech of the token", serialization_alias="pos")
-    cs: Optional[str] = Field(description="The case of the token", serialization_alias="case")
-    gender: Optional[str] = Field(description="The gender of the token", serialization_alias="gender")
-    number: Optional[str] = Field(description="The number of the token", serialization_alias="number")
-    unclear: bool = Field(description="Whether the token is unclear", serialization_alias="unclear")
-    unclear_reason: Optional[str] = Field(description="The reason the token is unclear", serialization_alias="unclear_reason")
-    add: bool = Field(description="Whether the token is added", serialization_alias="add")
-    add_hand: Optional[str] = Field(description="The hand of the added token", serialization_alias="add_hand")
-    dl: Optional[str] = Field(description="The reason the token is deleted", serialization_alias="delete")
-    abbr: bool = Field(description="Whether the token is an abbreviation", serialization_alias="abbr")
-    abbr_type: Optional[str] = Field(description="The type of abbreviation", serialization_alias="abbr_type")
-    abbr_original: Optional[str] = Field(description="The original abbreviation text", serialization_alias="abbr_original")
-    seg_type: Optional[str] = Field(description="The type of segment", serialization_alias="seg_type")
-    note: Optional[str] = Field(description="The note of the token", serialization_alias="note")
-    head: Optional[str] = Field(description="The head of the token", serialization_alias="head")
+    original: Optional[str] = Field(default=None, description="The original token text", serialization_alias="o")
+    pos: Optional[str] = Field(default=None, description="The part of speech of the token", serialization_alias="pos")
+    cs: Optional[str] = Field(default=None, description="The case of the token", serialization_alias="case")
+    gender: Optional[str] = Field(default=None, description="The gender of the token", serialization_alias="gender")
+    number: Optional[str] = Field(default=None, description="The number of the token", serialization_alias="number")
+    
+    # Editorial flags and metadata
+    unclear: bool = Field(default=False, description="Whether the token is unclear", serialization_alias="unclear")
+    unclear_reason: Optional[str] = Field(default=None, description="The reason the token is unclear", serialization_alias="unclear_reason")
+    
+    add: bool = Field(default=False, description="Whether the token is added", serialization_alias="add")
+    add_hand: Optional[str] = Field(default=None, description="The hand of the added token", serialization_alias="add_hand")
+    
+    dl: bool = Field(default=False, description="Whether the token is deleted", alias="del", serialization_alias="del")
+    del_reason: Optional[str] = Field(default=None, description="The reason the token is deleted", serialization_alias="del_reason")
+    
+    abbr: bool = Field(default=False, description="Whether the token is an abbreviation", serialization_alias="abbr")
+    abbr_type: Optional[str] = Field(default=None, description="The type of abbreviation", serialization_alias="abbr_type")
+    abbr_original: Optional[str] = Field(default=None, description="The original abbreviation text", serialization_alias="abbr_original")
+    
+    # ENLAC Semantic tags
+    seg_type: Optional[str] = Field(default=None, description="The type of segment", serialization_alias="seg_type")
+    seg_part: Optional[str] = Field(default=None, description="The part of the segment", serialization_alias="seg_part")
+    
+    is_note: bool = Field(default=False, description="Whether the token is a note", serialization_alias="is_note")
+    note_type: Optional[str] = Field(default=None, description="The type of note", serialization_alias="note_type")
+    
+    is_head: bool = Field(default=False, description="Whether the token is a head", serialization_alias="is_head")

@@ -34,11 +34,7 @@ class ClassicalProcessor:
                 pos=word.upos.tag if word.upos else "UNKNOWN",
                 cs=feats_dict.get("Case"),
                 gender=feats_dict.get("Gender"),
-                number=feats_dict.get("Number"),
-                # We leave XML metadata blank. The Converter fills that in!
-                unclear=False,
-                add=False,
-                abbr=False
+                number=feats_dict.get("Number")
             )
             tokens.append(my_token)
             
@@ -76,11 +72,7 @@ class ModernProcessor:
                     pos=pos_tag,
                     cs=feats_dict.get("Case"),
                     gender=feats_dict.get("Gender"),
-                    number=feats_dict.get("Number"),
-                    # We leave XML metadata blank. The Converter fills that in!
-                    unclear=False,
-                    add=False,
-                    abbr=False
+                    number=feats_dict.get("Number")
                 )
                 tokens.append(my_token)
                 

@@ -11,3 +11,9 @@ class Processor(Protocol):
 class Converter(Protocol):
     def run(self, data: Element) -> Any:
         ...
+
+class Parser(Protocol):
+    def __init__(self, abbr_file: Optional[str]):
+        ...
+    def parse(self, data: Any) -> Tuple[str, List[Tuple[int, int, Dict[str, Any]]]]:
+        ...
