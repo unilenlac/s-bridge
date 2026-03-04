@@ -30,7 +30,7 @@ class TEIParser:
         elif abbr_file:
             logger.warning(f"Abbreviation file not found: {abbr_file}")
 
-    def extract_normalized_text_and_metadata(self, data: str) -> Tuple[str, MetadataMap]:
+    def parse(self, data: str) -> Tuple[str, MetadataMap]:
         """Process TEI element to extract both metadata map and clean text."""
         root = ET.fromstring(str)
             
@@ -47,49 +47,36 @@ class TEIParser:
 
     def _resolve_hyphenation_and_breaks(self, root: Element) -> None:
         """Remove line/page breaks from soup, joining hyphenated words aggressively (modifies in place)."""
-    
-        # Process all <lb> and <pb> tags
-        for break_tag in soup.find_all(['lb', 'pb']):
-            is_hyphenated = False
-            
-            # A. Inspect preceding text logic
-            prev_node = break_tag.previous_sibling
-            # Look backwards to find actual text if there's an enclosing tag like <unclear>
-            while prev_node and not isinstance(prev_node, NavigableString) and getattr(prev_node, 'name', None) is not None:
-                if list(prev_node.children):
-                    prev_node = list(prev_node.children)[-1]
-                else:
-                    break
-                    
-            if isinstance(prev_node, NavigableString):
-                text = str(prev_node)
-                clean_text = text.rstrip()
-                if clean_text.endswith('-'):
-                    is_hyphenated = True
-                    # Delete the physical hyphen
-                    text = clean_text[:-1]
-                    prev_node.replace_with(NavigableString(text))
-                    
-            if is_hyphenated:
-                # B. Clean the following text (remove leading whitespace because we are merging)
-                next_node = break_tag.next_sibling
-                while next_node and not isinstance(next_node, NavigableString) and getattr(next_node, 'name', None) is not None:
-                    if list(next_node.children):
-                        next_node = list(next_node.children)[0]
-                    else:
-                        break
-                        
-                if isinstance(next_node, NavigableString):
-                    text = str(next_node)
-                    text = text.lstrip()
-                    next_node.replace_with(NavigableString(text))
-                
-                # C. Destroy the break tag entirely so words merge without spaces
-                break_tag.decompose()
-            else:
-                # Not a hyphenated word, just replace the break block with a space
-                break_tag.replace_with(NavigableString(' '))
+        #New process with ElementTree
+        for parent in root.iter():
+            for child in list(parent):
+                if child.tag in ['lb','pb']:
+                    child_index = list(parent).index(child)
 
+                    # Case A: Prior text is attached to a previous sibling's tail
+                    if child_index > 0:
+                        prev_sibling = parent[child_index - 1]
+                        prior_text = prev_sibling.tail or ""
+
+                        if prior_text.rstrip().endswith('-'):
+                            clean_prior = prior_text.rstrip()[:-1]
+                            rescued_tail = (child.tail or "").lstrip()
+                            prev_sibling.tail = clean_prior + rescued_tail
+                        else:
+                            prev_sibling.tail = prior_text + " " + (child.tail or "")
+
+                    # Case B: Prior text is the parent's text directly
+                    else:
+                        prior_text = parent.text or ""
+                        if prior_text.rstrip().endswith('-'):
+                            clean_prior = prior_text.rstrip()[:-1]
+                            rescued_tail = (child.tail or "").lstrip()
+                            parent.text = clean_prior + rescued_tail
+                        else:
+                            parent.text = prior_text + " " + (child.tail or "")
+                
+                parent.remove(child)
+                
     def _extract_text_with_metadata(
         self,
         element: Union[Tag, NavigableString, BeautifulSoup], 
