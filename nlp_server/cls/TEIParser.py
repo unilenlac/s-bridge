@@ -32,7 +32,7 @@ class TEIParser:
 
     def parse(self, data: str) -> Tuple[str, MetadataMap]:
         """Process TEI element to extract both metadata map and clean text."""
-        element = ET.fromstring(str)
+        element = ET.fromstring(data)
             
         # Step 1: Clear breaks first (modifies soup in place, keeps editorial tags)
         self._resolve_hyphenation_and_breaks(element)
@@ -49,10 +49,10 @@ class TEIParser:
         """Remove line/page breaks from soup, joining hyphenated words aggressively (modifies in place)."""
         #New process with ElementTree
         for parent in element.iter():
-            for child in list(parent):
-                if child.tag in ['lb','pb']:
-                    child_index = list(parent).index(child)
-
+            # Iterate backwards so that parent.remove() doesn't shift indices for preceding elements
+            for child_index in range(len(parent) - 1, -1, -1):
+                child = parent[child_index]
+                if child.tag in ['lb', 'pb']:
                     # Case A: Prior text is attached to a previous sibling's tail
                     if child_index > 0:
                         prev_sibling = parent[child_index - 1]
@@ -75,7 +75,7 @@ class TEIParser:
                         else:
                             parent.text = prior_text + " " + (child.tail or "")
                 
-                parent.remove(child)
+                    parent.remove(child)
                 
     def _build_tag_metadata(self, element: ET.Element) -> Dict[str, Any]:
         """Build tag-specific metadata dictionary based on the element."""

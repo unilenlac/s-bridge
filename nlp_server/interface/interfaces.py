@@ -1,6 +1,6 @@
 # processor protocol
 from typing import Protocol, Any
-from xml.etree.ElementTree import Element
+import xml.etree.ElementTree as ET
 
 class Processor(Protocol):
     def __init__(self, pipeline: Any):
@@ -15,5 +15,5 @@ class Converter(Protocol):
 class Parser(Protocol):
     def __init__(self, abbr_file: Optional[str]):
         ...
-    def parse(self, data: Any) -> Tuple[str, List[Tuple[int, int, Dict[str, Any]]]]:
+    def parse(self, data: ET.Element) -> Tuple[str, List[Tuple[int, int, Dict[str, Any]]]]:
         ...

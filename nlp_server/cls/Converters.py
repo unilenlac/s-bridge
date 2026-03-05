@@ -1,4 +1,4 @@
-from xml.etree.ElementTree import Element
+import xml.etree.ElementTree as ET
 from typing import List
 
 from nlp_server.interface.interfaces import Processor
@@ -8,17 +8,17 @@ from nlp_server.cls.TEIParser import TEIParser
 class SimpleConverter:
     def __init__(self, proc: Processor):
         self.processor = proc
-    def run(self, data: Element) -> str:  # Example: convert input text to uppercase
+    def run(self, data: ET.Element) -> str:  # Example: convert input text to uppercase
         return "".join(data.itertext())
 
 class FullConverter:
-    def __init__(self, proc: Processor, parser: TEIParser):
+    def __init__(self, proc: Processor, parser: Parser):
         self.processor = proc
         self.parser = parser
 
-    def run(self, data: Element) -> List[Token]:
+    def run(self, data: ET.Element) -> List[Token]:
         # 1. Extract clean text and offset metadata using the TEI Parser
-        clean_text, metadata_map = self.parser.extract_normalized_text_and_metadata(data)
+        clean_text, metadata_map = self.parser.parse(data)
         
         # 2. Process the raw string into tokens using our generic Processor
         raw_tokens: List[Token] = self.processor.process(clean_text)
