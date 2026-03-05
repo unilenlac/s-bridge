@@ -32,23 +32,23 @@ class TEIParser:
 
     def parse(self, data: str) -> Tuple[str, MetadataMap]:
         """Process TEI element to extract both metadata map and clean text."""
-        root = ET.fromstring(str)
+        element = ET.fromstring(str)
             
         # Step 1: Clear breaks first (modifies soup in place, keeps editorial tags)
-        self._resolve_hyphenation_and_breaks(root)
+        self._resolve_hyphenation_and_breaks(element)
         
         # Step 2: Extract text segments with their metadata
-        text_segments, _ = self._extract_text_with_metadata(soup)
+        text_segments, _ = self._extract_text_with_metadata(element)
         
         # Step 3: Build normalized text and metadata map
         clean_text, metadata_map = self._build_normalized_metadata_map(text_segments)
         
         return clean_text, metadata_map
 
-    def _resolve_hyphenation_and_breaks(self, root: Element) -> None:
+    def _resolve_hyphenation_and_breaks(self, element: ET.Element) -> None:
         """Remove line/page breaks from soup, joining hyphenated words aggressively (modifies in place)."""
         #New process with ElementTree
-        for parent in root.iter():
+        for parent in element.iter():
             for child in list(parent):
                 if child.tag in ['lb','pb']:
                     child_index = list(parent).index(child)
@@ -77,9 +77,79 @@ class TEIParser:
                 
                 parent.remove(child)
                 
+    def _build_tag_metadata(self, element: ET.Element) -> Dict[str, Any]:
+        """Build tag-specific metadata dictionary based on the element."""
+        tag_metadata: Dict[str, Any] = {}
+        
+        if element.tag == 'unclear':
+            tag_metadata['unclear'] = True
+            if element.get('reason'):
+                tag_metadata['unclear_reason'] = element.get('reason')
+        
+        elif element.tag == 'add':
+            tag_metadata['add'] = True
+            if element.get('hand'):
+                tag_metadata['add_hand'] = element.get('hand')
+
+        elif element.tag == 'del':
+            tag_metadata['del'] = True
+            rend = element.get('rend')
+            tag_metadata['del_reason'] = rend if rend else 'other'
+
+        elif element.tag == 'abbr':
+            tag_metadata['abbr'] = True
+            abbr_type = element.get('type')
+            if abbr_type:
+                tag_metadata['abbr_type'] = abbr_type
+                
+        elif element.tag == 'seg':
+            seg_type = element.get('type')
+            if seg_type:
+                tag_metadata['seg_type'] = seg_type
+            seg_part = element.get('part')
+            if seg_part:
+                tag_metadata['seg_part'] = seg_part
+                
+        elif element.tag == 'note':
+            tag_metadata['is_note'] = True
+            note_type = element.get('type')
+            if note_type:
+                tag_metadata['note_type'] = note_type
+                
+        elif element.tag == 'head':
+            tag_metadata['is_head'] = True
+            
+        return tag_metadata
+
+    def _process_text_chunk(
+        self, 
+        text: str, 
+        metadata_stack: List[Dict[str, Any]], 
+        pending_metadata: Dict[str, Any], 
+        results: List[TextSegment]
+    ) -> None:
+        """Process a text chunk and append it with accumulated metadata."""
+        current_metadata: Dict[str, Any] = {}
+        for meta in metadata_stack:
+            current_metadata.update(meta)
+
+        if text.strip():
+            current_metadata.update(pending_metadata)
+            pending_metadata.clear()
+        elif pending_metadata:
+            current_metadata.update(pending_metadata)
+
+        if current_metadata.get('abbr'):
+            raw_abbr = text.strip()
+            if raw_abbr in self.abbr_dict:
+                text = text.replace(raw_abbr, self.abbr_dict[raw_abbr])
+                current_metadata['abbr_original'] = raw_abbr
+
+        results.append((text, current_metadata))
+
     def _extract_text_with_metadata(
         self,
-        element: Union[Tag, NavigableString, BeautifulSoup], 
+        element: ET.Element, 
         metadata_stack: Optional[List[Dict[str, Any]]] = None, 
         pending_metadata: Optional[Dict[str, Any]] = None, 
         results: Optional[List[TextSegment]] = None
@@ -95,95 +165,30 @@ class TEIParser:
         if results is None:
             results = []
         
-        if isinstance(element, NavigableString):
-            text = str(element)
-            if text:  # Add all text including structural whitespace
-                # Copy current metadata stack
-                current_metadata: Dict[str, Any] = {}
-                for meta in metadata_stack:
-                    current_metadata.update(meta)
-                    
-                if text.strip():
-                    current_metadata.update(pending_metadata)
-                    pending_metadata.clear()
-                elif pending_metadata:
-                    # Still attach pending metadata to these spaces, but don't clear it
-                    current_metadata.update(pending_metadata)
-                    
-                if current_metadata.get('abbr'):
-                    raw_abbr = text.strip()
-                    if raw_abbr in self.abbr_dict:
-                        # Expand the abbreviation text
-                        text = text.replace(raw_abbr, self.abbr_dict[raw_abbr])
-                        current_metadata['abbr_original'] = raw_abbr
-                
-                results.append((text, current_metadata))
-            return results, pending_metadata
-        
-        if isinstance(element, (Tag, BeautifulSoup)):
-            # Build metadata for this tag
-            tag_metadata: Dict[str, Any] = {}
-            
-            if getattr(element, 'name', None) == 'unclear':
-                tag_metadata['unclear'] = True
-                if element.get('reason'):
-                    tag_metadata['unclear_reason'] = element.get('reason')
-            
-            if getattr(element, 'name', None) == 'add':
-                tag_metadata['add'] = True
-                if element.get('hand'):
-                    tag_metadata['add_hand'] = element.get('hand')
+        # 1. Generate Metadata
+        tag_metadata = self._build_tag_metadata(element)
+        if tag_metadata:
+            metadata_stack.append(tag_metadata)
 
-            if getattr(element, 'name', None) == 'del':
-                tag_metadata['del'] = True
-                rend = element.get('rend')
-                tag_metadata['del_reason'] = rend if rend else 'other'
+        # 2. Phase 1: Process .text (Inside the tag)
+        if element.text:
+            self._process_text_chunk(element.text, metadata_stack, pending_metadata, results)
 
-            if getattr(element, 'name', None) == 'abbr':
-                # Abbreviation expansion is handled at the text node level,
-                # but we record that we are inside an abbr tag
-                tag_metadata['abbr'] = True
-                abbr_type = element.get('type')
-                if abbr_type:
-                    tag_metadata['abbr_type'] = abbr_type
-                    
-            # ENLAC Semantic tags handling
-            if getattr(element, 'name', None) == 'seg':
-                seg_type = element.get('type')
-                if seg_type:
-                    tag_metadata['seg_type'] = seg_type
-                seg_part = element.get('part')
-                if seg_part:
-                    tag_metadata['seg_part'] = seg_part
-                    
-            if getattr(element, 'name', None) == 'note':
-                tag_metadata['is_note'] = True
-                note_type = element.get('type')
-                if note_type:
-                    tag_metadata['note_type'] = note_type
-                    
-            if getattr(element, 'name', None) == 'head':
-                tag_metadata['is_head'] = True
-            
-            # Push metadata onto stack if this tag has any
-            if tag_metadata:
-                metadata_stack.append(tag_metadata)
-            
-            has_children = False
-            # Process children
-            for child in getattr(element, 'children', []):
-                has_children = True
-                self._extract_text_with_metadata(child, metadata_stack, pending_metadata, results)
-            
-            # If the tag is empty but has metadata, apply it to pending_metadata
-            # so it attaches to the next valid text node
-            if not has_children and tag_metadata:
-                pending_metadata.update(tag_metadata)
-                
-            # Pop metadata from stack
-            if tag_metadata:
-                metadata_stack.pop()
-        
+        # 3. Phase 2: Recurse Children
+        for child in element:
+            self._extract_text_with_metadata(child, metadata_stack, pending_metadata, results)
+
+        # 4. Handle Empty Tags (like <unclear/> or <pb/>)
+        if not len(element) and not element.text and tag_metadata:
+            pending_metadata.update(tag_metadata)
+
+        # 5. Phase 3: Tag closes, process .tail (After the tag)
+        if tag_metadata:
+            metadata_stack.pop()
+
+        if element.tail:
+            self._process_text_chunk(element.tail, metadata_stack, pending_metadata, results)
+
         return results, pending_metadata
 
     def _build_normalized_metadata_map(self, text_segments: List[TextSegment]) -> Tuple[str, MetadataMap]:
