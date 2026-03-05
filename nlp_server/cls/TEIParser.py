@@ -30,10 +30,8 @@ class TEIParser:
         elif abbr_file:
             logger.warning(f"Abbreviation file not found: {abbr_file}")
 
-    def parse(self, data: str) -> Tuple[str, MetadataMap]:
+    def parse(self, element: ET.Element) -> Tuple[str, MetadataMap]:
         """Process TEI element to extract both metadata map and clean text."""
-        element = ET.fromstring(data)
-            
         # Step 1: Clear breaks first (modifies soup in place, keeps editorial tags)
         self._resolve_hyphenation_and_breaks(element)
         
@@ -45,36 +43,53 @@ class TEIParser:
         
         return clean_text, metadata_map
 
+    def _get_rightmost_text_node(self, parent: ET.Element, child_index: int) -> Tuple[ET.Element, str]:
+        """Find the element and attribute ('text' or 'tail') containing the physical text just before this child."""
+        if child_index > 0:
+            prev = parent[child_index - 1]
+            if prev.tail:
+                return prev, 'tail'
+            
+            curr = prev
+            while len(curr) > 0:
+                last_child = curr[-1]
+                if last_child.tail:
+                    return last_child, 'tail'
+                curr = last_child
+            return curr, 'text'
+        return parent, 'text'
+
     def _resolve_hyphenation_and_breaks(self, element: ET.Element) -> None:
-        """Remove line/page breaks from soup, joining hyphenated words aggressively (modifies in place)."""
-        #New process with ElementTree
+        """Remove line/page breaks from XML, joining hyphenated words aggressively."""
         for parent in element.iter():
-            # Iterate backwards so that parent.remove() doesn't shift indices for preceding elements
             for child_index in range(len(parent) - 1, -1, -1):
                 child = parent[child_index]
                 if child.tag in ['lb', 'pb']:
-                    # Case A: Prior text is attached to a previous sibling's tail
+                    
+                    # 1. Locate the physical text that immediately precedes the break
+                    node_with_text, attr_name = self._get_rightmost_text_node(parent, child_index)
+                    prior_text = getattr(node_with_text, attr_name) or ""
+                    
                     if child_index > 0:
+                        # Case A: Not the first child. We attach the lb's tail to the prev sibling
                         prev_sibling = parent[child_index - 1]
-                        prior_text = prev_sibling.tail or ""
-
+                        
                         if prior_text.rstrip().endswith('-'):
-                            clean_prior = prior_text.rstrip()[:-1]
-                            rescued_tail = (child.tail or "").lstrip()
-                            prev_sibling.tail = clean_prior + rescued_tail
+                            # Strip hyphen from wherever it was natively found
+                            setattr(node_with_text, attr_name, prior_text.rstrip()[:-1])
+                            # Merge tails tightly without space
+                            prev_sibling.tail = (prev_sibling.tail or "") + (child.tail or "").lstrip()
                         else:
-                            prev_sibling.tail = prior_text + " " + (child.tail or "")
-
-                    # Case B: Prior text is the parent's text directly
+                            # Not hyphenated. Attach with a space
+                            prev_sibling.tail = (prev_sibling.tail or "") + " " + (child.tail or "")
                     else:
-                        prior_text = parent.text or ""
+                        # Case B: First child. Attach the lb's tail strictly to the parent's text
                         if prior_text.rstrip().endswith('-'):
-                            clean_prior = prior_text.rstrip()[:-1]
-                            rescued_tail = (child.tail or "").lstrip()
-                            parent.text = clean_prior + rescued_tail
+                            # attr_name is guaranteed to be 'text' here since child_index == 0
+                            parent.text = prior_text.rstrip()[:-1] + (child.tail or "").lstrip()
                         else:
                             parent.text = prior_text + " " + (child.tail or "")
-                
+                            
                     parent.remove(child)
                 
     def _build_tag_metadata(self, element: ET.Element) -> Dict[str, Any]:

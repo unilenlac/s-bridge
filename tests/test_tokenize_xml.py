@@ -3,8 +3,8 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import pytest
-from bs4 import BeautifulSoup
-from tokenize_xml import extract_normalized_text_and_metadata
+import xml.etree.ElementTree as ET
+from nlp_server.cls.TEIParser import TEIParser
 
 def get_metadata_for_word(word_start, word_end, metadata_map):
     """Helper mirroring the tokenizer's logic to fetch metadata for a specific character range."""
@@ -21,38 +21,46 @@ def find_word_range(text, target_word):
         return -1, -1
     return start, start + len(target_word)
 
+def get_parser():
+    return TEIParser()
+
 def test_basic_text_extraction():
     xml = "<root>Hello world</root>"
-    soup = BeautifulSoup(xml, "xml")
-    clean_text, meta = extract_normalized_text_and_metadata(soup, {})
+    element = ET.fromstring(xml)
+    parser = get_parser()
+    clean_text, meta = parser.parse(element)
     assert clean_text == "Hello world"
     assert len(meta) == 0
 
 def test_lb_break_no_joining():
     # word "hyphenated" split across lb tag with a physical hyphen and trailing/leading whitespace.
     xml = "<root>This is a hy-<lb break='no'/>\n     phenated word.</root>"
-    soup = BeautifulSoup(xml, "xml")
-    clean_text, meta = extract_normalized_text_and_metadata(soup, {})
+    element = ET.fromstring(xml)
+    parser = get_parser()
+    clean_text, meta = parser.parse(element)
     assert clean_text == "This is a hyphenated word."
 
 def test_lb_normal_break():
     # normal <lb/> should be replaced by space
     xml = "<root>Line 1<lb/>Line 2</root>"
-    soup = BeautifulSoup(xml, "xml")
-    clean_text, meta = extract_normalized_text_and_metadata(soup, {})
+    element = ET.fromstring(xml)
+    parser = get_parser()
+    clean_text, meta = parser.parse(element)
     assert clean_text == "Line 1 Line 2"
 
 def test_pb_normal_break():
     # normal <pb/> should be replaced by space
     xml = "<root>Page 1<pb n='2'/>Page 2</root>"
-    soup = BeautifulSoup(xml, "xml")
-    clean_text, meta = extract_normalized_text_and_metadata(soup, {})
+    element = ET.fromstring(xml)
+    parser = get_parser()
+    clean_text, meta = parser.parse(element)
     assert clean_text == "Page 1 Page 2"
 
 def test_unclear_tag_metadata():
     xml = '<root>Here is an <unclear reason="illegible">obscure</unclear> text.</root>'
-    soup = BeautifulSoup(xml, "xml")
-    clean_text, meta = extract_normalized_text_and_metadata(soup, {})
+    element = ET.fromstring(xml)
+    parser = get_parser()
+    clean_text, meta = parser.parse(element)
     assert clean_text == "Here is an obscure text."
     
     start, end = find_word_range(clean_text, "obscure")
@@ -62,8 +70,9 @@ def test_unclear_tag_metadata():
 
 def test_add_tag_metadata():
     xml = '<root>The editor <add hand="scribe1">added</add> this.</root>'
-    soup = BeautifulSoup(xml, "xml")
-    clean_text, meta = extract_normalized_text_and_metadata(soup, {})
+    element = ET.fromstring(xml)
+    parser = get_parser()
+    clean_text, meta = parser.parse(element)
     
     start, end = find_word_range(clean_text, "added")
     word_meta = get_metadata_for_word(start, end, meta)
@@ -72,8 +81,9 @@ def test_add_tag_metadata():
 
 def test_del_tag_metadata():
     xml = '<root>The writer <del rend="strike">removed</del> this.</root>'
-    soup = BeautifulSoup(xml, "xml")
-    clean_text, meta = extract_normalized_text_and_metadata(soup, {})
+    element = ET.fromstring(xml)
+    parser = get_parser()
+    clean_text, meta = parser.parse(element)
     
     start, end = find_word_range(clean_text, "removed")
     word_meta = get_metadata_for_word(start, end, meta)
@@ -82,8 +92,9 @@ def test_del_tag_metadata():
     
 def test_del_tag_fallback_reason():
     xml = '<root>The writer <del>removed</del> this without a rend attribute.</root>'
-    soup = BeautifulSoup(xml, "xml")
-    clean_text, meta = extract_normalized_text_and_metadata(soup, {})
+    element = ET.fromstring(xml)
+    parser = get_parser()
+    clean_text, meta = parser.parse(element)
     
     start, end = find_word_range(clean_text, "removed")
     word_meta = get_metadata_for_word(start, end, meta)
@@ -92,8 +103,9 @@ def test_del_tag_fallback_reason():
 
 def test_abbr_tag_metadata():
     xml = '<root>He spoke to the <abbr type="ns">kyrios</abbr>.</root>'
-    soup = BeautifulSoup(xml, "xml")
-    clean_text, meta = extract_normalized_text_and_metadata(soup, {})
+    element = ET.fromstring(xml)
+    parser = get_parser()
+    clean_text, meta = parser.parse(element)
     
     start, end = find_word_range(clean_text, "kyrios")
     word_meta = get_metadata_for_word(start, end, meta)
@@ -103,8 +115,9 @@ def test_abbr_tag_metadata():
 def test_nested_tags():
     # <unclear> and <add> applied to the same word
     xml = '<root><add hand="m1"><unclear reason="faded">nested</unclear></add></root>'
-    soup = BeautifulSoup(xml, "xml")
-    clean_text, meta = extract_normalized_text_and_metadata(soup, {})
+    element = ET.fromstring(xml)
+    parser = get_parser()
+    clean_text, meta = parser.parse(element)
     
     assert clean_text == "nested"
     start, end = find_word_range(clean_text, "nested")
@@ -118,8 +131,9 @@ def test_nested_tags():
 def test_hyphenated_with_metadata():
     # Test our complex bug fix from earlier where 'hyphenated' has metadata on one half
     xml = '<root><unclear reason="ink">hy-</unclear><lb break="no"/>phenated</root>'
-    soup = BeautifulSoup(xml, "xml")
-    clean_text, meta = extract_normalized_text_and_metadata(soup, {})
+    element = ET.fromstring(xml)
+    parser = get_parser()
+    clean_text, meta = parser.parse(element)
     
     assert clean_text == "hyphenated"
     start, end = find_word_range(clean_text, "hyphenated")
@@ -132,16 +146,18 @@ def test_hyphenated_with_metadata():
 def test_punctuation():
     # Verify that punctuation maintains spacing rules properly alongside normal words.
     xml = '<root>Hello, world! Welcome.</root>'
-    soup = BeautifulSoup(xml, "xml")
-    clean_text, meta = extract_normalized_text_and_metadata(soup, {})
+    element = ET.fromstring(xml)
+    parser = get_parser()
+    clean_text, meta = parser.parse(element)
     
     assert clean_text == "Hello, world! Welcome."
 
 def test_abbr_expansion_logic():
     xml = '<root>Here is the <abbr type="nom_sac">κς</abbr>.</root>'
-    soup = BeautifulSoup(xml, "xml")
-    abbr_dict = {"κς": "κύριος"}
-    clean_text, meta = extract_normalized_text_and_metadata(soup, abbr_dict)
+    element = ET.fromstring(xml)
+    parser = get_parser()
+    parser.abbr_dict = {"κς": "κύριος"}
+    clean_text, meta = parser.parse(element)
     
     assert clean_text == "Here is the κύριος."
     start, end = find_word_range(clean_text, "κύριος")
@@ -154,14 +170,16 @@ def test_abbr_expansion_logic():
 def test_aggressive_hyphenation():
     # Test our aggressive merging: a hyphen before a normal <lb/> (no break="no")
     xml = "<root>This is completely a hy-<lb/>\n     phenated word.</root>"
-    soup = BeautifulSoup(xml, "xml")
-    clean_text, meta = extract_normalized_text_and_metadata(soup, {})
+    element = ET.fromstring(xml)
+    parser = get_parser()
+    clean_text, meta = parser.parse(element)
     assert clean_text == "This is completely a hyphenated word."
 
 def test_seg_tag_metadata():
     xml = '<root>Here is a <seg type="rubric" part="I">heading segment</seg>.</root>'
-    soup = BeautifulSoup(xml, "xml")
-    clean_text, meta = extract_normalized_text_and_metadata(soup, {})
+    element = ET.fromstring(xml)
+    parser = get_parser()
+    clean_text, meta = parser.parse(element)
     
     start, end = find_word_range(clean_text, "heading segment")
     word_meta = get_metadata_for_word(start, end, meta)
@@ -171,8 +189,9 @@ def test_seg_tag_metadata():
 
 def test_note_tag_metadata():
     xml = '<root>Text with a <note type="scribal">scribal note</note> in it.</root>'
-    soup = BeautifulSoup(xml, "xml")
-    clean_text, meta = extract_normalized_text_and_metadata(soup, {})
+    element = ET.fromstring(xml)
+    parser = get_parser()
+    clean_text, meta = parser.parse(element)
     
     start, end = find_word_range(clean_text, "scribal note")
     word_meta = get_metadata_for_word(start, end, meta)
@@ -182,10 +201,12 @@ def test_note_tag_metadata():
 
 def test_head_tag_metadata():
     xml = '<root><head>Chapter One</head></root>'
-    soup = BeautifulSoup(xml, "xml")
-    clean_text, meta = extract_normalized_text_and_metadata(soup, {})
+    element = ET.fromstring(xml)
+    parser = get_parser()
+    clean_text, meta = parser.parse(element)
     
     start, end = find_word_range(clean_text, "Chapter One")
     word_meta = get_metadata_for_word(start, end, meta)
     
     assert word_meta.get("is_head") is True
+
