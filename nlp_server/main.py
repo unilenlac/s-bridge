@@ -1,13 +1,14 @@
 from cltk import NLP
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 import xml.etree.ElementTree as ET
 import logging
 import stanza
 import uvicorn
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager 
 
 from nlp_server.interface.interfaces import Converter
-from nlp_server.cls.Processor import ClassicalProcessor, ModernProcessor
+from nlp_server.dep.processor_dep import converter_dep
+from nlp_server.cls.Processors import ClassicalProcessor, ModernProcessor
 from nlp_server.settings.settings import Settings
 from nlp_server.model.collatex import Token
 
@@ -18,7 +19,6 @@ settings = Settings()
 async def lifespan(app: FastAPI):
     logger.info("Initializing NLP engine...")
     
-    # Suppress CLTK startup noise
     if settings.pipeline == "modern":
         proc = ModernProcessor(stanza.Pipeline(settings.language, processors="tokenize,pos,lemma"))
     else:
@@ -42,9 +42,8 @@ dummy_data = """<div>""" \
             """</div>"""
 
 @app.get("/convert", response_model=list[Token] | str, description="Convert input text using the specified converter")
-async def convert(*, text: str, converter: Converter):
-    parsed_data = ET.fromstring(dummy_data)
-    return converter.run(parsed_data)  # Replace with actual conversion logic
+async def convert(*, text: str, converter: Converter = Depends(converter_dep)):
+    return converter.run(text)  # Replace with actual conversion logic
 
 
 if __name__ == "__main__":

@@ -7,15 +7,15 @@ from nlp_server.model.collatex import Token
 class SimpleConverter:
     def __init__(self, proc: Processor):
         self.processor = proc
-    def run(self, data: ET.Element) -> str:  # Example: convert input text to uppercase
-        return "".join(data.itertext())
+    def run(self, data: str) -> List[Token]:  # Example: convert input text into basic tokens
+        return self.processor.process(data)
 
 class FullConverter:
     def __init__(self, proc: Processor, parser: Parser):
         self.processor = proc
         self.parser = parser
 
-    def run(self, data: ET.Element) -> List[Token]:
+    def run(self, data: str) -> List[Token]:
         # 1. Extract clean text and offset metadata using the TEI Parser
         clean_text, metadata_map = self.parser.parse(data)
         
@@ -37,7 +37,7 @@ class FullConverter:
             editorial_metadata = self.parser.get_metadata_for_token(char_start, char_stop, metadata_map)
             
             # Reconstruct the Token dictionary to inject the metadata
-            token_dict = token.model_dump(by_alias=True, exclude_none=True)
+            token_dict = token.model_dump(by_alias=False, exclude_none=True)
             token_dict.update(editorial_metadata)
             
             # Re-instantiate the completely enriched Token

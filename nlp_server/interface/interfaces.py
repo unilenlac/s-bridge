@@ -9,11 +9,11 @@ class Processor(Protocol):
         ...
 
 class Converter(Protocol):
-    def run(self, data: ET.Element) -> Any:
+    def run(self, data: str) -> Any:
         ...
 
 class Parser(Protocol):
     def __init__(self, abbr_file: Optional[str]):
         ...
-    def parse(self, data: ET.Element) -> Tuple[str, List[Tuple[int, int, Dict[str, Any]]]]:
+    def parse(self, data: str) -> Tuple[str, List[Tuple[int, int, Dict[str, Any]]]]:
         ...

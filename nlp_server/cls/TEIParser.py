@@ -28,8 +28,14 @@ class TEIParser:
         elif abbr_file:
             logger.warning(f"Abbreviation file not found: {abbr_file}")
 
-    def parse(self, element: ET.Element) -> Tuple[str, MetadataMap]:
+    def parse(self, data: str) -> Tuple[str, MetadataMap]:
         """Process TEI element to extract both metadata map and clean text."""
+        try:
+            element = ET.fromstring(data)
+        except ET.ParseError as e:
+            logger.error(f"Failed to parse XML: {e}")
+            raise ValueError(f"Invalid XML data provided to TEIParser: {e}")
+            
         # Step 1: Clear breaks first (modifies soup in place, keeps editorial tags)
         self._resolve_hyphenation_and_breaks(element)
         
