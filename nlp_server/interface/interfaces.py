@@ -1,5 +1,5 @@
 # processor protocol
-from typing import Protocol, Any
+from typing import Protocol, Any, Dict, List, Tuple, Optional
 import xml.etree.ElementTree as ET
 
 class Processor(Protocol):
@@ -9,7 +9,7 @@ class Processor(Protocol):
         ...
 
 class Converter(Protocol):
-    def run(self, data: Element) -> Any:
+    def run(self, data: ET.Element) -> Any:
         ...
 
 class Parser(Protocol):

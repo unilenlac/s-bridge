@@ -2,7 +2,7 @@ import xml.etree.ElementTree as ET
 
 def main() -> None:
     # 1. We wrap the loose fragment in a <root> tag so it is valid XML
-    s = '<root><lb n="13"/>δεκα μαθ<del hand="corr1" rend="strike">ηταὶ αὐτοῦ</del>τῶν τοῦ <abbr type="ns">κυ</abbr>· καὶ ἡ ἀδελφὴ αὐτοῦ μαριάμνη· καὶ οἱ ἀκολουθοῦντες αὐτῶ μα"</root>'
+    # s = '<root><lb n="13"/>δεκα μαθ<del hand="corr1" rend="strike">ηταὶ αὐτοῦ</del>τῶν τοῦ <abbr type="ns">κυ</abbr>· καὶ ἡ ἀδελφὴ αὐτοῦ μαριάμνη· καὶ οἱ ἀκολουθοῦντες αὐτῶ μα"</root>'
     
     dummy_data = """<div>""" \
             """<pb n="f.193v"/>""" \

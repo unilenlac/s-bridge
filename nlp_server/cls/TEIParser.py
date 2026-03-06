@@ -1,10 +1,8 @@
 import csv
 import logging
 import os
-from typing import List, Dict, Tuple, Any, Optional, Union
+from typing import List, Dict, Tuple, Any, Optional
 
-from bs4 import BeautifulSoup
-from bs4.element import NavigableString, Tag
 import xml.etree.ElementTree as ET
 
 logger = logging.getLogger(__name__)

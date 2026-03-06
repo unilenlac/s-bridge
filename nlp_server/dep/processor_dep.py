@@ -1,11 +1,10 @@
 
 from typing import Annotated
-
 from fastapi import Depends, Request
 
-from nlp_server.interface.interfaces import Converter
-from nlp_server.cls.Processors import *
-from nlp_server.cls.Converters import *
+from nlp_server.cls.interface.interfaces import Converter
+from nlp_server.cls.TEIParser import TEIParser
+from nlp_server.cls.Converters import FullConverter, SimpleConverter
 from nlp_server.settings.settings import Settings
 
 settings = Settings()

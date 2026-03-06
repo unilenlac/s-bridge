@@ -1,9 +1,8 @@
 import xml.etree.ElementTree as ET
 from typing import List
 
-from nlp_server.interface.interfaces import Processor
+from nlp_server.interface.interfaces import Processor, Parser
 from nlp_server.model.collatex import Token
-from nlp_server.cls.TEIParser import TEIParser
 
 class SimpleConverter:
     def __init__(self, proc: Processor):

@@ -2,14 +2,14 @@ from cltk import NLP
 from fastapi import FastAPI
 import xml.etree.ElementTree as ET
 import logging
-
-import uvicorn
-from nlp_server.cls.Processors import ClassicalProcessor, ModernProcessor
-from nlp_server.dep.processor_dep import *
 import stanza
+import uvicorn
 from contextlib import asynccontextmanager
 
+from nlp_server.interface.interfaces import Converter
+from nlp_server.cls.Processor import ClassicalProcessor, ModernProcessor
 from nlp_server.settings.settings import Settings
+from nlp_server.model.collatex import Token
 
 
 settings = Settings()
@@ -42,7 +42,7 @@ dummy_data = """<div>""" \
             """</div>"""
 
 @app.get("/convert", response_model=list[Token] | str, description="Convert input text using the specified converter")
-async def convert(*, text: str, converter: converter):
+async def convert(*, text: str, converter: Converter):
     parsed_data = ET.fromstring(dummy_data)
     return converter.run(parsed_data)  # Replace with actual conversion logic
 
