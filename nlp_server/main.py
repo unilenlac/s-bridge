@@ -41,7 +41,7 @@ dummy_data = """<div>""" \
             """<lb n="6"/>πόλεις καὶ χώρας κατήγγειλεν πάσιν τὸ εὐαγγέλιον τοῦ χριστοῦ· """ \
             """</div>"""
 
-@app.get("/convert", response_model=list[Token] | str, description="Convert input text using the specified converter")
+@app.get("/convert", response_model=list[Token] | str, response_model_exclude_none=True, response_model_exclude_defaults=True, description="Convert input text using the specified converter")
 async def convert(*, text: str, normalization: str = Query("lemma+pos", description="Token normalization string. Options: lemma+pos, lemma, text, original"), converter: Converter = Depends(converter_dep)):
     return converter.run(text, normalization=normalization)  # Replace with actual conversion logic
 
