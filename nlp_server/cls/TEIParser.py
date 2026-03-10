@@ -148,10 +148,63 @@ class TEIParser:
         results: List[TextSegment]
     ) -> None:
         """Process a text chunk and append it with accumulated metadata."""
+        import re
         current_metadata: Dict[str, Any] = {}
         for meta in metadata_stack:
             current_metadata.update(meta)
 
+        #This logic handles self-closing tag such as the <unclear/> tag by applying it to the contiguous word (left or right or both)
+        if pending_metadata:
+            # If the upcoming text starts with a space, the empty tag was conceptually 
+            # placed at the *end* of the previous word.
+            if text.startswith(' ') or text.startswith('\n') or text.startswith('\t'):
+                # Apply it to the last appended word if it exists
+                if results:
+                    last_text, last_meta = results[-1]
+                    # We can't just mutate the dictionary if it's shared, so we make a copy
+                    new_meta = last_meta.copy()
+                    new_meta.update(pending_metadata)
+                    results[-1] = (last_text, new_meta)
+                else:
+                    # Rare edge case: tag is at the very beginning of the document before any text, 
+                    # but followed by a space. We'll just drop it or attach it to the space (which gets ignored).
+                    results.append(("", pending_metadata.copy()))
+            else:
+                # The text does not start with a space, so the tag is conceptually
+                # at the *start* of the upcoming word.
+                m = re.match(r'^(\s*)(\S+)(.*)$', text, flags=re.DOTALL)
+                if m:
+                    spaces, word, rest = m.groups()
+                    
+                    if spaces:
+                        results.append((spaces, current_metadata.copy()))
+                    
+                    word_meta = current_metadata.copy()
+                    word_meta.update(pending_metadata)
+                    
+                    if word_meta.get('abbr'):
+                        raw_abbr = word.strip()
+                        if raw_abbr in self.abbr_dict:
+                            word = word.replace(raw_abbr, self.abbr_dict[raw_abbr])
+                            word_meta['abbr_original'] = raw_abbr
+                    
+                    results.append((word, word_meta))
+                    
+                    if rest:
+                        rest_meta = current_metadata.copy()
+                        if rest_meta.get('abbr'):
+                            raw_abbr_rest = rest.strip()
+                            if raw_abbr_rest in self.abbr_dict:
+                                rest = rest.replace(raw_abbr_rest, self.abbr_dict[raw_abbr_rest])
+                                rest_meta['abbr_original'] = raw_abbr_rest
+                        results.append((rest, rest_meta))
+                    
+                    pending_metadata.clear()
+                    return
+
+            pending_metadata.clear()
+
+        #Leaving the self closing tag logic.
         if text.strip():
             current_metadata.update(pending_metadata)
             pending_metadata.clear()
@@ -197,7 +250,7 @@ class TEIParser:
         for child in element:
             self._extract_text_with_metadata(child, metadata_stack, pending_metadata, results)
 
-        # 4. Handle Empty Tags (like <unclear/> or <pb/>)
+        # 4. Handle Empty Tags / self-closing tag (like <unclear/> or <pb/>)
         if not len(element) and not element.text and tag_metadata:
             pending_metadata.update(tag_metadata)
 

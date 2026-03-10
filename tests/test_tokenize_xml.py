@@ -52,7 +52,50 @@ def test_pb_normal_break():
     assert clean_text == "Page 1 Page 2"
 
 def test_unclear_tag_metadata():
-    xml = '<root>Here is an <unclear reason="illegible">obscure</unclear> text.</root>'
+    xml = '<root>An <unclear reason="illegible"/>obscure text.</root>'
+    parser = get_parser()
+    clean_text, meta = parser.parse(xml)
+    assert clean_text == "An obscure text."
+    
+    start, end = find_word_range(clean_text, "obscure")
+    word_meta = get_metadata_for_word(start, end, meta)
+    assert word_meta.get("unclear") is True
+    assert word_meta.get("unclear_reason") == "illegible"
+
+    # Verify preceding word does not have 'unclear'
+    start_before, end_before = find_word_range(clean_text, "An")
+    meta_before = get_metadata_for_word(start_before, end_before, meta)
+    assert meta_before.get("unclear") is None
+
+    # Verify following word does not have 'unclear'
+    start_after, end_after = find_word_range(clean_text, "text")
+    meta_after = get_metadata_for_word(start_after, end_after, meta)
+    assert meta_after.get("unclear") is None
+
+def test_unclear_tag_wrapped_word():
+    xml = '<root>One <unclear reason="faded">faded</unclear> word.</root>'
+    parser = get_parser()
+    clean_text, meta = parser.parse(xml)
+    assert clean_text == "One faded word."
+    
+    start, end = find_word_range(clean_text, "faded")
+    word_meta = get_metadata_for_word(start, end, meta)
+    assert word_meta.get("unclear") is True
+    assert word_meta.get("unclear_reason") == "faded"
+
+    # Verify preceding word does not have 'unclear'
+    start_before, end_before = find_word_range(clean_text, "One")
+    meta_before = get_metadata_for_word(start_before, end_before, meta)
+    assert meta_before.get("unclear") is None
+
+    # Verify following word does not have 'unclear'
+    start_after, end_after = find_word_range(clean_text, "word")
+    meta_after = get_metadata_for_word(start_after, end_after, meta)
+    assert meta_after.get("unclear") is None
+
+def test_unclear_tag_inside_split_word():
+    # Tag is in the middle of a continuous word
+    xml = '<root>Here is an ob<unclear reason="illegible"/>scure text.</root>'
     parser = get_parser()
     clean_text, meta = parser.parse(xml)
     assert clean_text == "Here is an obscure text."
@@ -61,6 +104,33 @@ def test_unclear_tag_metadata():
     word_meta = get_metadata_for_word(start, end, meta)
     assert word_meta.get("unclear") is True
     assert word_meta.get("unclear_reason") == "illegible"
+
+    # Verify preceding word does not have 'unclear'
+    start_before, end_before = find_word_range(clean_text, "an")
+    meta_before = get_metadata_for_word(start_before, end_before, meta)
+    assert meta_before.get("unclear") is None
+
+    # Verify following word does not have 'unclear'
+    start_after, end_after = find_word_range(clean_text, "text")
+    meta_after = get_metadata_for_word(start_after, end_after, meta)
+    assert meta_after.get("unclear") is None
+
+def test_unclear_tag_with_trailing_space():
+    # Tag is placed after the word, followed by a space
+    xml = '<root>here is an obscu<unclear reason="damage"/> text.</root>'
+    parser = get_parser()
+    clean_text, meta = parser.parse(xml)
+    assert clean_text == "here is an obscu text."
+    
+    start, end = find_word_range(clean_text, "obscu")
+    word_meta = get_metadata_for_word(start, end, meta)
+    assert word_meta.get("unclear") is True
+    assert word_meta.get("unclear_reason") == "damage"
+
+    # Verify following word does not have 'unclear'
+    start_after, end_after = find_word_range(clean_text, "text")
+    meta_after = get_metadata_for_word(start_after, end_after, meta)
+    assert meta_after.get("unclear") is None
 
 def test_add_tag_metadata():
     xml = '<root>The editor <add hand="scribe1">added</add> this.</root>'
@@ -104,7 +174,7 @@ def test_abbr_tag_metadata():
 
 def test_nested_tags():
     # <unclear> and <add> applied to the same word
-    xml = '<root><add hand="m1"><unclear reason="faded">nested</unclear></add></root>'
+    xml = '<root><add hand="m1"><unclear reason="faded"/>nested</add></root>'
     parser = get_parser()
     clean_text, meta = parser.parse(xml)
     
@@ -119,7 +189,7 @@ def test_nested_tags():
 
 def test_hyphenated_with_metadata():
     # Test our complex bug fix from earlier where 'hyphenated' has metadata on one half
-    xml = '<root><unclear reason="ink">hy-</unclear><lb break="no"/>phenated</root>'
+    xml = '<root><unclear reason="ink"/>hy-<lb break="no"/>phenated</root>'
     parser = get_parser()
     clean_text, meta = parser.parse(xml)
     

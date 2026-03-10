@@ -9,7 +9,7 @@ from nlp_server.settings.settings import Settings
 
 settings = Settings()
 
-def converter_dep(request: Request, mode: str = "simple") -> Converter:
+def converter_dep(request: Request, mode: str = "full") -> Converter:
 
     match mode:
         case "simple":

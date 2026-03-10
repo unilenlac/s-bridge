@@ -29,8 +29,9 @@ class ClassicalProcessor:
             # Build our clean data model (NO string formatting!)
             my_token = Token(
                 text=word.string,
-                lemma=word.lemma if getattr(word, 'lemma', None) is not None else word.string,
+                normalisation=word.lemma,
                 original=word.string,
+                lemma=word.lemma if getattr(word, 'lemma', None) is not None else word.string,
                 pos=word.upos.tag if word.upos else "UNKNOWN",
                 cs=feats_dict.get("Case"),
                 gender=feats_dict.get("Gender"),
