@@ -1,5 +1,5 @@
 from cltk import NLP
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, Query
 import xml.etree.ElementTree as ET
 import logging
 import stanza
@@ -42,8 +42,8 @@ dummy_data = """<div>""" \
             """</div>"""
 
 @app.get("/convert", response_model=list[Token] | str, description="Convert input text using the specified converter")
-async def convert(*, text: str, converter: Converter = Depends(converter_dep)):
-    return converter.run(text)  # Replace with actual conversion logic
+async def convert(*, text: str, normalization: str = Query("lemma+pos", description="Token normalization string. Options: lemma+pos, lemma, text, original"), converter: Converter = Depends(converter_dep)):
+    return converter.run(text, normalization=normalization)  # Replace with actual conversion logic
 
 
 if __name__ == "__main__":

@@ -5,11 +5,11 @@ import xml.etree.ElementTree as ET
 class Processor(Protocol):
     def __init__(self, pipeline: Any):
         ...
-    def process(self, data: Any) -> Any:
+    def process(self, data: Any, normalization: str = "lemma+pos") -> Any:
         ...
 
 class Converter(Protocol):
-    def run(self, data: str) -> Any:
+    def run(self, data: str, normalization: str = "lemma+pos") -> Any:
         ...
 
 class Parser(Protocol):

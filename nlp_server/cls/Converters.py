@@ -7,20 +7,20 @@ from nlp_server.model.collatex import Token
 class SimpleConverter:
     def __init__(self, proc: Processor):
         self.processor = proc
-    def run(self, data: str) -> List[Token]:  # Example: convert input text into basic tokens
-        return self.processor.process(data)
+    def run(self, data: str, normalization: str = "original") -> List[Token]:  # Example: convert input text into basic tokens
+        return self.processor.process(data, normalization=normalization)
 
 class FullConverter:
     def __init__(self, proc: Processor, parser: Parser):
         self.processor = proc
         self.parser = parser
 
-    def run(self, data: str) -> List[Token]:
+    def run(self, data: str, normalization: str = "lemma+pos") -> List[Token]:
         # 1. Extract clean text and offset metadata using the TEI Parser
         clean_text, metadata_map = self.parser.parse(data)
         
         # 2. Process the raw string into tokens using our generic Processor
-        raw_tokens: List[Token] = self.processor.process(clean_text)
+        raw_tokens: List[Token] = self.processor.process(clean_text, normalization=normalization)
         
         # 3. Marry the TEI Metadata with the NLP Tokens based on character offsets
         enriched_tokens = []
