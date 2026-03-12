@@ -7,7 +7,8 @@ from nlp_server.model.collatex import Token
 class RawStrategyConverter:
     def __init__(self, proc: Processor):
         self.processor = proc
-    def run(self, data: str, normalization: str = "original", filter_del: bool = True) -> List[Token]:  # Example: convert input text into basic tokens
+    #the normalization default parameter *original" is overrun by fatAPI logic. It is currently useless here. Same for default filder_del bool.
+    def run(self, data: str, normalization: str = "original", filter_del: bool = False) -> List[Token]: 
         return self.processor.process(data, normalization=normalization)
 
 class EnrichedStrategyConverter:
