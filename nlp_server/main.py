@@ -24,7 +24,7 @@ async def lifespan(app: FastAPI):
         proc = ModernProcessor(stanza.Pipeline(settings.language, processors="tokenize,pos,lemma"))
     else:
         proc = ClassicalProcessor(NLP(settings.language, backend="stanza", suppress_banner=True))
-    app.state.proc = proc  
+    app.state.proc = proc
     logger.info("CLTK NLP engine initialized successfully.")
     
     yield

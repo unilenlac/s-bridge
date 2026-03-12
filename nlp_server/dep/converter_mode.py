@@ -18,6 +18,6 @@ def converter_dep(request: Request, mode: str = "full") -> Converter:
                 return converter
         case "full":
                 proc = request.app.state.proc
-                parser = TEIParser(abbr_file="utils/abbr.csv")
+                parser = TEIParser(abbr_file="utils/abbr_classical_greek.csv")
                 converter: Converter = FullConverter(proc=proc, parser=parser)
                 return converter
