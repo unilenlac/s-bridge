@@ -7,7 +7,8 @@ import uvicorn
 from contextlib import asynccontextmanager 
 
 from nlp_server.interface.interfaces import Converter
-from nlp_server.dep.processor_dep import converter_dep
+from nlp_server.dep.converter_mode import converter_dep
+from nlp_server.dep.processing_options import get_processing_options
 from nlp_server.cls.Processors import ClassicalProcessor, ModernProcessor
 from nlp_server.settings.settings import Settings
 from nlp_server.model.collatex import Token
@@ -42,8 +43,8 @@ dummy_data = """<div>""" \
             """</div>"""
 
 @app.get("/convert", response_model=list[Token] | str, response_model_exclude_none=True, response_model_exclude_defaults=True, description="Convert input text using the specified converter")
-async def convert(*, text: str, normalization: str = Query("lemma+pos", description="Token normalization string. Options: lemma+pos, lemma, text, original"), filter_del: bool = Query(True, description="Filter out tokens that are marked as deleted"), converter: Converter = Depends(converter_dep)):
-    return converter.run(text, normalization=normalization, filter_del=filter_del)  
+async def convert(*, text: str, options: ProcessingOptions = Depends(get_processing_options), converter: Converter = Depends(converter_dep)):
+    return converter.run(text, normalization=options.normalization, filter_del=options.filter_del)  
 
 
 if __name__ == "__main__":
