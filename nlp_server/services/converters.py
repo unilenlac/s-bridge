@@ -1,8 +1,8 @@
 import xml.etree.ElementTree as ET
 from typing import List
 
-from nlp_server.interface.interfaces import Processor, Parser
-from nlp_server.model.collatex import Token
+from nlp_server.core.interfaces import Processor, Parser
+from nlp_server.models.collatex import Token
 
 class RawStrategyConverter:
     def __init__(self, proc: Processor):

@@ -415,7 +415,7 @@ def main() -> None:
     )
     parser.add_argument("--remote-host", help="Hostname of the NLP server (if using remote)", default=None)
     parser.add_argument("--remote-port", type=int, help="Port of the NLP server (if using remote)", default=8000)
-    parser.add_argument("--abbr-file", help="Path to TSV/CSV dictionary for <abbr> elongation.", default="utils/abbr.csv")
+    parser.add_argument("--abbr-file", help="Path to TSV/CSV dictionary for <abbr> elongation.", default="nlp_server/utils/abbr_classical_greek.csv")
     args = parser.parse_args()
     
     try:

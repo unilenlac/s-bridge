@@ -6,12 +6,11 @@ import stanza
 import uvicorn
 from contextlib import asynccontextmanager 
 
-from nlp_server.interface.interfaces import Converter
-from nlp_server.dep.converter_mode import converter_dep
-from nlp_server.dep.processing_options import get_processing_options
-from nlp_server.cls.Processors import ClassicalProcessor, ModernProcessor
-from nlp_server.settings.settings import Settings
-from nlp_server.model.collatex import Token
+from nlp_server.core.interfaces import Converter
+from nlp_server.api.dependencies import converter_dep, get_processing_options, ProcessingOptions
+from nlp_server.services.processors import ClassicalProcessor, ModernProcessor
+from nlp_server.core.config import Settings
+from nlp_server.models.collatex import Token
 
 
 settings = Settings()
@@ -31,16 +30,6 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="σ-Bridge NLP Server", description="Remote NLP parsing service using CLTK", lifespan=lifespan)
 logger = logging.getLogger("nlp_server")
-
-dummy_data = """<div>""" \
-            """<pb n="f.193v"/>""" \
-            """<lb n="1"/><hi>κ</hi>ατὰ τὸν καιρὸν ἐκεῖνον τραϊανοῦ τοῦ βασιλέως παρειληφότος τῆν τῶν ρω-""" \
-            """<lb n="2" break="no"/>μαίων ἀρχὴν· μετὰ τὸ μαρτυρῆσαι ἐν ὀγδόω ἔτει τῆς βασιλείας αὐτοῦ σίμω-""" \
-            """<lb n="3" break="no"/>να τὸν τοῦ κλωπᾶ <seg>ἐπίσκοπον</seg> ὄντα ϊεροσολύμων· δεύτερον γενόμενον""" \
-            """<lb n="4"/>ἐπίσης τοῦ μετὰ ἰάκωβον τὸν χρηματίσαντα ἀδελφὸν τοῦ κυρίου· τῆς""" \
-            """<lb n="5"/>ἐκεῖσε ἐκκλησίας· φίλιππος ὁ ἀπόστολος διἐρχόμενος τὰ τῆς λυδίας καὶ ἀσίας""" \
-            """<lb n="6"/>πόλεις καὶ χώρας κατήγγειλεν πάσιν τὸ εὐαγγέλιον τοῦ χριστοῦ· """ \
-            """</div>"""
 
 @app.get("/convert", response_model=list[Token] | str, response_model_exclude_none=True, response_model_exclude_defaults=True, description="Convert input text using the specified converter")
 async def convert(*, text: str, options: ProcessingOptions = Depends(get_processing_options), converter: Converter = Depends(converter_dep)):

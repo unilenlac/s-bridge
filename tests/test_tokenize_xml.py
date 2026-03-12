@@ -3,7 +3,7 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import xml.etree.ElementTree as ET
-from nlp_server.cls.TEIParser import TEIParser
+from nlp_server.services.tei_parser import TEIParser
 
 def get_metadata_for_word(word_start, word_end, metadata_map):
     """Helper mirroring the tokenizer's logic to fetch metadata for a specific character range."""

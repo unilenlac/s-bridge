@@ -1,6 +1,6 @@
 from typing import Any
 from stanza import Pipeline
-from nlp_server.model.collatex import Token
+from nlp_server.models.collatex import Token
 
 class ClassicalProcessor:
     def __init__(self, pipeline: Any):
