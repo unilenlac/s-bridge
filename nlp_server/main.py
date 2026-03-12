@@ -42,8 +42,8 @@ dummy_data = """<div>""" \
             """</div>"""
 
 @app.get("/convert", response_model=list[Token] | str, response_model_exclude_none=True, response_model_exclude_defaults=True, description="Convert input text using the specified converter")
-async def convert(*, text: str, normalization: str = Query("lemma+pos", description="Token normalization string. Options: lemma+pos, lemma, text, original"), converter: Converter = Depends(converter_dep)):
-    return converter.run(text, normalization=normalization)  
+async def convert(*, text: str, normalization: str = Query("lemma+pos", description="Token normalization string. Options: lemma+pos, lemma, text, original"), filter_del: bool = Query(True, description="Filter out tokens that are marked as deleted"), converter: Converter = Depends(converter_dep)):
+    return converter.run(text, normalization=normalization, filter_del=filter_del)  
 
 
 if __name__ == "__main__":

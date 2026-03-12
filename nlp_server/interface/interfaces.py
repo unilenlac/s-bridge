@@ -9,7 +9,7 @@ class Processor(Protocol):
         ...
 
 class Converter(Protocol):
-    def run(self, data: str, normalization: str = "lemma+pos") -> Any:
+    def run(self, data: str, normalization: str = "lemma+pos", filter_del: bool = True) -> Any:
         ...
 
 class Parser(Protocol):

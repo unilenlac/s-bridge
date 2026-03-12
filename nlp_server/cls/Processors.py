@@ -40,7 +40,7 @@ class ClassicalProcessor:
             # Build our clean data model (NO string formatting!)
             my_token = Token(
                 text=word.string,
-                normalisation=norm_str,
+                normalization=norm_str,
                 original=word.string,
                 lemma=lemma_raw,
                 pos=pos_tag,
@@ -90,7 +90,7 @@ class ModernProcessor:
                 # Build our clean data model (NO string formatting!)
                 my_token = Token(
                     text=word.text,
-                    normalisation=norm_str,
+                    normalization=norm_str,
                     original=word.text,
                     lemma=lemma_raw,
                     pos=pos_tag,

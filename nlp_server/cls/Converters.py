@@ -7,7 +7,7 @@ from nlp_server.model.collatex import Token
 class SimpleConverter:
     def __init__(self, proc: Processor):
         self.processor = proc
-    def run(self, data: str, normalization: str = "original") -> List[Token]:  # Example: convert input text into basic tokens
+    def run(self, data: str, normalization: str = "original", filter_del: bool = True) -> List[Token]:  # Example: convert input text into basic tokens
         return self.processor.process(data, normalization=normalization)
 
 class FullConverter:
@@ -15,7 +15,7 @@ class FullConverter:
         self.processor = proc
         self.parser = parser
 
-    def run(self, data: str, normalization: str = "lemma+pos") -> List[Token]:
+    def run(self, data: str, normalization: str = "lemma+pos", filter_del: bool = True) -> List[Token]:
         # 1. Extract clean text and offset metadata using the TEI Parser
         clean_text, metadata_map = self.parser.parse(data)
         
@@ -41,6 +41,11 @@ class FullConverter:
             token_dict.update(editorial_metadata)
             
             # Re-instantiate the completely enriched Token
+            
+            # THE FILTERING LOGIC
+            if filter_del and editorial_metadata.get("del") is True:
+                continue # Skip this token entirely
+
             enriched_token = Token(**token_dict)
             enriched_tokens.append(enriched_token)
             

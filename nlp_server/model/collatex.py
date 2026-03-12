@@ -3,7 +3,7 @@ from typing import Optional
 
 class Token(BaseModel):
     text: str = Field(description="The original token text", serialization_alias="t")
-    normalisation: str = Field(description="The normalisation of the text", serialization_alias="n")
+    normalization: str = Field(description="The normalization of the text", serialization_alias="n")
     original: str = Field(default=None, description="The original token text", serialization_alias="o")
     lemma: str = Field(description="The lemma of the token", serialization_alias="lem")
     pos: Optional[str] = Field(default=None, description="The part of speech of the token", serialization_alias="pos")

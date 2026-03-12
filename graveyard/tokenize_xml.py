@@ -152,13 +152,13 @@ def extract_text_with_metadata(
                 tag_metadata['seg_part'] = seg_part
                 
         if getattr(element, 'name', None) == 'note':
-            tag_metadata['is_note'] = True
+            tag_metadata['note'] = True
             note_type = element.get('type')
             if note_type:
                 tag_metadata['note_type'] = note_type
                 
         if getattr(element, 'name', None) == 'head':
-            tag_metadata['is_head'] = True
+            tag_metadata['head'] = True
                 
             # For elongation later: check text inside this specific tag
             # If the entire element has a single text string, we can intercept it
@@ -300,9 +300,9 @@ def build_collatex_tokens(json_tokens: List[Dict[str, Any]], metadata_map: Metad
             # Add semantic tags to the n_format if they exist
             if editorial_metadata.get('seg_type'):
                 ed_tags.append(f"seg={editorial_metadata['seg_type']}")
-            if editorial_metadata.get('is_note'):
+            if editorial_metadata.get('note'):
                 ed_tags.append("note")
-            if editorial_metadata.get('is_head'):
+            if editorial_metadata.get('head'):
                 ed_tags.append("head")
             
             if ed_tags:
