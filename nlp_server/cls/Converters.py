@@ -4,13 +4,13 @@ from typing import List
 from nlp_server.interface.interfaces import Processor, Parser
 from nlp_server.model.collatex import Token
 
-class SimpleConverter:
+class RawStrategyConverter:
     def __init__(self, proc: Processor):
         self.processor = proc
     def run(self, data: str, normalization: str = "original", filter_del: bool = True) -> List[Token]:  # Example: convert input text into basic tokens
         return self.processor.process(data, normalization=normalization)
 
-class FullConverter:
+class EnrichedStrategyConverter:
     def __init__(self, proc: Processor, parser: Parser):
         self.processor = proc
         self.parser = parser
