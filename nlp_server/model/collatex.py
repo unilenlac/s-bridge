@@ -29,7 +29,9 @@ class Token(BaseModel):
     seg_type: Optional[str] = Field(default=None, description="The type of segment", serialization_alias="seg_type")
     seg_part: Optional[str] = Field(default=None, description="The part of the segment", serialization_alias="seg_part")
     
-    is_note: bool = Field(default=False, description="Whether the token is a note", serialization_alias="is_note")
+    note: bool = Field(default=False, description="Whether the token is a note", serialization_alias="note")
     note_type: Optional[str] = Field(default=None, description="The type of note", serialization_alias="note_type")
     
-    is_head: bool = Field(default=False, description="Whether the token is a head", serialization_alias="is_head")
+    head: bool = Field(default=False, description="Whether the token is a head", serialization_alias="head")
+
+    subst: bool = Field(default=False, description="Wether the token is a substitution", serialization_alias="subst")

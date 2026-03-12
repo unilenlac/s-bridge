@@ -130,13 +130,16 @@ class TEIParser:
                 tag_metadata['seg_part'] = seg_part
                 
         elif element.tag == 'note':
-            tag_metadata['is_note'] = True
+            tag_metadata['note'] = True
             note_type = element.get('type')
             if note_type:
                 tag_metadata['note_type'] = note_type
                 
         elif element.tag == 'head':
-            tag_metadata['is_head'] = True
+            tag_metadata['head'] = True
+
+        elif element.tag == 'subst':
+            tag_metadata['subst'] = True
             
         return tag_metadata
 

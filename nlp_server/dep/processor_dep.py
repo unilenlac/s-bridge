@@ -21,6 +21,3 @@ def converter_dep(request: Request, mode: str = "full") -> Converter:
                 parser = TEIParser(abbr_file="utils/abbr.csv")
                 converter: Converter = FullConverter(proc=proc, parser=parser)
                 return converter
-
-
-converter = Annotated[Converter, Depends(converter_dep)]

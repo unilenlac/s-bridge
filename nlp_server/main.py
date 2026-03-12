@@ -23,7 +23,7 @@ async def lifespan(app: FastAPI):
         proc = ModernProcessor(stanza.Pipeline(settings.language, processors="tokenize,pos,lemma"))
     else:
         proc = ClassicalProcessor(NLP(settings.language, backend="stanza", suppress_banner=True))
-    app.state.proc = proc  # Replace with actual NLP engine instance
+    app.state.proc = proc  
     logger.info("CLTK NLP engine initialized successfully.")
     
     yield
@@ -43,7 +43,7 @@ dummy_data = """<div>""" \
 
 @app.get("/convert", response_model=list[Token] | str, response_model_exclude_none=True, response_model_exclude_defaults=True, description="Convert input text using the specified converter")
 async def convert(*, text: str, normalization: str = Query("lemma+pos", description="Token normalization string. Options: lemma+pos, lemma, text, original"), converter: Converter = Depends(converter_dep)):
-    return converter.run(text, normalization=normalization)  # Replace with actual conversion logic
+    return converter.run(text, normalization=normalization)  
 
 
 if __name__ == "__main__":
