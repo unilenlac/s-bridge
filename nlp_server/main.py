@@ -1,5 +1,5 @@
 from cltk import NLP
-from fastapi import FastAPI, Depends, Query
+from fastapi import FastAPI, Depends, Query, Request
 import xml.etree.ElementTree as ET
 import logging
 import stanza

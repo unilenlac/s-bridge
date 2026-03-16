@@ -13,7 +13,8 @@ TextSegment = Tuple[str, Dict[str, Any]]
 TokenData = Dict[str, Any]
 
 class TEIParser:
-    def __init__(self, abbr_file: Optional[str] = None):
+    def __init__(self, abbr_file: Optional[str] = None, custom_tags: Optional[Dict[str, Any]] = None):
+        self.custom_tags: Dict[str, Any] = custom_tags if custom_tags is not None else self._default_enlac_tags()
         self.abbr_dict: Dict[str, str] = {}
         if abbr_file and os.path.isfile(abbr_file):
             logger.info(f"Loading abbreviation dictionary from {abbr_file}")
@@ -27,6 +28,42 @@ class TEIParser:
             logger.info(f"Loaded {len(self.abbr_dict)} abbreviations")
         elif abbr_file:
             logger.warning(f"Abbreviation file not found: {abbr_file}")
+
+    @staticmethod
+    def _default_enlac_tags() -> Dict[str, Any]:
+        """Return the default ENLAC editorial tag configuration."""
+        return {
+            "unclear": {
+                "flags": {"unclear": True},
+                "attributes": ["reason"],
+            },
+            "add": {
+                "flags": {"add": True},
+                "attributes": ["hand"],
+            },
+            "del": {
+                "flags": {"del": True},
+                "attribute_map": {"rend": "del_reason"},
+                "defaults": {"del_reason": "other"},
+            },
+            "abbr": {
+                "flags": {"abbr": True},
+                "attributes": ["type"],
+            },
+            "seg": {
+                "attributes": ["type", "part"],
+            },
+            "note": {
+                "flags": {"note": True},
+                "attributes": ["type"],
+            },
+            "head": {
+                "flags": {"head": True},
+            },
+            "subst": {
+                "flags": {"subst": True},
+            },
+        }
 
     def parse(self, data: str) -> Tuple[str, MetadataMap]:
         """Process TEI element to extract both metadata map and clean text."""
@@ -97,50 +134,40 @@ class TEIParser:
                     parent.remove(child)
                 
     def _build_tag_metadata(self, element: ET.Element) -> Dict[str, Any]:
-        """Build tag-specific metadata dictionary based on the element."""
+        """Build tag-specific metadata dictionary based on the element's tag configuration."""
         tag_metadata: Dict[str, Any] = {}
-        
-        if element.tag == 'unclear':
-            tag_metadata['unclear'] = True
-            if element.get('reason'):
-                tag_metadata['unclear_reason'] = element.get('reason')
-        
-        elif element.tag == 'add':
-            tag_metadata['add'] = True
-            if element.get('hand'):
-                tag_metadata['add_hand'] = element.get('hand')
+        if element.tag not in self.custom_tags:
+            return tag_metadata
 
-        elif element.tag == 'del':
-            tag_metadata['del'] = True
-            rend = element.get('rend')
-            tag_metadata['del_reason'] = rend if rend else 'other'
+        config = self.custom_tags[element.tag]
 
-        elif element.tag == 'abbr':
-            tag_metadata['abbr'] = True
-            abbr_type = element.get('type')
-            if abbr_type:
-                tag_metadata['abbr_type'] = abbr_type
-                
-        elif element.tag == 'seg':
-            seg_type = element.get('type')
-            if seg_type:
-                tag_metadata['seg_type'] = seg_type
-            seg_part = element.get('part')
-            if seg_part:
-                tag_metadata['seg_part'] = seg_part
-                
-        elif element.tag == 'note':
-            tag_metadata['note'] = True
-            note_type = element.get('type')
-            if note_type:
-                tag_metadata['note_type'] = note_type
-                
-        elif element.tag == 'head':
-            tag_metadata['head'] = True
+        # 1. Static flags (e.g., {"unclear": True})
+        for key, val in config.get("flags", {}).items():
+            tag_metadata[key] = val
 
-        elif element.tag == 'subst':
-            tag_metadata['subst'] = True
-            
+        # 2. Standard attributes → metadata key = {tag}_{attr}
+        for attr in config.get("attributes", []):
+            val = element.get(attr)
+            if val:
+                tag_metadata[f"{element.tag}_{attr}"] = val
+
+        # 3. List-type attributes → split space-separated values
+        for attr in config.get("attributes_list", []):
+            val = element.get(attr)
+            if val:
+                tag_metadata[f"{element.tag}_{attr}"] = val.split()
+
+        # 4. Mapped attributes → custom metadata key (e.g., rend → del_reason)
+        for xml_attr, meta_key in config.get("attribute_map", {}).items():
+            val = element.get(xml_attr)
+            if val:
+                tag_metadata[meta_key] = val
+
+        # 5. Defaults for keys not yet set (e.g., del_reason → "other")
+        for key, default_val in config.get("defaults", {}).items():
+            if key not in tag_metadata:
+                tag_metadata[key] = default_val
+
         return tag_metadata
 
     def _process_text_chunk(

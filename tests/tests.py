@@ -285,3 +285,119 @@ def test_subst_tag_metadata():
 #     clean_text, meta = parser.parse(xml)
 
 #     assert clean_text is "Hello world!"
+
+# --- Dynamic Tag Configuration Tests ---
+
+def test_custom_tag_with_flags_and_attributes():
+    """Custom tag defined via config produces correct metadata."""
+    custom_tags = {
+        "highlight": {
+            "flags": {"highlight": True},
+            "attributes": ["type"],
+        }
+    }
+    parser = TEIParser(custom_tags=custom_tags)
+    xml = '<root>A <highlight type="yellow">marked</highlight> word.</root>'
+    clean_text, meta = parser.parse(xml)
+
+    assert clean_text == "A marked word."
+    start, end = find_word_range(clean_text, "marked")
+    word_meta = get_metadata_for_word(start, end, meta)
+    assert word_meta.get("highlight") is True
+    assert word_meta.get("highlight_type") == "yellow"
+
+def test_custom_tag_self_closing():
+    """Self-closing custom tag applies metadata to the neighboring word via pending_metadata."""
+    custom_tags = {
+        "damage": {
+            "flags": {"damage": True},
+            "attributes": ["extent"],
+        }
+    }
+    parser = TEIParser(custom_tags=custom_tags)
+    xml = '<root>Some <damage extent="2 chars"/>broken text.</root>'
+    clean_text, meta = parser.parse(xml)
+
+    assert clean_text == "Some broken text."
+    start, end = find_word_range(clean_text, "broken")
+    word_meta = get_metadata_for_word(start, end, meta)
+    assert word_meta.get("damage") is True
+    assert word_meta.get("damage_extent") == "2 chars"
+
+def test_custom_tag_attribute_list():
+    """attributes_list config correctly splits space-separated values into a list."""
+    custom_tags = {
+        "add": {
+            "flags": {"add": True},
+            "attributes_list": ["place"],
+        }
+    }
+    parser = TEIParser(custom_tags=custom_tags)
+    xml = '<root>He <add place="margin right">wrote</add> here.</root>'
+    clean_text, meta = parser.parse(xml)
+
+    assert clean_text == "He wrote here."
+    start, end = find_word_range(clean_text, "wrote")
+    word_meta = get_metadata_for_word(start, end, meta)
+    assert word_meta.get("add") is True
+    assert word_meta.get("add_place") == ["margin", "right"]
+
+def test_custom_tag_attribute_map_with_default():
+    """attribute_map and defaults config work correctly (the del-tag pattern)."""
+    # With the rend attribute present
+    parser_default = TEIParser()  # uses ENLAC defaults
+    xml_with_rend = '<root>The writer <del rend="strike">removed</del> this.</root>'
+    clean_text, meta = parser_default.parse(xml_with_rend)
+    
+    start, end = find_word_range(clean_text, "removed")
+    word_meta = get_metadata_for_word(start, end, meta)
+    assert word_meta.get("del") is True
+    assert word_meta.get("del_reason") == "strike"
+
+    # Without the rend attribute — should fallback to "other"
+    xml_no_rend = '<root>The writer <del>removed</del> this.</root>'
+    clean_text2, meta2 = parser_default.parse(xml_no_rend)
+    
+    start2, end2 = find_word_range(clean_text2, "removed")
+    word_meta2 = get_metadata_for_word(start2, end2, meta2)
+    assert word_meta2.get("del") is True
+    assert word_meta2.get("del_reason") == "other"
+
+def test_default_enlac_tags_backward_compat():
+    """Verify that TEIParser() with no custom_tags produces identical results to the old hardcoded behavior."""
+    parser = TEIParser()
+
+    # unclear
+    xml = '<root>An <unclear reason="illegible"/>obscure text.</root>'
+    clean_text, meta = parser.parse(xml)
+    start, end = find_word_range(clean_text, "obscure")
+    assert get_metadata_for_word(start, end, meta).get("unclear") is True
+    assert get_metadata_for_word(start, end, meta).get("unclear_reason") == "illegible"
+
+    # add
+    xml = '<root>The editor <add hand="scribe1">added</add> this.</root>'
+    clean_text, meta = parser.parse(xml)
+    start, end = find_word_range(clean_text, "added")
+    assert get_metadata_for_word(start, end, meta).get("add") is True
+    assert get_metadata_for_word(start, end, meta).get("add_hand") == "scribe1"
+
+    # seg
+    xml = '<root>A <seg type="rubric" part="I">segment</seg>.</root>'
+    clean_text, meta = parser.parse(xml)
+    start, end = find_word_range(clean_text, "segment")
+    assert get_metadata_for_word(start, end, meta).get("seg_type") == "rubric"
+    assert get_metadata_for_word(start, end, meta).get("seg_part") == "I"
+
+    # head
+    xml = '<root><head>Title</head></root>'
+    clean_text, meta = parser.parse(xml)
+    start, end = find_word_range(clean_text, "Title")
+    assert get_metadata_for_word(start, end, meta).get("head") is True
+
+    # subst
+    xml = '<root><subst><del>old</del><add>new</add></subst></root>'
+    clean_text, meta = parser.parse(xml)
+    start, end = find_word_range(clean_text, "new")
+    word_meta = get_metadata_for_word(start, end, meta)
+    assert word_meta.get("subst") is True
+    assert word_meta.get("add") is True

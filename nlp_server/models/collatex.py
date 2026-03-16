@@ -1,7 +1,8 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional 
 
 class Token(BaseModel):
+    model_config = ConfigDict(extra="allow")
     text: str = Field(description="The original token text", serialization_alias="t")
     normalization: str = Field(description="The normalization of the text", serialization_alias="n")
     original: str = Field(default=None, description="The original token text", serialization_alias="o")
@@ -12,16 +13,16 @@ class Token(BaseModel):
     number: Optional[str] = Field(default=None, description="The number of the token", serialization_alias="number")
     
     # Editorial flags and metadata
-    unclear: bool = Field(default=False, description="Whether the token is unclear", serialization_alias="unclear")
+    unclear: Optional[bool] = Field(default=None, description="Whether the token is unclear", serialization_alias="unclear")
     unclear_reason: Optional[str] = Field(default=None, description="The reason the token is unclear", serialization_alias="unclear_reason")
     
-    add: bool = Field(default=False, description="Whether the token is added", serialization_alias="add")
+    add: Optional[bool] = Field(default=None, description="Whether the token is added", serialization_alias="add")
     add_hand: Optional[str] = Field(default=None, description="The hand of the added token", serialization_alias="add_hand")
     
-    dl: bool = Field(default=False, description="Whether the token is deleted", alias="del", serialization_alias="del")
+    dl: Optional[bool] = Field(default=None, description="Whether the token is deleted", alias="del", serialization_alias="del")
     del_reason: Optional[str] = Field(default=None, description="The reason the token is deleted", serialization_alias="del_reason")
     
-    abbr: bool = Field(default=False, description="Whether the token is an abbreviation", serialization_alias="abbr")
+    abbr: Optional[bool] = Field(default=None, description="Whether the token is an abbreviation", serialization_alias="abbr")
     abbr_type: Optional[str] = Field(default=None, description="The type of abbreviation", serialization_alias="abbr_type")
     abbr_original: Optional[str] = Field(default=None, description="The original abbreviation text", serialization_alias="abbr_original")
     
@@ -29,9 +30,9 @@ class Token(BaseModel):
     seg_type: Optional[str] = Field(default=None, description="The type of segment", serialization_alias="seg_type")
     seg_part: Optional[str] = Field(default=None, description="The part of the segment", serialization_alias="seg_part")
     
-    note: bool = Field(default=False, description="Whether the token is a note", serialization_alias="note")
+    note: Optional[bool] = Field(default=None, description="Whether the token is a note", serialization_alias="note")
     note_type: Optional[str] = Field(default=None, description="The type of note", serialization_alias="note_type")
     
-    head: bool = Field(default=False, description="Whether the token is a head", serialization_alias="head")
+    head: Optional[bool] = Field(default=None, description="Whether the token is a head", serialization_alias="head")
 
-    subst: bool = Field(default=False, description="Wether the token is a substitution", serialization_alias="subst")
+    subst: Optional[bool] = Field(default=None, description="Whether the token is a substitution", serialization_alias="subst")
