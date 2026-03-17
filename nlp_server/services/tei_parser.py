@@ -38,8 +38,11 @@ class TEIParser:
             logger.error(f"Failed to parse XML: {e}")
             raise ValueError(f"Invalid XML data provided to TEIParser: {e}")
             
-        # Step 1: Clear breaks first (modifies soup in place, keeps editorial tags)
+        # Step 1: Clear breaks first 
         self._resolve_hyphenation_and_breaks(element)
+
+        # Step 1.5: Remove parenthesis 
+        self._remove_parenthesis(element)
         
         # Step 2: Extract text segments with their metadata
         text_segments, _ = self._extract_text_with_metadata(element)
@@ -97,7 +100,15 @@ class TEIParser:
                             parent.text = prior_text + " " + (child.tail or "")
                             
                     parent.remove(child)
-                
+
+    def _remove_parenthesis(self, element: ET.Element) -> None:
+        """Remove all parentheses from text and tail of all elements."""
+        for node in element.iter():
+            if node.text:
+                node.text = node.text.replace('(', '').replace(')', '')
+            if node.tail:
+                node.tail = node.tail.replace('(', '').replace(')', '')
+
     def _build_tag_metadata(self, element: ET.Element) -> Dict[str, Any]:
         """Build tag-specific metadata dictionary based on the element's tag configuration."""
         tag_metadata: Dict[str, Any] = {}
