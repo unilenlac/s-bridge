@@ -51,9 +51,6 @@ class Settings(BaseSettings):
 
 def _validate_tag_dictionary(data: Any, source: str) -> None:
     """Validate the top-level structure of a tag dictionary.
-
-    Each key must be a tag name (str) mapping to a dict whose keys are
-    a subset of ``_VALID_TAG_CONFIG_KEYS``.
     """
     if not isinstance(data, dict):
         raise ValueError(
@@ -69,10 +66,4 @@ def _validate_tag_dictionary(data: Any, source: str) -> None:
             raise ValueError(
                 f"Tag config '{source}': config for tag '{tag_name}' must be a dict, "
                 f"got {type(tag_cfg).__name__}."
-            )
-        unknown_keys = set(tag_cfg.keys()) - _VALID_TAG_CONFIG_KEYS
-        if unknown_keys:
-            raise ValueError(
-                f"Tag config '{source}': tag '{tag_name}' has unknown keys: {unknown_keys}. "
-                f"Allowed keys: {_VALID_TAG_CONFIG_KEYS}."
             )
