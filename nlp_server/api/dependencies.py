@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Dict, Literal, Optional
+from typing import Literal
 from fastapi import Request, Query
 from pydantic import BaseModel
 
@@ -12,6 +12,10 @@ settings = Settings()
 
 FormatType = Literal["tei", "json", "text"]
 StrategyType = Literal["enriched", "raw"]
+
+# Resolve the tag dictionary once at import time (fail-fast on invalid config).
+_tag_dict = settings.load_tag_dictionary()
+
 
 class ProcessingOptions(BaseModel):
     normalization: str
@@ -27,7 +31,6 @@ def converter_dep(
     request: Request, 
     format: FormatType = Query("tei", description="Input data format"), 
     strategy: StrategyType = Query("enriched", description="Parsing complexity strategy"),
-    custom_tags: Optional[Dict[str, Any]] = None,
 ) -> Converter:
     proc = request.app.state.proc
 
@@ -39,7 +42,7 @@ def converter_dep(
             case "tei":
                 utils_dir = Path(__file__).parent.parent / "utils"
                 abbr_file = utils_dir / "abbr_classical_greek.csv"
-                parser = TEIParser(abbr_file=str(abbr_file), custom_tags=custom_tags)
+                parser = TEIParser(abbr_file=str(abbr_file), custom_tags=_tag_dict)
             case "json":
                 #Not implemented
                 raise NotImplementedError("JSON Support is coming soon! TM")

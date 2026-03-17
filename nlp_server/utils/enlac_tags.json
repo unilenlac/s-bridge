@@ -1,0 +1,61 @@
+{
+    "unclear": {
+        "flags": {
+            "unclear": true
+        },
+        "attributes": [
+            "reason"
+        ]
+    },
+    "add": {
+        "flags": {
+            "add": true
+        },
+        "attributes": [
+            "hand"
+        ]
+    },
+    "del": {
+        "flags": {
+            "del": true
+        },
+        "attributes": [
+            "rend"
+        ]
+    },
+    "abbr": {
+        "flags": {
+            "abbr": true
+        },
+        "attributes": [
+            "type"
+        ]
+    },
+    "seg": {
+        "flags": {
+            "seg": true
+        },
+        "attributes": [
+            "type",
+            "part"
+        ]
+    },
+    "note": {
+        "flags": {
+            "note": true
+        },
+        "attributes": [
+            "type"
+        ]
+    },
+    "head": {
+        "flags": {
+            "head": true
+        }
+    },
+    "subst": {
+        "flags": {
+            "subst": true
+        }
+    }
+}

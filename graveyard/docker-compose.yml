@@ -7,3 +7,7 @@ services:
       - "8000:8000"
     restart: unless-stopped
     container_name: s-bridge-nlp
+    # environment:
+    #   TAG_CONFIG: /app/config/custom_tags.json
+    # volumes:
+    #   - ./my_tags.json:/app/config/custom_tags.json:ro

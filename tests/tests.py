@@ -21,7 +21,9 @@ def find_word_range(text, target_word):
     return start, start + len(target_word)
 
 def get_parser():
-    return TEIParser()
+    from nlp_server.core.config import Settings
+    tags = Settings().load_tag_dictionary()
+    return TEIParser(custom_tags=tags)
 
 def test_basic_text_extraction():
     xml = "<root>Hello world</root>"
@@ -150,17 +152,7 @@ def test_del_tag_metadata():
     start, end = find_word_range(clean_text, "removed")
     word_meta = get_metadata_for_word(start, end, meta)
     assert word_meta.get("del") is True
-    assert word_meta.get("del_reason") == "strike"
-    
-def test_del_tag_fallback_reason():
-    xml = '<root>The writer <del>removed</del> this without a rend attribute.</root>'
-    parser = get_parser()
-    clean_text, meta = parser.parse(xml)
-    
-    start, end = find_word_range(clean_text, "removed")
-    word_meta = get_metadata_for_word(start, end, meta)
-    assert word_meta.get("del") is True
-    assert word_meta.get("del_reason") == "other"
+    assert word_meta.get("del_rend") == "strike"
 
 def test_abbr_tag_metadata():
     xml = '<root>He spoke to the <abbr type="ns">kyrios</abbr>.</root>'
@@ -238,6 +230,7 @@ def test_seg_tag_metadata():
     start, end = find_word_range(clean_text, "heading segment")
     word_meta = get_metadata_for_word(start, end, meta)
     
+    assert word_meta.get("seg") is True
     assert word_meta.get("seg_type") == "rubric"
     assert word_meta.get("seg_part") == "I"
 
@@ -324,48 +317,11 @@ def test_custom_tag_self_closing():
     assert word_meta.get("damage") is True
     assert word_meta.get("damage_extent") == "2 chars"
 
-def test_custom_tag_attribute_list():
-    """attributes_list config correctly splits space-separated values into a list."""
-    custom_tags = {
-        "add": {
-            "flags": {"add": True},
-            "attributes_list": ["place"],
-        }
-    }
-    parser = TEIParser(custom_tags=custom_tags)
-    xml = '<root>He <add place="margin right">wrote</add> here.</root>'
-    clean_text, meta = parser.parse(xml)
-
-    assert clean_text == "He wrote here."
-    start, end = find_word_range(clean_text, "wrote")
-    word_meta = get_metadata_for_word(start, end, meta)
-    assert word_meta.get("add") is True
-    assert word_meta.get("add_place") == ["margin", "right"]
-
-def test_custom_tag_attribute_map_with_default():
-    """attribute_map and defaults config work correctly (the del-tag pattern)."""
-    # With the rend attribute present
-    parser_default = TEIParser()  # uses ENLAC defaults
-    xml_with_rend = '<root>The writer <del rend="strike">removed</del> this.</root>'
-    clean_text, meta = parser_default.parse(xml_with_rend)
-    
-    start, end = find_word_range(clean_text, "removed")
-    word_meta = get_metadata_for_word(start, end, meta)
-    assert word_meta.get("del") is True
-    assert word_meta.get("del_reason") == "strike"
-
-    # Without the rend attribute — should fallback to "other"
-    xml_no_rend = '<root>The writer <del>removed</del> this.</root>'
-    clean_text2, meta2 = parser_default.parse(xml_no_rend)
-    
-    start2, end2 = find_word_range(clean_text2, "removed")
-    word_meta2 = get_metadata_for_word(start2, end2, meta2)
-    assert word_meta2.get("del") is True
-    assert word_meta2.get("del_reason") == "other"
+# removed tests for attribute_list, attribute_map, and defaults as features were removed.
 
 def test_default_enlac_tags_backward_compat():
-    """Verify that TEIParser() with no custom_tags produces identical results to the old hardcoded behavior."""
-    parser = TEIParser()
+    """Verify that get_parser() (loading default JSON) produces expected ENLAC behavior."""
+    parser = get_parser()
 
     # unclear
     xml = '<root>An <unclear reason="illegible"/>obscure text.</root>'
@@ -381,10 +337,18 @@ def test_default_enlac_tags_backward_compat():
     assert get_metadata_for_word(start, end, meta).get("add") is True
     assert get_metadata_for_word(start, end, meta).get("add_hand") == "scribe1"
 
+    # del
+    xml = '<root>A <del rend="strike">deleted</del> word.</root>'
+    clean_text, meta = parser.parse(xml)
+    start, end = find_word_range(clean_text, "deleted")
+    assert get_metadata_for_word(start, end, meta).get("del") is True
+    assert get_metadata_for_word(start, end, meta).get("del_rend") == "strike"
+
     # seg
     xml = '<root>A <seg type="rubric" part="I">segment</seg>.</root>'
     clean_text, meta = parser.parse(xml)
     start, end = find_word_range(clean_text, "segment")
+    assert get_metadata_for_word(start, end, meta).get("seg") is True
     assert get_metadata_for_word(start, end, meta).get("seg_type") == "rubric"
     assert get_metadata_for_word(start, end, meta).get("seg_part") == "I"
 
@@ -401,3 +365,66 @@ def test_default_enlac_tags_backward_compat():
     word_meta = get_metadata_for_word(start, end, meta)
     assert word_meta.get("subst") is True
     assert word_meta.get("add") is True
+
+# --- Settings / Tag Config Loading Tests ---
+
+def test_load_tag_dictionary_default():
+    """load_tag_dictionary() returns the default ENLAC tags when tag_config is unset."""
+    from nlp_server.core.config import Settings
+    s = Settings(tag_config=None)
+    result = s.load_tag_dictionary()
+    assert isinstance(result, dict)
+    assert "unclear" in result
+    assert result["unclear"]["flags"] == {"unclear": True}
+
+def test_load_tag_dictionary_valid_file(tmp_path):
+    """load_tag_dictionary() returns the parsed dict from a valid JSON file."""
+    import json
+    from nlp_server.core.config import Settings
+
+    tag_data = {
+        "highlight": {"flags": {"highlight": True}, "attributes": ["type"]}
+    }
+    tag_file = tmp_path / "tags.json"
+    tag_file.write_text(json.dumps(tag_data), encoding="utf-8")
+
+    s = Settings(tag_config=str(tag_file))
+    result = s.load_tag_dictionary()
+    assert result == tag_data
+
+def test_load_tag_dictionary_file_not_found():
+    """load_tag_dictionary() raises FileNotFoundError on a missing file."""
+    from nlp_server.core.config import Settings
+    import pytest
+
+    s = Settings(tag_config="/nonexistent/path/tags.json")
+    with pytest.raises(FileNotFoundError, match="Tag config file not found"):
+        s.load_tag_dictionary()
+
+def test_load_tag_dictionary_invalid_json(tmp_path):
+    """load_tag_dictionary() raises ValueError on malformed JSON."""
+    from nlp_server.core.config import Settings
+    import pytest
+
+    bad_file = tmp_path / "bad.json"
+    bad_file.write_text("{not valid json", encoding="utf-8")
+
+    s = Settings(tag_config=str(bad_file))
+    with pytest.raises(ValueError, match="invalid JSON"):
+        s.load_tag_dictionary()
+
+def test_load_tag_dictionary_invalid_structure(tmp_path):
+    """load_tag_dictionary() raises ValueError when a tag config has unknown keys."""
+    import json
+    from nlp_server.core.config import Settings
+    import pytest
+
+    bad_data = {
+        "note": {"flags": {"note": True}, "bogus_key": "oops"}
+    }
+    bad_file = tmp_path / "bad_structure.json"
+    bad_file.write_text(json.dumps(bad_data), encoding="utf-8")
+
+    s = Settings(tag_config=str(bad_file))
+    with pytest.raises(ValueError, match="unknown keys"):
+        s.load_tag_dictionary()

@@ -14,7 +14,7 @@ TokenData = Dict[str, Any]
 
 class TEIParser:
     def __init__(self, abbr_file: Optional[str] = None, custom_tags: Optional[Dict[str, Any]] = None):
-        self.custom_tags: Dict[str, Any] = custom_tags if custom_tags is not None else self._default_enlac_tags()
+        self.custom_tags: Dict[str, Any] = custom_tags if custom_tags is not None else {}
         self.abbr_dict: Dict[str, str] = {}
         if abbr_file and os.path.isfile(abbr_file):
             logger.info(f"Loading abbreviation dictionary from {abbr_file}")
@@ -29,41 +29,6 @@ class TEIParser:
         elif abbr_file:
             logger.warning(f"Abbreviation file not found: {abbr_file}")
 
-    @staticmethod
-    def _default_enlac_tags() -> Dict[str, Any]:
-        """Return the default ENLAC editorial tag configuration."""
-        return {
-            "unclear": {
-                "flags": {"unclear": True},
-                "attributes": ["reason"],
-            },
-            "add": {
-                "flags": {"add": True},
-                "attributes": ["hand"],
-            },
-            "del": {
-                "flags": {"del": True},
-                "attribute_map": {"rend": "del_reason"},
-                "defaults": {"del_reason": "other"},
-            },
-            "abbr": {
-                "flags": {"abbr": True},
-                "attributes": ["type"],
-            },
-            "seg": {
-                "attributes": ["type", "part"],
-            },
-            "note": {
-                "flags": {"note": True},
-                "attributes": ["type"],
-            },
-            "head": {
-                "flags": {"head": True},
-            },
-            "subst": {
-                "flags": {"subst": True},
-            },
-        }
 
     def parse(self, data: str) -> Tuple[str, MetadataMap]:
         """Process TEI element to extract both metadata map and clean text."""
@@ -145,28 +110,11 @@ class TEIParser:
         for key, val in config.get("flags", {}).items():
             tag_metadata[key] = val
 
-        # 2. Standard attributes → metadata key = {tag}_{attr}
+        # 2. Attributes → metadata key = {tag}_{attr}
         for attr in config.get("attributes", []):
             val = element.get(attr)
             if val:
                 tag_metadata[f"{element.tag}_{attr}"] = val
-
-        # 3. List-type attributes → split space-separated values
-        for attr in config.get("attributes_list", []):
-            val = element.get(attr)
-            if val:
-                tag_metadata[f"{element.tag}_{attr}"] = val.split()
-
-        # 4. Mapped attributes → custom metadata key (e.g., rend → del_reason)
-        for xml_attr, meta_key in config.get("attribute_map", {}).items():
-            val = element.get(xml_attr)
-            if val:
-                tag_metadata[meta_key] = val
-
-        # 5. Defaults for keys not yet set (e.g., del_reason → "other")
-        for key, default_val in config.get("defaults", {}).items():
-            if key not in tag_metadata:
-                tag_metadata[key] = default_val
 
         return tag_metadata
 
