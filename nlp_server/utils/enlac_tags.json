@@ -4,7 +4,45 @@
             "unclear": true
         },
         "attributes": [
-            "reason"
+            "reason",
+            "atLeast",
+            "atMost"
+        ]
+    },
+    "reproduction": {
+        "flags": {
+            "reproduction": true
+        },
+        "attributes": [
+            "atLeast",
+            "atMost"
+        ]
+    },
+    "supplied": {
+        "flags": {
+            "supplied": true
+        },
+        "attributes": [
+            "low",
+            "medium",
+            "high"
+        ]
+    },
+    "handshift": {
+        "flags": {
+            "handshift": true
+        },
+        "attributes": [
+            "hand"
+        ]
+    },
+    "space": {
+        "flags": {
+            "space": true
+        },
+        "attributes": [
+            "atLeast",
+            "atMost"
         ]
     },
     "add": {
@@ -12,7 +50,10 @@
             "add": true
         },
         "attributes": [
-            "hand"
+            "hand",
+            "place",
+            "type",
+            "rend"
         ]
     },
     "del": {
@@ -20,7 +61,10 @@
             "del": true
         },
         "attributes": [
-            "rend"
+            "rend",
+            "hand",
+            "atLeast",
+            "atMost"
         ]
     },
     "abbr": {
@@ -37,7 +81,8 @@
         },
         "attributes": [
             "type",
-            "part"
+            "hand",
+            "place"
         ]
     },
     "note": {
@@ -51,11 +96,70 @@
     "head": {
         "flags": {
             "head": true
-        }
+        },
+        "attributes": [
+            "type",
+            "place"
+        ]
     },
     "subst": {
         "flags": {
             "subst": true
+        },
+        "attributes": [
+            "type"
+        ]
+    },
+    "gap": {
+        "flags": {
+            "gap": true
+        }
+    },
+    "choice": {
+        "flags": {
+            "choice": true
+        },
+        "attributes": [
+            "place",
+            "hand",
+            "notation"
+        ]
+    },
+    "c": {
+        "flags": {
+            "c": true
+        },
+        "attributes": [
+            "type"
+        ]
+    },
+    "hi": {
+        "flags": {
+            "hi": true
+        }
+    },
+    "name": {
+        "flags": {
+            "name": true
+        }
+    },
+    "num": {
+        "flags": {
+            "num": true
+        },
+        "attributes": [
+            "value",
+            "type"
+        ]
+    },
+    "quote": {
+        "flags": {
+            "quote": true
+        }
+    },
+    "sic": {
+        "flags": {
+            "sic": true
         }
     }
 }
