@@ -150,10 +150,28 @@ class TEIParser:
                 # Apply it to the last appended word if it exists
                 if results:
                     last_text, last_meta = results[-1]
-                    # We can't just mutate the dictionary if it's shared, so we make a copy
-                    new_meta = last_meta.copy()
-                    new_meta.update(pending_metadata)
-                    results[-1] = (last_text, new_meta)
+                    
+                    import re
+                    # Split last_text to apply metadata ONLY to the last word
+                    # e.g. "φθάσας δὲ" -> group(1): "φθάσας ", group(2): "δὲ", group(3): ""
+                    m_last = re.match(r'^(.*?)(\S+)(\s*)$', last_text, flags=re.DOTALL)
+                    if m_last and m_last.group(1):
+                        prefix = m_last.group(1)
+                        last_word = m_last.group(2)
+                        trailing_spaces = m_last.group(3)
+                        
+                        # Replace the last element with prefix (old meta)
+                        results[-1] = (prefix, last_meta)
+                        
+                        # Append the last word with new meta
+                        new_meta = last_meta.copy()
+                        new_meta.update(pending_metadata)
+                        results.append((last_word + trailing_spaces, new_meta))
+                    else:
+                        # We can't just mutate the dictionary if it's shared, so we make a copy
+                        new_meta = last_meta.copy()
+                        new_meta.update(pending_metadata)
+                        results[-1] = (last_text, new_meta)
                 else:
                     # Rare edge case: tag is at the very beginning of the document before any text, 
                     # but followed by a space. We'll just drop it or attach it to the space (which gets ignored).
