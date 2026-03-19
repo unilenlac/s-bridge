@@ -34,7 +34,6 @@ class ClassicalProcessor:
                             prev.original = data[prev.char_start:w_stop]
                         else:
                             prev.original += word.string
-                        prev.text += word.string
                         continue
 
             # Safely extract NLP features (Case, Gender, Number)
@@ -101,7 +100,6 @@ class ModernProcessor:
                                 prev.original = data[prev.char_start:w_stop]
                             else:
                                 prev.original += word.text
-                            prev.text += word.text
                             continue
 
                 # Safely extract NLP features (Stanza stores them as string: 'Case=Nom|Gender=Masc|Number=Sing')
