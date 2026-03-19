@@ -17,13 +17,12 @@ def convert_text(input_file, output_file, format="tei", strategy="enriched", nor
         
         # We pass parameters via query params
         params = {
-            "text": text,
             "format": format,
             "strategy": strategy,
             "normalization": normalization
         }
         
-        response = requests.get(url, params=params)
+        response = requests.post(url, params=params, json={"text": text})
         response.raise_for_status()  # check for HTTP errors
         
         data = response.json()
