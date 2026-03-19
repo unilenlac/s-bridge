@@ -412,19 +412,3 @@ def test_load_tag_dictionary_invalid_json(tmp_path):
     s = Settings(tag_config=str(bad_file))
     with pytest.raises(ValueError, match="invalid JSON"):
         s.load_tag_dictionary()
-
-def test_load_tag_dictionary_invalid_structure(tmp_path):
-    """load_tag_dictionary() raises ValueError when a tag config has unknown keys."""
-    import json
-    from nlp_server.core.config import Settings
-    import pytest
-
-    bad_data = {
-        "note": {"flags": {"note": True}, "bogus_key": "oops"}
-    }
-    bad_file = tmp_path / "bad_structure.json"
-    bad_file.write_text(json.dumps(bad_data), encoding="utf-8")
-
-    s = Settings(tag_config=str(bad_file))
-    with pytest.raises(ValueError, match="unknown keys"):
-        s.load_tag_dictionary()

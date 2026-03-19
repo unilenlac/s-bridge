@@ -82,7 +82,8 @@
         "attributes": [
             "type",
             "hand",
-            "place"
+            "place",
+            "part"
         ]
     },
     "note": {
