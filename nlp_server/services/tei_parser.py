@@ -73,7 +73,9 @@ class TEIParser:
         for parent in element.iter():
             for child_index in range(len(parent) - 1, -1, -1):
                 child = parent[child_index]
-                if child.tag in ['lb', 'pb']:
+                #fix issue when first element is <TEI xmlns="http://www.tei-c.org/ns/1.0" xml:lang="grc">
+                tag_name = child.tag.split('}')[-1] if '}' in child.tag else child.tag
+                if tag_name in ['lb', 'pb']:
                     
                     # 1. Locate the physical text that immediately precedes the break
                     node_with_text, attr_name = self._get_rightmost_text_node(parent, child_index)
@@ -112,10 +114,12 @@ class TEIParser:
     def _build_tag_metadata(self, element: ET.Element) -> Dict[str, Any]:
         """Build tag-specific metadata dictionary based on the element's tag configuration."""
         tag_metadata: Dict[str, Any] = {}
-        if element.tag not in self.custom_tags:
+        tag_name = element.tag.split('}')[-1] if '}' in element.tag else element.tag
+
+        if tag_name not in self.custom_tags:
             return tag_metadata
 
-        config = self.custom_tags[element.tag]
+        config = self.custom_tags[tag_name]
 
         # 1. Static flags (e.g., {"unclear": True})
         for key, val in config.get("flags", {}).items():
@@ -125,7 +129,7 @@ class TEIParser:
         for attr in config.get("attributes", []):
             val = element.get(attr)
             if val:
-                tag_metadata[f"{element.tag}_{attr}"] = val
+                tag_metadata[f"{tag_name}_{attr}"] = val
 
         return tag_metadata
 
