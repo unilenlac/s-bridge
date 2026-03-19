@@ -7,9 +7,6 @@ from pydantic_settings import BaseSettings
 
 logger = logging.getLogger(__name__)
 
-# Allowed keys inside each tag's configuration dict.
-_VALID_TAG_CONFIG_KEYS = {"flags", "attributes"}
-
 
 class Settings(BaseSettings):
     pipeline: str = "classical"  # Default pipeline (e.g., "modern" or "classical")
