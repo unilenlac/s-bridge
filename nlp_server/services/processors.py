@@ -15,10 +15,27 @@ class ClassicalProcessor:
         for word in cltk_doc.words:
             pos_tag = word.upos.tag if word.upos else "UNKNOWN"
             
+            w_start = getattr(word, 'index_char_start', None)
+            w_stop = getattr(word, 'index_char_stop', None)
+
             if pos_tag == "PUNCT":
                 if tokens:
-                    tokens[-1].original += word.string
-                continue
+                    prev = tokens[-1]
+                    can_merge = False
+                    if prev.char_stop is not None and w_start is not None:
+                        if prev.char_stop == w_start:
+                            can_merge = True
+                    else:
+                        can_merge = True
+                        
+                    if can_merge:
+                        if prev.char_start is not None and w_stop is not None:
+                            prev.char_stop = w_stop
+                            prev.original = data[prev.char_start:w_stop]
+                        else:
+                            prev.original += word.string
+                        prev.text += word.string
+                        continue
 
             # Safely extract NLP features (Case, Gender, Number)
             feats_dict = {}
@@ -46,7 +63,9 @@ class ClassicalProcessor:
                 pos=pos_tag,
                 cs=feats_dict.get("Case"),
                 gender=feats_dict.get("Gender"),
-                number=feats_dict.get("Number")
+                number=feats_dict.get("Number"),
+                char_start=w_start,
+                char_stop=w_stop
             )
             tokens.append(my_token)
             
@@ -63,10 +82,27 @@ class ModernProcessor:
             for word in sentence.words:
                 pos_tag = word.upos if word.upos else "UNKNOWN"
                 
+                w_start = getattr(word.parent, 'start_char', getattr(word, 'start_char', None)) if hasattr(word, 'parent') else getattr(word, 'start_char', None)
+                w_stop = getattr(word.parent, 'end_char', getattr(word, 'end_char', None)) if hasattr(word, 'parent') else getattr(word, 'end_char', None)
+
                 if pos_tag == "PUNCT":
                     if tokens:
-                        tokens[-1].original += word.text
-                    continue
+                        prev = tokens[-1]
+                        can_merge = False
+                        if prev.char_stop is not None and w_start is not None:
+                            if prev.char_stop == w_start:
+                                can_merge = True
+                        else:
+                            can_merge = True
+                            
+                        if can_merge:
+                            if prev.char_start is not None and w_stop is not None:
+                                prev.char_stop = w_stop
+                                prev.original = data[prev.char_start:w_stop]
+                            else:
+                                prev.original += word.text
+                            prev.text += word.text
+                            continue
 
                 # Safely extract NLP features (Stanza stores them as string: 'Case=Nom|Gender=Masc|Number=Sing')
                 feats_dict = {}
@@ -96,7 +132,9 @@ class ModernProcessor:
                     pos=pos_tag,
                     cs=feats_dict.get("Case"),
                     gender=feats_dict.get("Gender"),
-                    number=feats_dict.get("Number")
+                    number=feats_dict.get("Number"),
+                    char_start=w_start,
+                    char_stop=w_stop
                 )
                 tokens.append(my_token)
                 

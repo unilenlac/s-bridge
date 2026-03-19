@@ -10,7 +10,11 @@ class Token(BaseModel):
     pos: Optional[str] = Field(default=None, description="The part of speech of the token", serialization_alias="pos")
     cs: Optional[str] = Field(default=None, description="The case of the token", serialization_alias="case")
     gender: Optional[str] = Field(default=None, description="The gender of the token", serialization_alias="gender")
-    number: Optional[str] = Field(default=None, description="The number of the token", serialization_alias="number")
+    number: Optional[str] = Field(default=None, description="The value of the grammatical category of number of the token", serialization_alias="number")
+    
+    char_start: Optional[int] = Field(default=None, exclude=True, description="Start character index in the raw string")
+    char_stop: Optional[int] = Field(default=None, exclude=True, description="Stop character index in the raw string")
+
     
     # Editorial flags and metadata
     unclear: Optional[bool] = Field(default=None, description="Whether the token is unclear", serialization_alias="unclear")

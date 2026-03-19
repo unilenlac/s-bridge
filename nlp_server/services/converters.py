@@ -28,11 +28,15 @@ class EnrichedStrategyConverter:
         current_char_offset = 0
         
         for token in raw_tokens:
-            char_start = current_char_offset
-            char_stop = current_char_offset + len(token.original)
-            
-            # Increment offset for next token + space
-            current_char_offset += len(token.original) + 1 
+            if getattr(token, 'char_start', None) is not None and getattr(token, 'char_stop', None) is not None:
+                char_start = token.char_start
+                char_stop = token.char_stop
+                current_char_offset = char_stop + 1
+            else:
+                char_start = current_char_offset
+                char_stop = current_char_offset + len(token.original)
+                current_char_offset += len(token.original) + 1 
+ 
             
             # Get matching metadata
             editorial_metadata = self.parser.get_metadata_for_token(char_start, char_stop, metadata_map)
@@ -43,7 +47,7 @@ class EnrichedStrategyConverter:
             
             # Re-instantiate the completely enriched Token
             
-            # THE FILTERING LOGIC
+            # THE FILTERING LOGIC and it is wrong for following tokens.
             if filter_del and editorial_metadata.get("del") is True:
                 continue # Skip this token entirely
 
