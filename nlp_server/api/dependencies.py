@@ -46,9 +46,6 @@ def converter_dep(
             case "json":
                 #Not implemented
                 raise NotImplementedError("JSON Support is coming soon! TM")
-            case "text":
-                #Not implemented
-                raise NotImplementedError("Plain text support is coming soon! TM")
             case _:
                 #Technically unreachable due to FastAPI validation but good practice
                 raise ValueError(f"Unsupported format: {format}")
