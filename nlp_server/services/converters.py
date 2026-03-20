@@ -47,7 +47,7 @@ class EnrichedStrategyConverter:
             
             # Re-instantiate the completely enriched Token
             
-            # THE FILTERING LOGIC and it is wrong for following tokens.
+            # THE FILTERING LOGIC
             if filter_del and editorial_metadata.get("del") is True:
                 continue # Skip this token entirely
 

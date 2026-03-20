@@ -97,6 +97,7 @@ class ModernProcessor:
                         if can_merge:
                             if prev.char_start is not None and w_stop is not None:
                                 prev.char_stop = w_stop
+                                #We artificially expend the previous token's bounding box
                                 prev.original = data[prev.char_start:w_stop]
                             else:
                                 prev.original += word.text

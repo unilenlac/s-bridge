@@ -9,16 +9,22 @@
 
 **Answer:**
 > 
+The converter instance is provided through a selection made in dependencies. The converter_dep function helps selecting the correct converter based on format and strategies given through the endpoint as parameters in the http post request. fastAPI includes Query which facilitates this.
+
+The main difference between Raw and enriched is the fact that Enriched uses a parser. In the enriched, a parser is initialized with specific abbreviation file and tag dictionary. It will be used  to parse the text before handling it to cltk to analyze.
 
 2. **Lifespan Management**: Looking at `main.py`, the `Processor` (either `ModernProcessor` or `ClassicalProcessor`) is initialized in the `lifespan` context manager. Why is this preferable to initializing the processor inside the endpoint function or directly at the module level?
 
 **Answer:**
 > 
+ It is initialized in the lifespan context manager given through fastAPI instead of directly at the module level because everything contained in lifespan is ran ONCE at server launch. then the processor is set as an app.state variable, accessible through fastAPI Request
+
 
 3. **Format Support**: The `converter_dep` dependency handles `tei`, `json`, and `text` formats. Currently, `json` and `text` raise a `NotImplementedError`. What changes would you need to make in `converters.py` and `dependencies.py` to seamlessly support plain text input while still using the generic `Processor`?
 
 **Answer:**
 > 
+in converters.py, no change would be needed, that's the beauty of decoupling it in such a way. in dependencies.py, we would need to give a specific parser for text and json. Presumably JSONParser and  TEXTParser/PLAINParser. We would need to implement those however.
 
 ## Section 2: Data Models & Serialization
 **Focus**: Pydantic models and field aliases.
@@ -27,16 +33,20 @@
 
 **Answer:**
 > 
+As is, the Token(BaseModel) is largely for documentation as the model_config = ConfigDict(Extra="allow") actually allows for more entries than those stated as Optionnal. Now, onto the serialization question, I suppose it can be of use for the /convert endpoint response as .. Actually, I don't know and I wish to know. Because processors.py do use the  serialiazed alias. However it seems these serialisation alias do end up in the final  collection of tokens output. WRONG:
+The only reason `serialization_alias` exists here is **network payload compression and downstream collation efficiency**.
 
 2. **Excluding Fields**: The `char_start` and `char_stop` fields are defined with `exclude=True`. Why are these character offsets needed during processing but explicitly excluded from the final JSON payload sent to the client?
 
 **Answer:**
 > 
+The char offsets are needed for correct alignment of metadata post cltk analyze. However, these are not needed for further manipulation, therefore we don't sent it. the enriched converter append enriched  token without the offset thanks to the exlude true. otherwise, they would be added with the  enriched_token = Token(**token_dict). Also, we want to be clean and not send useless information to reduce load.
 
 3. **Pydantic dumps**: In `converters.py`, `token.model_dump(by_alias=False, exclude_none=True)` is called. Why must `by_alias` be `False` when reconstructing the token after merging it with editorial metadata?
 
 **Answer:**
 > 
+It's to be aligned with the processor. it filled it field using full names and not aliases. That's why.
 
 ## Section 3: NLP Processors
 **Focus**: Linguistic processing, tokenization, and punctuation handling.
@@ -45,11 +55,15 @@
 
 **Answer:**
 > 
+so cltk.analyze creates a doc object containing words object. word contain information relative to the token, like the pos_tag. If one is PUNCT, we don't want to send it to the client as punctuation is noise. In greek and other language, punctuation didn't exist. They are most of the time added by the scribe and we want to filter  them. Therefore, we don't send a token of the punctuation, but we do link it in the "original" ("o") entry of the preceding token so that we have a trace of it.
 
 2. **Normalization Strategies**: The `process` method accepts a `normalization` argument (e.g., `lemma`, `text`, `original`, `lemma+pos`). Trace how `lemma+pos` is constructed from a Stanza or CLTK word object. What happens if the `lemma` is missing from the underlying NLP library's output?
 
 **Answer:**
 > 
+~Right now, the process and the Token class does expect lemma and pos from the analyse. cltk does give it and so does stanza. If this isn't possible for other language (smth else than greek or latin or cltk related language), than we would need to update the token construction in processor and forced fields in Token class. WRONG:
+It's handled through the fallback word.string if word.lemma is None
+
 
 ## Section 4: Converters & Metadata Merging
 **Focus**: The "Enriched" orchestration phase.
