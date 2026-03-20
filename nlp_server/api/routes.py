@@ -11,7 +11,7 @@ router = APIRouter()
 class ConvertRequest(BaseModel):
     text: str
 
-@router.post("/convert", response_model=list[Token] | str, 
+@router.post("/convert", response_model=list[Token], 
     response_model_exclude_none=True, 
     response_model_exclude_defaults=True, 
     description="Convert input text using the specified converter")
