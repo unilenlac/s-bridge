@@ -7,7 +7,7 @@ The `TEIParser` supports dynamic editorial tag configuration. Instead of being l
 Pass a `custom_tags` dictionary when creating a `TEIParser`:
 
 ```python
-from nlp_server.services.tei_parser import TEIParser
+from services.tei_parser import TEIParser
 
 custom_tags = {
     "damage": {

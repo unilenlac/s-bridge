@@ -3,7 +3,7 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import xml.etree.ElementTree as ET
-from nlp_server.services.tei_parser import TEIParser
+from services.tei_parser import TEIParser
 
 def get_metadata_for_word(word_start, word_end, metadata_map):
     """Helper mirroring the tokenizer's logic to fetch metadata for a specific character range."""
@@ -21,7 +21,7 @@ def find_word_range(text, target_word):
     return start, start + len(target_word)
 
 def get_parser():
-    from nlp_server.core.config import Settings
+    from core.config import Settings
     tags = Settings().load_tag_dictionary()
     return TEIParser(custom_tags=tags)
 
@@ -370,7 +370,7 @@ def test_default_enlac_tags_backward_compat():
 
 def test_load_tag_dictionary_default():
     """load_tag_dictionary() returns the default ENLAC tags when tag_config is unset."""
-    from nlp_server.core.config import Settings
+    from core.config import Settings
     s = Settings(tag_config=None)
     result = s.load_tag_dictionary()
     assert isinstance(result, dict)
@@ -380,7 +380,7 @@ def test_load_tag_dictionary_default():
 def test_load_tag_dictionary_valid_file(tmp_path):
     """load_tag_dictionary() returns the parsed dict from a valid JSON file."""
     import json
-    from nlp_server.core.config import Settings
+    from core.config import Settings
 
     tag_data = {
         "highlight": {"flags": {"highlight": True}, "attributes": ["type"]}
@@ -394,7 +394,7 @@ def test_load_tag_dictionary_valid_file(tmp_path):
 
 def test_load_tag_dictionary_file_not_found():
     """load_tag_dictionary() raises FileNotFoundError on a missing file."""
-    from nlp_server.core.config import Settings
+    from core.config import Settings
     import pytest
 
     s = Settings(tag_config="/nonexistent/path/tags.json")
@@ -403,7 +403,7 @@ def test_load_tag_dictionary_file_not_found():
 
 def test_load_tag_dictionary_invalid_json(tmp_path):
     """load_tag_dictionary() raises ValueError on malformed JSON."""
-    from nlp_server.core.config import Settings
+    from core.config import Settings
     import pytest
 
     bad_file = tmp_path / "bad.json"
