@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     pipeline: str = "classical"  # Default pipeline (e.g., "modern" or "classical")
     language: str = "grc"
     tag_config: Optional[str] = None  # Path to a JSON tag dictionary file
+    dts_api_base_url: str = "http://ftsr-dev.unil.ch:8000"
 
     def load_tag_dictionary(self) -> Dict[str, Any]:
         """Load and validate a tag dictionary from the JSON file at ``tag_config``.
