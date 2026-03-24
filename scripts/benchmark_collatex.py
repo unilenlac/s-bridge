@@ -58,7 +58,7 @@ async def run_benchmark():
     await old_service.prepare_collatex(resources, converter, options, ref="109")
     t1 = time.time()
     old_time = t1 - t0
-    print(f"🐢 Old Sequential Architecture : {old_time:.3f} seconds")
+    print(f" Old Sequential Architecture : {old_time:.3f} seconds")
     
     # 4. Simulate New Architecture
     new_service = CollatexService(fetcher)
@@ -66,7 +66,7 @@ async def run_benchmark():
     await new_service.prepare_collatex(resources, converter, options, ref="109")
     t1 = time.time()
     new_time = t1 - t0
-    print(f"🚀 New Parallel Architecture   : {new_time:.3f} seconds\n")
+    print(f" New Parallel Architecture   : {new_time:.3f} seconds\n")
     
     # 5. Conclusion
     speedup = old_time / new_time if new_time > 0 else 0
