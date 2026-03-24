@@ -3,7 +3,7 @@ from typing import List, Dict, Any, Optional
 
 from core.interfaces import DocumentFetcher, Converter
 from api.dependencies import ProcessingOptions
-from models.collatex import CollatexResponse, CollatexWitness
+from models.tokenization import CollatexResponse, CollatexWitness
 
 logger = logging.getLogger(__name__)
 

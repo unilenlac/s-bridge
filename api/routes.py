@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 from core.interfaces import Converter
 from api.dependencies import converter_dep, get_processing_options, ProcessingOptions
-from models.collatex import Token, CollatexResponse
+from models.tokenization import Token, CollatexResponse
 from clients.dts_client import DTSClient
 from services.collatex_service import CollatexService
 from core.config import Settings

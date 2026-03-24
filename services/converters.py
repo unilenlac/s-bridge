@@ -2,7 +2,7 @@ import xml.etree.ElementTree as ET
 from typing import List
 
 from core.interfaces import Processor, Parser
-from models.collatex import Token
+from models.tokenization import Token
 
 class RawStrategyConverter:
     def __init__(self, proc: Processor):
