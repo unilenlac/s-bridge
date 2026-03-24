@@ -8,7 +8,7 @@ from models.tokenization import CollatexResponse, CollatexWitness
 
 logger = logging.getLogger(__name__)
 
-class CollatexService:
+class WitnessService:
     def __init__(self, fetcher: DocumentFetcher):
         self.fetcher = fetcher
 
@@ -40,7 +40,7 @@ class CollatexService:
             logger.warning(f"Gracefully skipping witness '{resource}': {e}")
             return None
 
-    async def prepare_collatex(
+    async def process_witnesses(
         self, 
         resources: List[str], 
         converter: Converter,

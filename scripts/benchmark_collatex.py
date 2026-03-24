@@ -8,7 +8,7 @@ from clients.dts_client import DTSClient
 from services.tei_parser import TEIParser
 from services.processors import ClassicalProcessor
 from services.converters import EnrichedStrategyConverter
-from services.collatex_service import CollatexService
+from services.witness_service import WitnessService
 from api.dependencies import ProcessingOptions
 from models.tokenization import CollatexWitness, CollatexResponse
 
@@ -17,12 +17,12 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("services").setLevel(logging.WARNING)
 logging.getLogger("clients").setLevel(logging.WARNING)
 
-class OldCollatexService:
+class OldWitnessService:
     """The original sequential implementation we just replaced."""
     def __init__(self, fetcher):
         self.fetcher = fetcher
 
-    async def prepare_collatex(self, resources, converter, options, ref=None):
+    async def process_witnesses(self, resources, converter, options, ref=None):
         witnesses = []
         for resource in resources:
             try:
@@ -53,17 +53,17 @@ async def run_benchmark():
     print(f"==============================================\n")
     
     # 3. Simulate Old Architecture
-    old_service = OldCollatexService(fetcher)
+    old_service = OldWitnessService(fetcher)
     t0 = time.time()
-    await old_service.prepare_collatex(resources, converter, options, ref="109")
+    await old_service.process_witnesses(resources, converter, options, ref="109")
     t1 = time.time()
     old_time = t1 - t0
     print(f" Old Sequential Architecture : {old_time:.3f} seconds")
     
     # 4. Simulate New Architecture
-    new_service = CollatexService(fetcher)
+    new_service = WitnessService(fetcher)
     t0 = time.time()
-    await new_service.prepare_collatex(resources, converter, options, ref="109")
+    await new_service.process_witnesses(resources, converter, options, ref="109")
     t1 = time.time()
     new_time = t1 - t0
     print(f" New Parallel Architecture   : {new_time:.3f} seconds\n")

@@ -6,7 +6,7 @@ from core.interfaces import Converter
 from api.dependencies import converter_dep, get_processing_options, ProcessingOptions
 from models.tokenization import Token, CollatexResponse
 from clients.dts_client import DTSClient
-from services.collatex_service import CollatexService
+from services.witness_service import WitnessService
 from core.config import Settings
 
 #APIRouteur acts as a mini FastAPI application to structure the routes.
@@ -14,7 +14,7 @@ router = APIRouter()
 
 settings = Settings()
 dts_client = DTSClient(base_url=settings.dts_api_base_url)
-collatex_service = CollatexService(fetcher=dts_client)
+witness_service = WitnessService(fetcher=dts_client)
 
 class ConvertRequest(BaseModel):
     text: str
@@ -46,7 +46,7 @@ async def prepare_collatex(
     converter: Converter = Depends(converter_dep)
 ):
     try:
-        result = await collatex_service.prepare_collatex(
+        result = await witness_service.process_witnesses(
             resources=req.resources,
             converter=converter,
             options=options,

@@ -1,7 +1,4 @@
 import pytest
-import sys
-import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from fastapi.testclient import TestClient
 from main import app
@@ -18,11 +15,11 @@ def get_mock_converter():
 
 app.dependency_overrides[converter_dep] = get_mock_converter
 
-class MockCollatexService:
+class MockWitnessService:
     def __init__(self, *args, **kwargs):
         pass
         
-    async def prepare_collatex(self, resources, converter, options, ref=None):
+    async def process_witnesses(self, resources, converter, options, ref=None):
         return CollatexResponse(
             witnesses=[
                 CollatexWitness(
@@ -35,9 +32,9 @@ class MockCollatexService:
         )
 
 def test_prepare_collatex(monkeypatch):
-    # Patch the CollatexService instance in the api.routes module
+    # Patch the WitnessService instance in the api.routes module
     from api import routes
-    monkeypatch.setattr(routes, "collatex_service", MockCollatexService())
+    monkeypatch.setattr(routes, "witness_service", MockWitnessService())
     
     response = client.post("/dts/prepare-collatex", json={"resources": ["A", "B"]})
     assert response.status_code == 200
