@@ -29,6 +29,13 @@ class TEIParser:
         elif abbr_file:
             logger.warning(f"Abbreviation file not found: {abbr_file}")
 
+    def _extract_body(self, root: ET.Element) -> ET.Element:
+        """Isolate the `<body>` element of the TEI document to avoid extracting metadata from `<teiHeader>`."""
+        ns = {'tei': 'http://www.tei-c.org/ns/1.0'}
+        body = root.find('.//tei:body', namespaces=ns)
+        if body is None:
+            body = root.find('.//body')
+        return body if body is not None else root
 
     def parse(self, data: str) -> Tuple[str, MetadataMap]:
         """Process TEI element to extract both metadata map and clean text."""
@@ -37,6 +44,9 @@ class TEIParser:
         except ET.ParseError as e:
             logger.error(f"Failed to parse XML: {e}")
             raise ValueError(f"Invalid XML data provided to TEIParser: {e}")
+            
+        # Step 0: Ensure we are only extracting from the body
+        element = self._extract_body(element)
             
         # Step 1: Clear breaks first 
         self._resolve_hyphenation_and_breaks(element)

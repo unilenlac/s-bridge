@@ -6,7 +6,7 @@ def main():
     # 1. CHOOSE YOUR RESOURCE ID HERE
     # ==========================================
     # Change this string to fetch a different XML witness
-    resource_id = "athous-iviron-450"
+    resource_id = "athous-iviron-476"
     # ==========================================
     
     url = "http://ftsr-dev.unil.ch:8000/api/dts/v1/document/"
