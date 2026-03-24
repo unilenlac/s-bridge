@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 from core.interfaces import Converter
 from api.dependencies import converter_dep, get_processing_options, ProcessingOptions
-from models.collatex import Token
+from models.collatex import Token, CollatexResponse
 from clients.dts_client import DTSClient
 from services.collatex_service import CollatexService
 from core.config import Settings
@@ -22,28 +22,34 @@ class ConvertRequest(BaseModel):
 @router.post("/convert", response_model=list[Token], 
     response_model_exclude_none=True, 
     response_model_exclude_defaults=True, 
-    description="Convert input text using the specified converter")
-
+    description="[DEPRECATED] Convert input text using the specified converter",
+    deprecated=True)
 async def convert(req: ConvertRequest, 
     options: ProcessingOptions = Depends(get_processing_options), 
     converter: Converter = Depends(converter_dep)):
     return converter.run(req.text, normalization=options.normalization, filter_del=options.filter_del)
+
 
 class CollatexPreparationRequest(BaseModel):
     resources: List[str]
     ref: Optional[str] = None
 
 @router.post("/dts/prepare-collatex",
-    response_model=Dict[str, Any],
+    response_model=CollatexResponse,
+    response_model_exclude_none=True, 
+    response_model_exclude_defaults=True, 
+    response_model_by_alias=True,
     description="Fetch multiple DTS resources and prepare them for Collatex")
 async def prepare_collatex(
     req: CollatexPreparationRequest,
+    options: ProcessingOptions = Depends(get_processing_options),
     converter: Converter = Depends(converter_dep)
 ):
     try:
         result = await collatex_service.prepare_collatex(
             resources=req.resources,
             converter=converter,
+            options=options,
             ref=req.ref
         )
         return result

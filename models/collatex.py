@@ -40,3 +40,10 @@ class Token(BaseModel):
     head: Optional[bool] = Field(default=None, description="Whether the token is a head", serialization_alias="head")
 
     subst: Optional[bool] = Field(default=None, description="Whether the token is a substitution", serialization_alias="subst")
+
+class CollatexWitness(BaseModel):
+    id: str
+    tokens: list[Token]
+
+class CollatexResponse(BaseModel):
+    witnesses: list[CollatexWitness]

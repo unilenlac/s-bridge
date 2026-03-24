@@ -6,6 +6,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 from fastapi.testclient import TestClient
 from main import app
 from api.dependencies import converter_dep
+from models.collatex import CollatexResponse, CollatexWitness, Token
 
 client = TestClient(app)
 
@@ -21,17 +22,17 @@ class MockCollatexService:
     def __init__(self, *args, **kwargs):
         pass
         
-    async def prepare_collatex(self, resources, converter, ref=None):
-        return {
-            "witnesses": [
-                {
-                    "id": res,
-                    "tokens": [
-                        {"t": f"token_for_{res}", "n": f"norm_{res}"}
+    async def prepare_collatex(self, resources, converter, options, ref=None):
+        return CollatexResponse(
+            witnesses=[
+                CollatexWitness(
+                    id=res,
+                    tokens=[
+                        Token(text=f"token_for_{res}", normalization=f"norm_{res}", lemma=f"lemma_{res}")
                     ]
-                } for res in resources
+                ) for res in resources
             ]
-        }
+        )
 
 def test_prepare_collatex(monkeypatch):
     # Patch the CollatexService instance in the api.routes module
