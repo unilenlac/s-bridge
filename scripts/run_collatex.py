@@ -45,11 +45,11 @@ def main():
                 with open(output_file, "w", encoding="utf-8") as f:
                     json.dump(data, f, indent=2, ensure_ascii=False)
                     
-                print(f"✅ Success! Data successfully written to '{output_file}'")
+                print(f"Success! Data successfully written to '{output_file}'")
                 print(f"Returned {len(data.get('witnesses', []))} witnesses.")
                 
             else:
-                print(f"❌ API returned an error (Status {response.status_code}):")
+                print(f"API returned an error (Status {response.status_code}):")
                 try:
                     # Let's try to parse the error as JSON to make it readable
                     print(json.dumps(response.json(), indent=2))
@@ -57,8 +57,8 @@ def main():
                     print(response.text)
                 
     except httpx.RequestError as e:
-        print(f"❌ Network error while connecting to {e.request.url}: {e}")
-        print("💡 Make sure your FastAPI server is currently running in another terminal!")
+        print(f"Network error while connecting to {e.request.url}: {e}")
+        print("Make sure your FastAPI server is currently running in another terminal!")
 
 if __name__ == "__main__":
     main()

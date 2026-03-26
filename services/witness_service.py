@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 
 class WitnessService:
     def __init__(self, fetcher: DocumentFetcher):
+		#example : DTSClient
         self.fetcher = fetcher
 
     async def _process_single_witness(
