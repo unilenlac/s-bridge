@@ -1,6 +1,11 @@
 import asyncio
 import time
 import logging
+import sys
+from pathlib import Path
+
+# Add project root to sys.path
+sys.path.append(str(Path(__file__).parent.parent))
 
 from main import app
 from core.config import Settings
