@@ -30,7 +30,7 @@ class DTSClient:
 
         logger.info(f"Fetching DTS document for resource: {resource}, ref: {ref}")
 
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(follow_redirects=True) as client:
             response = await client.get(url, params=params)
             response.raise_for_status()
             return response.text
@@ -49,7 +49,7 @@ class DTSClient:
 
         logger.info(f"Fetching navigation for resource: {resource}")
 
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(follow_redirects=True) as client:
             while True:
                 params = {
                     "resource": resource,
@@ -77,3 +77,27 @@ class DTSClient:
 
         logger.info(f"Found {len(members)} level-1 refs for resource: {resource}")
         return members
+
+    async def get_collection_name(self, resource: str) -> str:
+        """
+        Fetches the collection name for a given resource.
+        """
+        url = f"{self.base_url}/api/dts/v1/collection/"
+        params = {"id": resource, "nav": "parents"}
+        logger.info(f"Fetching collection parents for resource: {resource}")
+
+        async with httpx.AsyncClient(follow_redirects=True) as client:
+            response = await client.get(url, params=params)
+            response.raise_for_status()
+            data = response.json()
+
+            # Try to get the first parent collection title
+            members = data.get("member", [])
+            for m in members:
+                title = m.get("title")
+                if title:
+                    return title.split(" - ")[0].strip()
+
+            # Fallback to the resource's own title
+            title = data.get("title", resource)
+            return title.split(" - ")[0].strip()

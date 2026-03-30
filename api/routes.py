@@ -73,8 +73,6 @@ async def prepare_collatex_whole(
 
 class CollatexBySectionRequest(BaseModel):
     resources: List[str]
-    collection_name: str
-    output_dir: str = "output"
 
 class CollatexBySectionResponse(BaseModel):
     written_files: List[str]
@@ -97,8 +95,6 @@ async def prepare_collatex_split(
             resources=req.resources,
             converter=converter,
             options=options,
-            collection_name=req.collection_name,
-            output_dir=req.output_dir,
         )
         return CollatexBySectionResponse(
             written_files=written,

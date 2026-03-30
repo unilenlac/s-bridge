@@ -33,11 +33,12 @@ class MockWitnessService:
         )
 
     async def process_witnesses_by_section(
-        self, resources, converter, options, collection_name, output_dir="output"
+        self, resources, converter, options
     ):
+        collection_name = "Auto Collection"
         return [
-            os.path.join(output_dir, collection_name, "milestone_107.json"),
-            os.path.join(output_dir, collection_name, "milestone_108.json"),
+            os.path.join("collections", collection_name, "milestone_107.json"),
+            os.path.join("collections", collection_name, "milestone_108.json"),
         ]
 
 
@@ -85,11 +86,7 @@ def test_prepare_collatex_split(monkeypatch):
 
     response = client.post(
         "/dts/prepare-collatex/split",
-        json={
-            "resources": ["A", "B"],
-            "collection_name": "Le Martyre de Philippe",
-            "output_dir": "output",
-        }
+        json={"resources": ["A", "B"]}
     )
     assert response.status_code == 200
     data = response.json()
@@ -99,13 +96,16 @@ def test_prepare_collatex_split(monkeypatch):
     assert any("milestone_108.json" in f for f in data["written_files"])
 
 
-def test_prepare_collatex_split_missing_collection(monkeypatch):
-    """collection_name is required — should fail validation."""
+def test_prepare_collatex_split_works(monkeypatch):
+    """Should succeed and auto-fetch."""
     from api import routes
     monkeypatch.setattr(routes, "witness_service", MockWitnessService())
 
     response = client.post(
         "/dts/prepare-collatex/split",
-        json={"resources": ["A", "B"]}  # missing collection_name
+        json={"resources": ["A", "B"]}
     )
-    assert response.status_code == 422
+    assert response.status_code == 200
+    data = response.json()
+    assert "written_files" in data
+    assert any("Auto Collection" in f for f in data["written_files"])

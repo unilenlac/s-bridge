@@ -17,12 +17,13 @@ def test_get_document(monkeypatch):
             pass
 
     class MockAsyncClient:
+        def __init__(self, **kwargs): pass
         async def __aenter__(self):
             return self
         async def __aexit__(self, exc_type, exc_val, exc_tb):
             pass
         async def get(self, url, params=None):
-            assert url.startswith("http://test/api/dts/v1/document/")
+            assert url.startswith("http://test/api/dts/v1/document")
             assert params["resource"] == "res1"
             assert params["media_type"] == "text/xml"
             if "ref" in params:
@@ -61,6 +62,8 @@ def test_get_navigation_single_page(monkeypatch):
             return nav_response
 
     class MockAsyncClient:
+        def __init__(self, *args, **kwargs):
+            pass
         async def __aenter__(self):
             return self
         async def __aexit__(self, *args):
@@ -110,6 +113,8 @@ def test_get_navigation_multiple_pages(monkeypatch):
             return self._data
 
     class MockAsyncClient:
+        def __init__(self, *args, **kwargs):
+            pass
         async def __aenter__(self):
             return self
         async def __aexit__(self, *args):

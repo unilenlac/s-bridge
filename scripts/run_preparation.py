@@ -22,12 +22,8 @@ def main():
     # ==========================================
     # 3. MODE-SPECIFIC SETTINGS
     # ==========================================
-    # For "witness" mode: optionally restrict to a sub-reference
+    # For "whole" mode: optionally restrict to a sub-reference
     ref = None  # e.g. "109" or None for the full text
-
-    # For "by-section" mode: collection name and output directory
-    collection_name = "Le Martyre de Philippe"
-    output_dir = "output"
 
     # The base URL to your local FastAPI app server
     base_url = "http://127.0.0.1:8000"
@@ -61,12 +57,10 @@ def main():
                 url = f"{base_url}/dts/prepare-collatex/split"
                 payload = {
                     "resources": resources_to_fetch,
-                    "collection_name": collection_name,
-                    "output_dir": output_dir,
                 }
 
                 print(f"\nCalling: {url}")
-                print(f"Output directory: {output_dir}/{collection_name}/")
+                print("Output directory: collections/[auto-fetched]/")
                 print("Please wait, this may take a while (one API call per section per resource)...\n")
 
                 response = client.post(url, json=payload)

@@ -78,8 +78,6 @@ class WitnessService:
         resources: List[str],
         converter: Converter,
         options: ProcessingOptions,
-        collection_name: str,
-        output_dir: str = "output",
     ) -> List[str]:
         """
         When ref=None: fetches the list of top-level refs from the Navigation API
@@ -98,13 +96,15 @@ class WitnessService:
         if not nav_members:
             raise ValueError(f"No navigation members found for resource '{resources[0]}'.")
 
+        collection_name = await self.fetcher.get_collection_name(resources[0])
+
         logger.info(
             f"Processing {len(nav_members)} sections across {len(resources)} resources "
             f"for collection '{collection_name}'"
         )
 
         # 2. Prepare output directory
-        target_dir = os.path.join(output_dir, collection_name)
+        target_dir = os.path.join("collections", collection_name)
         os.makedirs(target_dir, exist_ok=True)
 
         written_files: List[str] = []
