@@ -1,4 +1,5 @@
 import pytest
+import os
 
 from fastapi.testclient import TestClient
 from main import app
@@ -18,7 +19,7 @@ app.dependency_overrides[converter_dep] = get_mock_converter
 class MockWitnessService:
     def __init__(self, *args, **kwargs):
         pass
-        
+
     async def process_witnesses(self, resources, converter, options, ref=None):
         return CollatexResponse(
             witnesses=[
@@ -31,19 +32,80 @@ class MockWitnessService:
             ]
         )
 
-def test_prepare_collatex(monkeypatch):
-    # Patch the WitnessService instance in the api.routes module
+    async def process_witnesses_by_section(
+        self, resources, converter, options, collection_name, output_dir="output"
+    ):
+        return [
+            os.path.join(output_dir, collection_name, "milestone_107.json"),
+            os.path.join(output_dir, collection_name, "milestone_108.json"),
+        ]
+
+
+# ---------------------------------------------------------------------------
+# Tests for /dts/prepare-collatex/witness  (renamed from /dts/prepare-collatex)
+# ---------------------------------------------------------------------------
+
+def test_prepare_collatex_witness(monkeypatch):
     from api import routes
     monkeypatch.setattr(routes, "witness_service", MockWitnessService())
-    
-    response = client.post("/dts/prepare-collatex", json={"resources": ["A", "B"]})
+
+    response = client.post("/dts/prepare-collatex/whole", json={"resources": ["A", "B"]})
     assert response.status_code == 200
     data = response.json()
     assert "witnesses" in data
     assert len(data["witnesses"]) == 2
-    
+
     assert data["witnesses"][0]["id"] == "A"
     assert data["witnesses"][0]["tokens"][0]["t"] == "token_for_A"
-    
+
     assert data["witnesses"][1]["id"] == "B"
     assert data["witnesses"][1]["tokens"][0]["t"] == "token_for_B"
+
+
+def test_prepare_collatex_witness_with_ref(monkeypatch):
+    from api import routes
+    monkeypatch.setattr(routes, "witness_service", MockWitnessService())
+
+    response = client.post(
+        "/dts/prepare-collatex/whole",
+        json={"resources": ["A"], "ref": "109"}
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data["witnesses"]) == 1
+
+
+# ---------------------------------------------------------------------------
+# Tests for /dts/prepare-collatex/by-section
+# ---------------------------------------------------------------------------
+
+def test_prepare_collatex_split(monkeypatch):
+    from api import routes
+    monkeypatch.setattr(routes, "witness_service", MockWitnessService())
+
+    response = client.post(
+        "/dts/prepare-collatex/split",
+        json={
+            "resources": ["A", "B"],
+            "collection_name": "Le Martyre de Philippe",
+            "output_dir": "output",
+        }
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert "written_files" in data
+    assert data["total_sections"] == 2
+    assert any("milestone_107.json" in f for f in data["written_files"])
+    assert any("milestone_108.json" in f for f in data["written_files"])
+
+
+def test_prepare_collatex_split_missing_collection(monkeypatch):
+    """collection_name is required — should fail validation."""
+    from api import routes
+    monkeypatch.setattr(routes, "witness_service", MockWitnessService())
+
+    response = client.post(
+        "/dts/prepare-collatex/split",
+        json={"resources": ["A", "B"]}  # missing collection_name
+    )
+    assert response.status_code == 422

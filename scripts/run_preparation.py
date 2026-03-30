@@ -3,10 +3,15 @@ import json
 
 def main():
     # ==========================================
-    # 1. CHOOSE YOUR RESOURCES HERE
+    # 1. CHOOSE YOUR MODE
     # ==========================================
-    # Add or remove witness IDs from this list. 
-    # Do not use parameters, just modify this array directly.
+    # "whole" — single CollatexResponse, optional ref
+    # "split" — one file per top-level section written to disk
+    mode = "split"
+
+    # ==========================================
+    # 2. CHOOSE YOUR RESOURCES
+    # ==========================================
     resources_to_fetch = [
         "athous-iviron-450",
         "athous-iviron-476",
@@ -14,52 +19,80 @@ def main():
         "ebe-1027"
     ]
 
-    
-    # Optional: If you want to specify a sub-reference, you can set it here, otherwise keep it None
-    ref = "109"
     # ==========================================
+    # 3. MODE-SPECIFIC SETTINGS
+    # ==========================================
+    # For "witness" mode: optionally restrict to a sub-reference
+    ref = None  # e.g. "109" or None for the full text
 
-    payload = {
-        "resources": resources_to_fetch,
-        "ref": ref
-    }
-    
-    # The URL to your local FastAPI app server
-    url = "http://127.0.0.1:8000/dts/prepare-collatex"
-    
-    print(f"Calling local API: {url}")
-    print(f"Fetching and parsing witnesses: {resources_to_fetch}...")
-    print("Please wait, NLP processing may take a few seconds per witness...\n")
-    
+    # For "by-section" mode: collection name and output directory
+    collection_name = "Le Martyre de Philippe"
+    output_dir = "output"
+
+    # The base URL to your local FastAPI app server
+    base_url = "http://127.0.0.1:8000"
+
+    # ==========================================
+    print(f"Mode: {mode}")
+    print(f"Resources: {resources_to_fetch}")
+
     try:
-        # We set a large timeout (120 seconds) because fetching and parsing 
-        # multiple XML documents through the NLP pipeline takes time.
-        with httpx.Client(timeout=120.0) as client:
-            response = client.post(url, json=payload)
-            
-            # Check if the server returned a success response
-            if response.status_code == 200:
-                data = response.json()
-                
-                # Write the response to an output file
-                output_file = "collatex_output.json"
-                with open(output_file, "w", encoding="utf-8") as f:
-                    json.dump(data, f, indent=2, ensure_ascii=False)
-                    
-                print(f"Success! Data successfully written to '{output_file}'")
-                print(f"Returned {len(data.get('witnesses', []))} witnesses.")
-                
+        with httpx.Client(timeout=300.0) as client:
+
+            if mode == "whole":
+                url = f"{base_url}/dts/prepare-collatex/whole"
+                payload = {"resources": resources_to_fetch, "ref": ref}
+
+                print(f"\nCalling: {url}")
+                print("Please wait, NLP processing may take a few seconds per witness...\n")
+
+                response = client.post(url, json=payload)
+                if response.status_code == 200:
+                    data = response.json()
+                    output_file = "collatex_output.json"
+                    with open(output_file, "w", encoding="utf-8") as f:
+                        json.dump(data, f, indent=2, ensure_ascii=False)
+                    print(f"Success! Written to '{output_file}'")
+                    print(f"Returned {len(data.get('witnesses', []))} witnesses.")
+                else:
+                    _print_error(response)
+
+            elif mode == "split":
+                url = f"{base_url}/dts/prepare-collatex/split"
+                payload = {
+                    "resources": resources_to_fetch,
+                    "collection_name": collection_name,
+                    "output_dir": output_dir,
+                }
+
+                print(f"\nCalling: {url}")
+                print(f"Output directory: {output_dir}/{collection_name}/")
+                print("Please wait, this may take a while (one API call per section per resource)...\n")
+
+                response = client.post(url, json=payload)
+                if response.status_code == 200:
+                    data = response.json()
+                    print(f"Success! {data['total_sections']} section files written:")
+                    for path in data["written_files"]:
+                        print(f"  {path}")
+                else:
+                    _print_error(response)
+
             else:
-                print(f"API returned an error (Status {response.status_code}):")
-                try:
-                    # Let's try to parse the error as JSON to make it readable
-                    print(json.dumps(response.json(), indent=2))
-                except:
-                    print(response.text)
-                
+                print(f"Unknown mode: '{mode}'. Use 'whole' or 'split'.")
+
     except httpx.RequestError as e:
         print(f"Network error while connecting to {e.request.url}: {e}")
-        print("Make sure your FastAPI server is currently running in another terminal!")
+        print("Make sure your FastAPI server is running in another terminal!")
+
+
+def _print_error(response):
+    print(f"API returned an error (Status {response.status_code}):")
+    try:
+        print(json.dumps(response.json(), indent=2))
+    except Exception:
+        print(response.text)
+
 
 if __name__ == "__main__":
     main()
