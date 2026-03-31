@@ -3,12 +3,14 @@ import logging
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 logger = logging.getLogger(__name__)
 
 
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    
     pipeline: str = "classical"  # Default pipeline (e.g., "modern" or "classical")
     language: str = "grc"
     tag_config: Optional[str] = None  # Path to a JSON tag dictionary file

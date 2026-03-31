@@ -2,6 +2,7 @@ import json
 import logging
 import asyncio
 import os
+import tempfile
 from typing import List, Optional
 
 from core.interfaces import DocumentFetcher, Converter
@@ -103,8 +104,11 @@ class WitnessService:
             f"for collection '{collection_name}'"
         )
 
-        # 2. Prepare output directory
-        target_dir = os.path.join("collections", collection_name)
+        # 2. Prepare output directory (Transient Temp Directory)
+        # Using mkdtemp ensures a unique, secure directory that survives this function 
+        # so Collatex can read it in the next step, but can be erased later.
+        base_temp_dir = tempfile.mkdtemp(prefix="collatex_ready_")
+        target_dir = os.path.join(base_temp_dir, collection_name)
         os.makedirs(target_dir, exist_ok=True)
 
         written_files: List[str] = []
