@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     language: str = "grc"
     tag_config: Optional[str] = None  # Path to a JSON tag dictionary file
     dts_api_base_url: str = "http://ftsr-dev.unil.ch:8000"
+    collatex_api_base_url: str = "http://ftsr-dev.unil.ch:7369"
 
     def load_tag_dictionary(self) -> Dict[str, Any]:
         """Load and validate a tag dictionary from the JSON file at ``tag_config``.

@@ -7,7 +7,7 @@ def main():
     # ==========================================
     # "whole" — single CollatexResponse, optional ref
     # "split" — one file per top-level section written to disk
-    mode = "split"
+    mode = "whole"
 
     # ==========================================
     # 2. CHOOSE YOUR RESOURCES
@@ -23,7 +23,7 @@ def main():
     # 3. MODE-SPECIFIC SETTINGS
     # ==========================================
     # For "whole" mode: optionally restrict to a sub-reference
-    ref = None  # e.g. "109" or None for the full text
+    ref = "109"  # e.g. "109" or None for the full text
 
     # The base URL to your local FastAPI app server
     base_url = "http://127.0.0.1:8000"
