@@ -2,15 +2,16 @@ from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional 
 
 class Token(BaseModel):
-    model_config = ConfigDict(extra="allow")
-    text: str = Field(description="The original token text", serialization_alias="t")
-    normalization: str = Field(description="The normalization of the text", serialization_alias="n")
-    original: str = Field(default=None, description="The original token text", serialization_alias="o")
-    lemma: str = Field(description="The lemma of the token", serialization_alias="lem")
-    pos: Optional[str] = Field(default=None, description="The part of speech of the token", serialization_alias="pos")
-    cs: Optional[str] = Field(default=None, description="The case of the token", serialization_alias="case")
-    gender: Optional[str] = Field(default=None, description="The gender of the token", serialization_alias="gender")
-    number: Optional[str] = Field(default=None, description="The value of the grammatical category of number of the token", serialization_alias="number")
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
+    text: str = Field(description="The original token text", alias="t", serialization_alias="t")
+    normalization: str = Field(description="The normalization of the text", alias="n", serialization_alias="n")
+    original: str = Field(default=None, description="The original token text", alias="o", serialization_alias="o")
+    lemma: str = Field(description="The lemma of the token", alias="lem", serialization_alias="lem")
+    pos: Optional[str] = Field(default=None, description="The part of speech of the token", alias="pos", serialization_alias="pos")
+    cs: Optional[str] = Field(default=None, description="The case of the token", alias="case", serialization_alias="case")
+    gender: Optional[str] = Field(default=None, description="The gender of the token", alias="gender", serialization_alias="gender")
+    number: Optional[str] = Field(default=None, description="The value of the grammatical category of number of the token", alias="number", serialization_alias="number")
+
     
     char_start: Optional[int] = Field(default=None, exclude=True, description="Start character index in the raw string")
     char_stop: Optional[int] = Field(default=None, exclude=True, description="Stop character index in the raw string")

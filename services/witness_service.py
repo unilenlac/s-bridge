@@ -8,6 +8,8 @@ from typing import List, Optional
 from core.interfaces import DocumentFetcher, Converter
 from api.dependencies import ProcessingOptions
 from models.tokenization import CollatexResponse, CollatexWitness
+from core.config import Settings
+
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +46,7 @@ class WitnessService:
             logger.warning(f"Gracefully skipping witness '{resource}': {e}")
             return None
 
+	#Depreciated, used by prepare-collatex/whole
     async def process_witnesses(
         self,
         resources: List[str],
@@ -104,12 +107,11 @@ class WitnessService:
             f"for collection '{collection_name}'"
         )
 
-        # 2. Prepare output directory (Transient Temp Directory)
-        # Using mkdtemp ensures a unique, secure directory that survives this function 
-        # so Collatex can read it in the next step, but can be erased later.
-        base_temp_dir = tempfile.mkdtemp(prefix="collatex_ready_")
-        target_dir = os.path.join(base_temp_dir, collection_name)
+        # 2. Prepare output directory (Stable Directory from Settings)
+        settings = Settings()
+        target_dir = os.path.join(settings.output_dir, collection_name)
         os.makedirs(target_dir, exist_ok=True)
+
 
         written_files: List[str] = []
 
@@ -153,3 +155,71 @@ class WitnessService:
             logger.info(f"Wrote section file: {filepath}")
 
         return written_files
+
+    def get_section_filepath(self, collection_name: str, ref_id: str, cite_type: str = "milestone") -> str:
+        """Standardizes the path for a prepared section file."""
+        settings = Settings()
+        return os.path.join(settings.output_dir, collection_name, f"{cite_type}_{ref_id}.json")
+
+    def load_prepared_section(self, filepath: str) -> CollatexResponse:
+        """Loads a prepared Collatex JSON file from disk."""
+        if not os.path.exists(filepath):
+            raise FileNotFoundError(f"Prepared section file not found: {filepath}")
+        
+        with open(filepath, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            return CollatexResponse.model_validate(data)
+
+    async def prepare_section_if_needed(
+        self,
+        resources: List[str],
+        ref: str,
+        converter: Converter,
+        options: ProcessingOptions,
+        force: bool = False
+    ) -> str:
+        """
+        Ensures a specific section is prepared and saved to disk.
+        Returns the path to the prepared file.
+        """
+        if not resources:
+            raise ValueError("At least one resource is required.")
+
+        collection_name = await self.fetcher.get_collection_name(resources[0])
+        # For simplicity, we assume 'milestone' as citeType if not known, 
+        # but ideally we'd fetch it from navigation.
+        filepath = self.get_section_filepath(collection_name, ref)
+
+        if not force and os.path.exists(filepath):
+            logger.info(f"Using existing prepared file for ref '{ref}': {filepath}")
+            return filepath
+
+        logger.info(f"Preparing section '{ref}' for collection '{collection_name}'...")
+        
+        # Fetch and process
+        section_data = await self.process_witnesses(
+            resources=resources,
+            converter=converter,
+            options=options,
+            ref=ref
+        )
+
+        # Ensure directory exists
+        os.makedirs(os.path.dirname(filepath), exist_ok=True)
+
+        # Write to disk
+        with open(filepath, "w", encoding="utf-8") as f:
+            json.dump(
+                section_data.model_dump(
+                    by_alias=True,
+                    exclude_none=True,
+                    exclude_defaults=True,
+                ),
+                f,
+                indent=2,
+                ensure_ascii=False,
+            )
+        
+        logger.info(f"Successfully prepared and saved section to: {filepath}")
+        return filepath
+

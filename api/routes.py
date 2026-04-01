@@ -1,6 +1,9 @@
+import logging
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException, Response, Query
 from pydantic import BaseModel
+
+logger = logging.getLogger(__name__)
 
 from core.interfaces import Converter
 from api.dependencies import converter_dep, get_processing_options, ProcessingOptions
@@ -48,8 +51,11 @@ class CollatexWitnessRequest(BaseModel):
     response_model_by_alias=True,
     description=(
         "Fetch multiple DTS resources and prepare them for Collatex. "
-        "Optionally scope to a specific passage ref."
-    ))
+        "Optionally scope to a specific passage ref. "
+        "[DEPRECATED] Use /dts/prepare-collatex/split instead."
+    ),
+    deprecated=True)
+
 async def prepare_collatex_whole(
     req: CollatexWitnessRequest,
     options: ProcessingOptions = Depends(get_processing_options),
@@ -118,40 +124,45 @@ async def prepare_collatex_split(
     ))
 async def collate_resources(
     req: CollatexWitnessRequest,
-    output_format: str = "application/json",
+    output_format: str = Query("application/json", description="Output format"),
     options: ProcessingOptions = Depends(get_processing_options),
     converter: Converter = Depends(converter_dep)
 ):
     try:
-        # 1. Fetch and process the witnesses
-        collatex_ready_data = await witness_service.process_witnesses(
-            resources=req.resources,
-            converter=converter,
-            options=options,
-            ref=req.ref
-        )
-        
-        # 2. Serialize to a JSON dictionary compatible with CollateX
-        payload = collatex_ready_data.model_dump(
-            by_alias=True,
-            exclude_none=True,
-            exclude_defaults=True,
-        )
+        # 1. Identify all refs (sections) to process
+        if req.ref:
+            refs = [req.ref]
+        else:
+            nav = await dts_client.get_navigation(req.resources[0])
+            refs = [m["identifier"] for m in nav]
 
-        # 3. Call the CollateX client
-        result = await collatex_client.collate(
-            payload=payload, 
-            output_format=output_format
-        )
+        # 2. Iterate and collate each section (always through prepared files)
+        results = {}
+        for r in refs:
+            path = await witness_service.prepare_section_if_needed(req.resources, r, converter, options)
+            ready_data = witness_service.load_prepared_section(path)
+            results[r] = await collatex_client.collate(
+                payload=ready_data.model_dump(by_alias=True, exclude_none=True),
+                output_format=output_format
+            )
 
-        # 4. If result is not JSON (it's a string like DOT, SVG, or TEI), 
-        #    return it as a raw Response to avoid JSON-encoding newlines.
+        # 3. Return: single result for single-ref, dict for multi-ref
+        if req.ref:
+            res = results[req.ref]
+            if output_format != CollatexClient.FORMAT_JSON:
+                return Response(content=res, media_type=output_format)
+            return res
+
+        # For multi-section requests with non-JSON format, join outcomes
         if output_format != CollatexClient.FORMAT_JSON:
-            return Response(content=result, media_type=output_format)
+            combined = "\n\n".join([f"/* --- Section {r} --- */\n{val}" for r, val in results.items()])
+            return Response(content=combined, media_type=output_format)
 
-        return result
+        return results
         
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
+        logger.error(f"Error in collate_resources: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+

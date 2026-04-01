@@ -41,6 +41,20 @@ class MockWitnessService:
             os.path.join("collections", collection_name, "milestone_108.json"),
         ]
 
+    async def prepare_section_if_needed(self, resources, ref, converter, options, force=False):
+        return f"/tmp/mock_prepared_{ref}.json"
+
+    def load_prepared_section(self, filepath):
+        return CollatexResponse(
+            witnesses=[
+                CollatexWitness(
+                    id="MockRes",
+                    tokens=[Token(text="mock", normalization="mock", lemma="mock")]
+                )
+            ]
+        )
+
+
 
 # ---------------------------------------------------------------------------
 # Tests for /dts/prepare-collatex/witness  (renamed from /dts/prepare-collatex)

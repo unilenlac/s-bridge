@@ -16,7 +16,7 @@ def main():
     # 2. CONFIGURE COLLATION SETTINGS
     # ==========================================
     # Optionally restrict to a sub-reference (e.g. "109" or None for full text)
-    ref = "109"
+    ref = ""
 
     # Output format options:
     # - "application/json" (default)
