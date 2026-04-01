@@ -54,8 +54,10 @@ class ClassicalProcessor:
                 norm_str = f"{lemma_raw}+{pos_tag}"
             
             # Build our clean data model (NO string formatting!)
+            # NOTE: We add a trailing space to 'text' (t) for better display in CollateX graphs,
+            # while 'normalization' (n) remains clean for precise alignment.
             my_token = Token(
-                text=word.string,
+                text=word.string + " ",
                 normalization=norm_str,
                 original=word.string,
                 lemma=lemma_raw,
@@ -123,8 +125,10 @@ class ModernProcessor:
                     norm_str = f"{lemma_raw}+{pos_tag}"
                 
                 # Build our clean data model (NO string formatting!)
+                # NOTE: We add a trailing space to 'text' (t) for better display in CollateX graphs,
+                # while 'normalization' (n) remains clean for precise alignment.
                 my_token = Token(
-                    text=word.text,
+                    text=word.text + " ",
                     normalization=norm_str,
                     original=word.text,
                     lemma=lemma_raw,
