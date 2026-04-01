@@ -3,7 +3,7 @@ import logging
 import asyncio
 import os
 import tempfile
-from typing import List, Optional
+from typing import List, Optional, Union, Dict
 
 from core.interfaces import DocumentFetcher, Converter
 from api.dependencies import ProcessingOptions
@@ -169,6 +169,44 @@ class WitnessService:
         with open(filepath, "r", encoding="utf-8") as f:
             data = json.load(f)
             return CollatexResponse.model_validate(data)
+
+    def save_collation_result(
+        self, 
+        collection_name: str, 
+        ref_id: str, 
+        result: Union[Dict, str], 
+        output_format: str,
+        cite_type: str = "milestone"
+    ) -> str:
+        """
+        Saves a collation result to a file and returns the path.
+        """
+        settings = Settings()
+        target_dir = os.path.join(settings.collation_dir, collection_name)
+        os.makedirs(target_dir, exist_ok=True)
+
+        # Determine file extension based on format
+        format_map = {
+            "application/json": ".json",
+            "text/plain": ".dot",  # Most common use case for text/plain in Collatex
+            "application/tei+xml": ".xml",
+            "application/graphml+xml": ".graphml",
+            "image/svg+xml": ".svg",
+        }
+        ext = format_map.get(output_format, ".txt")
+        
+        filename = f"{cite_type}_{ref_id}{ext}"
+        filepath = os.path.join(target_dir, filename)
+
+        if isinstance(result, dict):
+            with open(filepath, "w", encoding="utf-8") as f:
+                json.dump(result, f, indent=2, ensure_ascii=False)
+        else:
+            with open(filepath, "w", encoding="utf-8") as f:
+                f.write(result)
+
+        logger.info(f"Saved collation result to: {filepath}")
+        return filepath
 
     async def prepare_section_if_needed(
         self,

@@ -74,3 +74,30 @@ async def test_load_prepared_section(witness_service, mock_converter, options):
     assert isinstance(response, CollatexResponse)
     assert len(response.witnesses) == 1
     assert response.witnesses[0].tokens[0].text == "test"
+
+def test_save_collation_result(witness_service):
+    settings = Settings()
+    # Ensure collation_dir is cleared for test
+    if os.path.exists(settings.collation_dir):
+        shutil.rmtree(settings.collation_dir)
+        
+    collection = "TestColl"
+    ref = "103"
+    result = "DOT DATA"
+    format = "text/plain"
+    
+    path = witness_service.save_collation_result(collection, ref, result, format)
+    
+    assert os.path.exists(path)
+    assert "TestColl" in path
+    assert "milestone_103.dot" in path
+    with open(path, "r") as f:
+        assert f.read() == "DOT DATA"
+
+    # Test JSON saving
+    json_result = {"key": "value"}
+    path_json = witness_service.save_collation_result(collection, "104", json_result, "application/json")
+    assert path_json.endswith(".json")
+    with open(path_json, "r") as f:
+        data = json.load(f)
+        assert data == json_result

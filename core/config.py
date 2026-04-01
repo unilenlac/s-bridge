@@ -16,7 +16,8 @@ class Settings(BaseSettings):
     tag_config: Optional[str] = None  # Path to a JSON tag dictionary file
     dts_api_base_url: str = "http://ftsr-dev.unil.ch:8000"
     collatex_api_base_url: str = "http://ftsr-dev.unil.ch:7369"
-    output_dir: str = "/tmp/s-bridge/output"
+    output_dir: str = "/home/jbidaux/s-bridge/pre_collation"
+    collation_dir: str = "/home/jbidaux/s-bridge/post_collation"
 
 
     def load_tag_dictionary(self) -> Dict[str, Any]:

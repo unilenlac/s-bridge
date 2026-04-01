@@ -137,28 +137,38 @@ async def collate_resources(
             refs = [m["identifier"] for m in nav]
 
         # 2. Iterate and collate each section (always through prepared files)
-        results = {}
+        # 2. Process sections and save results to disk
+        collection_name = await witness_service.fetcher.get_collection_name(req.resources[0])
+        saved_files = {}
+        
         for r in refs:
+            # Prepare section if needed
             path = await witness_service.prepare_section_if_needed(req.resources, r, converter, options)
             ready_data = witness_service.load_prepared_section(path)
-            results[r] = await collatex_client.collate(
+            
+            # Collate
+            result = await collatex_client.collate(
                 payload=ready_data.model_dump(by_alias=True, exclude_none=True),
                 output_format=output_format
             )
+            
+            # Persist result to disk
+            # For simplicity we assume milestone here, but we could improve this by passing citeType
+            saved_path = witness_service.save_collation_result(
+                collection_name=collection_name,
+                ref_id=r,
+                result=result,
+                output_format=output_format
+            )
+            saved_files[r] = saved_path
 
-        # 3. Return: single result for single-ref, dict for multi-ref
-        if req.ref:
-            res = results[req.ref]
-            if output_format != CollatexClient.FORMAT_JSON:
-                return Response(content=res, media_type=output_format)
-            return res
-
-        # For multi-section requests with non-JSON format, join outcomes
-        if output_format != CollatexClient.FORMAT_JSON:
-            combined = "\n\n".join([f"/* --- Section {r} --- */\n{val}" for r, val in results.items()])
-            return Response(content=combined, media_type=output_format)
-
-        return results
+        # 3. Return the mapping of refs to file paths
+        return {
+            "collection": collection_name,
+            "format": output_format,
+            "total_sections": len(saved_files),
+            "results": saved_files
+        }
         
     except Exception as e:
         logger.error(f"Error in collate_resources: {e}", exc_info=True)

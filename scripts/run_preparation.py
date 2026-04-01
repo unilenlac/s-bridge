@@ -7,7 +7,7 @@ def main():
     # ==========================================
     # "whole" — single CollatexResponse, optional ref
     # "split" — one file per top-level section written to disk
-    mode = "whole"
+    mode = "split"
 
     # ==========================================
     # 2. CHOOSE YOUR RESOURCES

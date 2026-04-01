@@ -24,7 +24,7 @@ def main():
     # - "text/plain"
     # - "application/graphml+xml"
     # - "image/svg+xml"
-    output_format = "application/json"
+    output_format = "text/plain"
 
     # The base URL to your local FastAPI app server
     base_url = "http://127.0.0.1:8000"
@@ -45,28 +45,17 @@ def main():
 
             response = client.post(url, json=payload, params=params)
             if response.status_code == 200:
-                # Determine output file extension based on format
-                ext_map = {
-                    "application/json": ".json",
-                    "application/tei+xml": ".xml",
-                    "text/plain": ".txt",
-                    "application/graphml+xml": ".graphml",
-                    "image/svg+xml": ".svg",
-                }
-                ext = ext_map.get(output_format, ".txt")
-                output_file = f"collate_output{ext}"
-
-                # Write output based on format
-                if output_format == "application/json":
-                    data = response.json()
-                    with open(output_file, "w", encoding="utf-8") as f:
-                        json.dump(data, f, indent=2, ensure_ascii=False)
-                else:
-                    # For non-JSON formats (TEI, SVG, etc.), write as text
-                    with open(output_file, "w", encoding="utf-8") as f:
-                        f.write(response.text)
-
-                print(f"Success! Written to '{output_file}'")
+                data = response.json()
+                print(f"Success! Collation completed for {data['total_sections']} sections.")
+                print(f"Format: {data['format']}")
+                print(f"Results stored in '{data['collection']}':")
+                for ref_id, path in data["results"].items():
+                    print(f"  [{ref_id}]: {path}")
+                
+                # Optional: Write the summary to a local file
+                with open("collate_results_summary.json", "w", encoding="utf-8") as f:
+                    json.dump(data, f, indent=2, ensure_ascii=False)
+                print(f"\nSummary written to 'collate_results_summary.json'")
             else:
                 _print_error(response)
 
