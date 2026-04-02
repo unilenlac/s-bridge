@@ -24,7 +24,7 @@ def main():
     # - "text/plain"
     # - "application/graphml+xml"
     # - "image/svg+xml"
-    output_format = "text/plain"
+    output_format = "application/json"
 
     # The base URL to your local FastAPI app server
     base_url = "http://127.0.0.1:8000"

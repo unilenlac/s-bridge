@@ -101,3 +101,29 @@ class DTSClient:
             # Fallback to the resource's own title
             title = data.get("title", resource)
             return title.split(" - ")[0].strip()
+
+    async def get_cite_type(self, resource: str, ref: str) -> str:
+        """
+        Fetches the citeType for a specific reference from the Navigation API.
+        """
+        url = f"{self.base_url}/api/dts/v1/navigation/"
+        params = {
+            "resource": resource,
+            "ref": ref,
+        }
+        logger.info(f"Fetching citeType for resource: {resource}, ref: {ref}")
+
+        async with httpx.AsyncClient(follow_redirects=True) as client:
+            response = await client.get(url, params=params)
+            response.raise_for_status()
+            data = response.json()
+
+            # citeType is usually in the 'ref' object for a specific ref,
+            # but could also be at the top level in some implementations
+            cite_type = data.get("citeType") or data.get("ref", {}).get("citeType")
+            if not cite_type:
+                # Fallback to 'milestone' if not found, consistent with existing logic
+                logger.warning(f"citeType not found for ref '{ref}', defaulting to 'milestone'")
+                return "milestone"
+
+            return cite_type

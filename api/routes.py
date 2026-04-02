@@ -153,7 +153,7 @@ async def collate_resources(
             )
             
             # Persist result to disk
-            # For simplicity we assume milestone here, but we could improve this by passing citeType
+            curr_cite_type = await dts_client.get_cite_type(req.resources[0], r)
             saved_path = witness_service.save_collation_result(
                 collection_name=collection_name,
                 ref_id=r,
