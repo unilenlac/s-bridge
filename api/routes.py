@@ -133,8 +133,8 @@ async def collate_resources(
         if req.ref:
             refs = [req.ref]
         else:
-            nav = await dts_client.get_navigation(req.resources[0])
-            refs = [m["identifier"] for m in nav]
+            members = await dts_client.get_members(req.resources[0])
+            refs = [m["identifier"] for m in members]
 
         # 2. Iterate and collate each section (always through prepared files)
         # 2. Process sections and save results to disk
@@ -153,7 +153,6 @@ async def collate_resources(
             )
             
             # Persist result to disk
-            curr_cite_type = await dts_client.get_cite_type(req.resources[0], r)
             saved_path = witness_service.save_collation_result(
                 collection_name=collection_name,
                 ref_id=r,

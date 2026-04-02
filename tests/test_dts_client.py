@@ -77,7 +77,7 @@ def test_get_navigation_single_page(monkeypatch):
     monkeypatch.setattr(httpx, "AsyncClient", MockAsyncClient)
 
     client = DTSClient(base_url="http://test")
-    members = asyncio.run(client.get_navigation("res1"))
+    members = asyncio.run(client.get_members("res1"))
 
     assert len(members) == 2
     assert members[0] == {"identifier": "107", "citeType": "milestone"}
@@ -135,7 +135,7 @@ def test_get_navigation_multiple_pages(monkeypatch):
     monkeypatch.setattr(httpx, "AsyncClient", MockAsyncClient)
 
     client = DTSClient(base_url="http://test")
-    members = asyncio.run(client.get_navigation("res1"))
+    members = asyncio.run(client.get_members("res1"))
 
     assert len(members) == 2
     assert len(members) == 2

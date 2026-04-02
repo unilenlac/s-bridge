@@ -22,7 +22,7 @@ class DocumentFetcher(Protocol):
     async def get_document(self, resource: str, ref: Optional[str] = None) -> str:
         ...
 
-    async def get_navigation(self, resource: str) -> List[Dict[str, str]]:
+    async def get_members(self, resource: str) -> List[Dict[str, str]]:
         ...
 
     async def get_collection_name(self, resource: str) -> str:

@@ -35,7 +35,7 @@ class DTSClient:
             response.raise_for_status()
             return response.text
 
-    async def get_navigation(self, resource: str) -> list[dict]:
+    async def get_members(self, resource: str) -> list[dict]:
         """
         Fetches all level-1 CitableUnits for a resource from the Navigation API.
         Handles pagination automatically.
@@ -53,6 +53,7 @@ class DTSClient:
             while True:
                 params = {
                     "resource": resource,
+                    #down : 1 to get section like milestone. down 2 would give subsections
                     "down": 1,
                     "limit": 100,
                     "page": page,
@@ -127,3 +128,25 @@ class DTSClient:
                 return "milestone"
 
             return cite_type
+
+    async def get_collection_name_url(self, client_url: str) -> str:
+        """
+        Fetches the collection name from the basic url.
+        """
+        # Simple extraction based on the user's rule: id is between 'id=' and the next '&'
+        try:
+            id_collection = client_url.split("id=")[1].split("&")[0]
+        except (IndexError, AttributeError):
+            logger.warning(f"Could not extract 'id' from URL: {client_url}")
+            return "Unknown"
+
+        url = f"{self.base_url}/api/dts/v1/collection/"
+        params = {
+            "id": id_collection
+        }
+
+        async with httpx.AsyncClient(follow_redirects=True) as client:
+            response = await client.get(url, params=params)
+            response.raise_for_status()
+            data = response.json()
+            return data.get("title", id_collection)
