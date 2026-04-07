@@ -16,7 +16,7 @@ def main():
     # 2. CONFIGURE COLLATION SETTINGS
     # ==========================================
     # Optionally restrict to a sub-reference (e.g. "109" or None for full text)
-    ref = "109"
+    ref = ""
 
     # Output format options:
     # - "application/json" (default)
@@ -46,16 +46,29 @@ def main():
             response = client.post(url, json=payload, params=params)
             if response.status_code == 200:
                 data = response.json()
-                print(f"Success! Collation completed for {data['total_sections']} sections.")
-                print(f"Format: {data['format']}")
-                print(f"Results stored in '{data['collection']}':")
-                for ref_id, path in data["results"].items():
-                    print(f"  [{ref_id}]: {path}")
-                
-                # Optional: Write the summary to a local file
-                with open("collate_results_summary.json", "w", encoding="utf-8") as f:
-                    json.dump(data, f, indent=2, ensure_ascii=False)
-                print(f"\nSummary written to 'collate_results_summary.json'")
+                job_id = data.get("job_id")
+                print(f"Job launched successfully! Job ID: {job_id}")
+                print("Polling for completion...")
+
+                import time
+                while True:
+                    time.sleep(3)
+                    job_resp = client.get(f"{base_url}/dts/jobs/{job_id}")
+                    if job_resp.status_code != 200:
+                        print(f"Error polling job status... status code {job_resp.status_code}")
+                        break
+                    
+                    job_data = job_resp.json()
+                    status = job_data.get("status")
+                    print(f"Current Status: {status}...")
+                    
+                    if status in ["COMPLETED", "FAILED", "CANCELLED"]:
+                        print(f"\nJob finished with final state: {status}")
+                        if status == "FAILED":
+                            print(f"Error Message: {job_data.get('error_message')}")
+                        elif status == "COMPLETED":
+                            print("To view the paths to your collated artifacts, query: GET /dts/traditions")
+                        break
             else:
                 _print_error(response)
 

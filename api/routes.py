@@ -11,7 +11,14 @@ from models.tokenization import Token, CollatexResponse
 from clients.dts_client import DTSClient
 from clients.collatex_client import CollatexClient
 from services.witness_service import WitnessService
+from services.workers import run_collate_job
+from core.database import get_session
+from sqlalchemy.ext.asyncio import AsyncSession
+from models.database import Job, JobStatus, Tradition
+import uuid
+from fastapi import BackgroundTasks
 from core.config import Settings
+from sqlmodel import select
 
 # APIRouter acts as a mini FastAPI application to structure the routes.
 router = APIRouter()
@@ -119,59 +126,84 @@ async def prepare_collatex_split(
 
 @router.post("/dts/collate",
     description=(
-        "Fetch multiple DTS resources, prepare them, and send them to the "
-        "CollateX service for alignment. Returns the response from CollateX."
+        "Proxy to the CollateX service. Submits a job to run in the background "
+        "and immediately returns a job ID to track status."
     ))
 async def collate_resources(
     req: CollatexWitnessRequest,
+    background_tasks: BackgroundTasks,
     output_format: str = Query("application/json", description="Output format"),
     options: ProcessingOptions = Depends(get_processing_options),
-    converter: Converter = Depends(converter_dep)
+    converter: Converter = Depends(converter_dep),
+    session: AsyncSession = Depends(get_session)
 ):
     try:
-        # 1. Identify all refs (sections) to process
+        # Identify refs
         if req.ref:
             refs = [req.ref]
         else:
             members = await dts_client.get_members(req.resources[0])
             refs = [m["identifier"] for m in members]
 
-        # 2. Iterate and collate each section (always through prepared files)
-        # 2. Process sections and save results to disk
         collection_name = await witness_service.fetcher.get_collection_name(req.resources[0])
-        saved_files = {}
-        
-        for r in refs:
-            # Prepare section if needed
-            path = await witness_service.prepare_section_if_needed(req.resources, r, converter, options)
-            ready_data = witness_service.load_prepared_section(path)
-            
-            # Collate
-            result = await collatex_client.collate(
-                payload=ready_data.model_dump(by_alias=True, exclude_none=True),
-                output_format=output_format
-            )
-            
-            # Persist result to disk
-            saved_path = witness_service.save_collation_result(
-                collection_name=collection_name,
-                ref_id=r,
-                result=result,
-                output_format=output_format
-            )
-            saved_files[r] = saved_path
 
-        # 3. Return the mapping of refs to file paths
+        # Create Job
+        job = Job(resource_id=collection_name, ref=req.ref)
+        session.add(job)
+        await session.commit()
+        await session.refresh(job)
+
+        # Dispatch background worker
+        background_tasks.add_task(
+            run_collate_job,
+            job_id=job.id,
+            collection_name=collection_name,
+            refs=refs,
+            resources=req.resources,
+            output_format=output_format,
+            options=options,
+            converter=converter,
+            witness_service=witness_service,
+            collatex_client=collatex_client
+        )
+
         return {
-            "collection": collection_name,
-            "format": output_format,
-            "total_sections": len(saved_files),
-            "results": saved_files
+            "job_id": str(job.id),
+            "status": job.status,
+            "message": "Collation job started in the background."
         }
         
     except Exception as e:
-        logger.error(f"Error in collate_resources: {e}", exc_info=True)
+        logger.error(f"Error starting collate job: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
+
+@router.get("/dts/jobs/{job_id}", description="Fetch the status of a specific job.")
+async def get_job_status(job_id: uuid.UUID, session: AsyncSession = Depends(get_session)):
+    job = await session.get(Job, job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return job
+
+
+@router.put("/dts/jobs/{job_id}/cancel", description="Cancel a pending or processing job.")
+async def cancel_job(job_id: uuid.UUID, session: AsyncSession = Depends(get_session)):
+    job = await session.get(Job, job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    
+    if job.status in [JobStatus.PENDING.value, JobStatus.PROCESSING.value]:
+        job.status = JobStatus.CANCELLED.value
+        session.add(job)
+        await session.commit()
+        return {"status": job.status, "message": "Job cancelled."}
+    
+    raise HTTPException(status_code=400, detail=f"Cannot cancel job in state: {job.status}")
+
+
+@router.get("/dts/traditions", description="List all successfully completed traditions.")
+async def get_traditions(session: AsyncSession = Depends(get_session)):
+    result = await session.execute(select(Tradition))
+    return result.scalars().all()
 
 

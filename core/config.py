@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     collatex_api_base_url: str = "http://ftsr-dev.unil.ch:7369"
     output_dir: str = "/tmp/s-bridge/pre_collation"
     collation_dir: str = "/tmp/s-bridge/post_collation"
+    database_url: str = "sqlite+aiosqlite:///data/s_bridge.db"
 
 
     def load_tag_dictionary(self) -> Dict[str, Any]:
