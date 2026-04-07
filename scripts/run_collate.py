@@ -67,7 +67,33 @@ def main():
                         if status == "FAILED":
                             print(f"Error Message: {job_data.get('error_message')}")
                         elif status == "COMPLETED":
-                            print("To view the paths to your collated artifacts, query: GET /dts/traditions")
+                            trad_resp = client.get(f"{base_url}/dts/traditions")
+                            if trad_resp.status_code == 200:
+                                all_traditions = trad_resp.json()
+                                job_results = [t for t in all_traditions if t.get("job_id") == job_id]
+                                
+                                if job_results:
+                                    print(f"Success! Collation completed for {len(job_results)} sections.")
+                                    collection = job_results[0].get("resource_id", "Unknown")
+                                    print(f"Results stored in '{collection}':")
+                                    
+                                    results_dict = {}
+                                    for t in job_results:
+                                        print(f"  [{t['ref']}]: {t['result_path']}")
+                                        results_dict[t['ref']] = t['result_path']
+                                    
+                                    summary_data = {
+                                        "collection": collection,
+                                        "job_id": str(job_id),
+                                        "total_sections": len(job_results),
+                                        "results": results_dict
+                                    }
+                                    
+                                    with open("collate_results_summary.json", "w", encoding="utf-8") as f:
+                                        json.dump(summary_data, f, indent=2, ensure_ascii=False)
+                                    print(f"\nSummary written to 'collate_results_summary.json'")
+                                else:
+                                    print("\nJob completed, but no physical results were tracked in the database.")
                         break
             else:
                 _print_error(response)

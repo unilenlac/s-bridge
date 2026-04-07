@@ -83,44 +83,6 @@ async def prepare_collatex_whole(
 
 
 # ---------------------------------------------------------------------------
-# By-section endpoint — split by top-level refs, write one file per section
-# ---------------------------------------------------------------------------
-
-class CollatexBySectionRequest(BaseModel):
-    resources: List[str]
-
-class CollatexBySectionResponse(BaseModel):
-    written_files: List[str]
-    total_sections: int
-
-@router.post("/dts/prepare-collatex/split",
-    response_model=CollatexBySectionResponse,
-    description=(
-        "Fetch multiple DTS resources, split by top-level sections (e.g. milestones), "
-        "and write one Collatex JSON file per section to disk. "
-        "Files are written to: <output_dir>/<collection_name>/<citeType>_<identifier>.json"
-    ))
-async def prepare_collatex_split(
-    req: CollatexBySectionRequest,
-    options: ProcessingOptions = Depends(get_processing_options),
-    converter: Converter = Depends(converter_dep)
-):
-    try:
-        written = await witness_service.process_witnesses_by_section(
-            resources=req.resources,
-            converter=converter,
-            options=options,
-        )
-        return CollatexBySectionResponse(
-            written_files=written,
-            total_sections=len(written),
-        )
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
-
-# ---------------------------------------------------------------------------
 # Collate endpoint — fetch witnesses and proxy them to the CollateX Service
 # ---------------------------------------------------------------------------
 

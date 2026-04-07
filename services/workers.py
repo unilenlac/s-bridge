@@ -72,6 +72,7 @@ async def run_collate_job(
                 job.status = JobStatus.COMPLETED.value
                 session.add(job)
                 await session.commit()
+                logger.info(f"Collation job {job_id} successfully completed for collection '{collection_name}'.")
 
         except Exception as e:
             logger.error(f"Job {job_id} failed: {e}", exc_info=True)
