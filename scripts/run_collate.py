@@ -36,7 +36,7 @@ def main():
 
     try:
         with httpx.Client(timeout=300.0) as client:
-            url = f"{base_url}/dts/collate"
+            url = f"{base_url}/dts/process-and-collate"
             payload = {"resources": resources_to_fetch, "ref": ref}
             params = {"output_format": output_format}
 

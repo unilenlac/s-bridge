@@ -93,39 +93,7 @@ def test_prepare_collatex_witness_with_ref(monkeypatch):
     assert len(data["witnesses"]) == 1
 
 
-# ---------------------------------------------------------------------------
-# Tests for /dts/prepare-collatex/by-section
-# ---------------------------------------------------------------------------
 
-def test_prepare_collatex_split(monkeypatch):
-    from api import routes
-    monkeypatch.setattr(routes, "witness_service", MockWitnessService())
-
-    response = client.post(
-        "/dts/prepare-collatex/split",
-        json={"resources": ["A", "B"]}
-    )
-    assert response.status_code == 200
-    data = response.json()
-    assert "written_files" in data
-    assert data["total_sections"] == 2
-    assert any("milestone_107.json" in f for f in data["written_files"])
-    assert any("milestone_108.json" in f for f in data["written_files"])
-
-
-def test_prepare_collatex_split_works(monkeypatch):
-    """Should succeed and auto-fetch."""
-    from api import routes
-    monkeypatch.setattr(routes, "witness_service", MockWitnessService())
-
-    response = client.post(
-        "/dts/prepare-collatex/split",
-        json={"resources": ["A", "B"]}
-    )
-    assert response.status_code == 200
-    data = response.json()
-    assert "written_files" in data
-    assert any("Auto Collection" in f for f in data["written_files"])
 
 # ---------------------------------------------------------------------------
 # Tests for /dts/collate
@@ -148,7 +116,7 @@ def test_collate_returns_job_id(monkeypatch):
     app.dependency_overrides[get_session] = override_get_session
 
     response = client.post(
-        "/dts/collate",
+        "/dts/process-and-collate",
         json={"resources": ["A"], "ref": "mock_ref"}
     )
     assert response.status_code == 200

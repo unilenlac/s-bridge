@@ -86,12 +86,14 @@ async def prepare_collatex_whole(
 # Collate endpoint — fetch witnesses and proxy them to the CollateX Service
 # ---------------------------------------------------------------------------
 
-@router.post("/dts/collate",
+@router.post("/dts/process-and-collate",
     description=(
-        "Proxy to the CollateX service. Submits a job to run in the background "
-        "and immediately returns a job ID to track status."
+        "End-to-End NLP Collation Pipeline. This route orchestrates fetching XML resources from the DTS service, "
+        "processes them through a CLTK/Stanza NLP engine (or similar) to convert text into deep-normalized token lists, "
+        "and finally aligns them all together using the CollateX service. "
+        "Workloads are executed securely in an asynchronous background job thread. Returns a Job ID to track pipeline status."
     ))
-async def collate_resources(
+async def process_and_collate_resources(
     req: CollatexWitnessRequest,
     background_tasks: BackgroundTasks,
     output_format: str = Query("application/json", description="Output format"),
@@ -167,5 +169,27 @@ async def cancel_job(job_id: uuid.UUID, session: AsyncSession = Depends(get_sess
 async def get_traditions(session: AsyncSession = Depends(get_session)):
     result = await session.execute(select(Tradition))
     return result.scalars().all()
+
+
+@router.delete("/dts/traditions/{tradition_id}", description="Safely delete a Tradition's database record and physical disk file.")
+async def delete_tradition(tradition_id: int, session: AsyncSession = Depends(get_session)):
+    import os
+    tradition = await session.get(Tradition, tradition_id)
+    if not tradition:
+        raise HTTPException(status_code=404, detail="Tradition not found in database.")
+    
+    # Safely remove the file from the disk if it exists
+    try:
+        if os.path.exists(tradition.result_path):
+            os.remove(tradition.result_path)
+            logger.info(f"Deleted physical Tradition file at {tradition.result_path}")
+    except Exception as e:
+        logger.warning(f"Could not delete physical file at {tradition.result_path}. It may already be deleted. Error: {e}")
+
+    # Remove the DB record
+    await session.delete(tradition)
+    await session.commit()
+    
+    return {"status": "success", "message": f"Deleted tradition ID {tradition_id}"}
 
 
