@@ -4,7 +4,7 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
-#Implements a DocumentFetcher Protocol
+
 class DTSClient:
     def __init__(self, base_url: str):
         """

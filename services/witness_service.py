@@ -5,7 +5,8 @@ import os
 import tempfile
 from typing import List, Optional, Union, Dict
 
-from core.interfaces import DocumentFetcher, Converter
+from core.interfaces import Converter
+from clients.dts_client import DTSClient
 from api.dependencies import ProcessingOptions
 from models.tokenization import CollatexResponse, CollatexWitness
 from core.config import Settings
@@ -14,8 +15,7 @@ from core.config import Settings
 logger = logging.getLogger(__name__)
 
 class WitnessService:
-    def __init__(self, fetcher: DocumentFetcher):
-        # example : DTSClient
+    def __init__(self, fetcher: DTSClient):
         self.fetcher = fetcher
 
     async def _process_single_witness(
