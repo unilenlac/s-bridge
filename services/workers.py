@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import sessionmaker
 
 from core.database import engine
-from models.database import Job, JobStatus, Tradition
+from models.schema import Job, JobStatus, Tradition
 
 logger = logging.getLogger(__name__)
 

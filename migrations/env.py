@@ -18,7 +18,7 @@ if config.config_file_name is not None:
 
 from sqlmodel import SQLModel
 # Import all models here so SQLModel.metadata registers them
-import models.database
+import models.schema
 from core.config import Settings
 
 target_metadata = SQLModel.metadata

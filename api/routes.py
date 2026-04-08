@@ -14,7 +14,7 @@ from services.witness_service import WitnessService
 from services.workers import run_collate_job
 from core.database import get_session
 from sqlalchemy.ext.asyncio import AsyncSession
-from models.database import Job, JobStatus, Tradition
+from models.schema import Job, JobStatus, Tradition
 import uuid
 from fastapi import BackgroundTasks
 from core.config import Settings
@@ -59,7 +59,6 @@ class CollatexWitnessRequest(BaseModel):
     description=(
         "Fetch multiple DTS resources and prepare them for Collatex. "
         "Optionally scope to a specific passage ref. "
-        "[DEPRECATED] Use /dts/prepare-collatex/split instead."
     ),
     deprecated=True)
 

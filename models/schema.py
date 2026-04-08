@@ -24,7 +24,7 @@ class Job(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     resource_id: str
     ref: Optional[str] = None
-    status: str = Field(default=JobStatus.PENDING.value)
+    status: JobStatus = Field(default=JobStatus.PENDING)
     error_message: Optional[str] = None
     
     # Use sqlalchemy's server_default to handle timestamps at the DB layer implicitly
@@ -36,6 +36,7 @@ class Job(SQLModel, table=True):
         default=None,
         sa_column=Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     )
+
 
 
 class Tradition(SQLModel, table=True):

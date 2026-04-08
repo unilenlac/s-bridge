@@ -99,7 +99,7 @@ def test_prepare_collatex_witness_with_ref(monkeypatch):
 # Tests for /dts/collate
 # ---------------------------------------------------------------------------
 from unittest.mock import AsyncMock, MagicMock
-from models.database import Job, JobStatus
+from models.schema import Job, JobStatus
 import uuid
 
 async def override_get_session():
