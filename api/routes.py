@@ -10,6 +10,7 @@ from api.dependencies import converter_dep, get_processing_options, ProcessingOp
 from models.tokenization import Token, CollatexResponse
 from clients.dts_client import DTSClient
 from clients.collatex_client import CollatexClient
+from clients.stemmarest_client import StemmarestClient
 from services.witness_service import WitnessService
 from services.workers import run_collate_job
 from core.database import get_session
@@ -26,6 +27,7 @@ router = APIRouter()
 settings = Settings()
 dts_client = DTSClient(base_url=settings.dts_api_base_url)
 collatex_client = CollatexClient(base_url=settings.collatex_api_base_url)
+stemmarest_client = StemmarestClient(base_url=settings.stemmarest_api_base_url)
 witness_service = WitnessService(fetcher=dts_client)
 
 
@@ -127,7 +129,8 @@ async def process_and_collate_resources(
             options=options,
             converter=converter,
             witness_service=witness_service,
-            collatex_client=collatex_client
+            collatex_client=collatex_client,
+            stemmarest_client=stemmarest_client
         )
 
         return {

@@ -46,7 +46,6 @@ class WitnessService:
             logger.warning(f"Gracefully skipping witness '{resource}': {e}")
             return None
 
-	#Depreciated, used by prepare-collatex/whole
     async def process_witnesses(
         self,
         resources: List[str],
@@ -147,13 +146,43 @@ class WitnessService:
 
         filepath = self.get_section_filepath(collection_name, ref)
 
+        #Section to process only missing refs of a already processed collection if needed.
         if not force and os.path.exists(filepath):
-            logger.info(f"Using existing prepared file for ref '{ref}': {filepath}")
-            return filepath
+            try:
+                existing_data = self.load_prepared_section(filepath)
+                existing_ids = {w.id for w in existing_data.witnesses}
+                missing_resources = [r for r in resources if r not in existing_ids]
 
-        logger.info(f"Preparing section '{ref}' for collection '{collection_name}'...")
+                if not missing_resources:
+                    logger.info(f"Using existing prepared file for ref '{ref}' (all resources present): {filepath}")
+                    return filepath
+
+                logger.info(f"Appending {len(missing_resources)} new resources to existing prepared file for '{ref}'...")
+                
+                # Fetch and process ONLY missing resources
+                new_section_data = await self.process_witnesses(
+                    resources=missing_resources,
+                    converter=converter,
+                    options=options,
+                    ref=ref
+                )
+                
+                # Append new witnesses to existing data
+                existing_data.witnesses.extend(new_section_data.witnesses)
+                
+                # Define helper for dumping to avoid repetition
+                self._dump_to_file(existing_data, filepath)
+                
+                logger.info(f"Successfully appended to section: {filepath}")
+                return filepath
+
+            except Exception as e:
+                logger.warning(f"Failed to load or update existing prepared file: {e}. Regenerating completely.")
+                # Fall through to regenerate completely
+
+        logger.info(f"Preparing section '{ref}' for collection '{collection_name}' completely...")
         
-        # Fetch and process
+        # Fetch and process all resources
         section_data = await self.process_witnesses(
             resources=resources,
             converter=converter,
@@ -161,13 +190,17 @@ class WitnessService:
             ref=ref
         )
 
-        # Ensure directory exists
-        os.makedirs(os.path.dirname(filepath), exist_ok=True)
+        self._dump_to_file(section_data, filepath)
+        
+        logger.info(f"Successfully prepared and saved section to: {filepath}")
+        return filepath
 
-        # Write to disk
+    def _dump_to_file(self, data: CollatexResponse, filepath: str):
+        """Helper to write a CollatexResponse to disk as JSON."""
+        os.makedirs(os.path.dirname(filepath), exist_ok=True)
         with open(filepath, "w", encoding="utf-8") as f:
             json.dump(
-                section_data.model_dump(
+                data.model_dump(
                     by_alias=True,
                     exclude_none=True,
                     exclude_defaults=True,
@@ -176,7 +209,4 @@ class WitnessService:
                 indent=2,
                 ensure_ascii=False,
             )
-        
-        logger.info(f"Successfully prepared and saved section to: {filepath}")
-        return filepath
 

@@ -19,7 +19,8 @@ async def run_collate_job(
     options,
     converter,
     witness_service,
-    collatex_client
+    collatex_client,
+    stemmarest_client
 ):
     """
     Background worker that runs the collation task, tracking status to SQLite.
@@ -36,6 +37,17 @@ async def run_collate_job(
             job.status = JobStatus.PROCESSING.value
             session.add(job)
             await session.commit()
+
+            from core.config import Settings
+            settings_cfg = Settings()
+            
+            # Ensure the Stemmarest tradition exists for this collection
+            trad_id = await stemmarest_client.get_or_create_tradition(
+                name=collection_name, 
+                language=settings_cfg.language, 
+                direction="LR", 
+                is_public=False
+            )
 
             for r in refs:
                 # Check for cancellation before each large section
@@ -57,6 +69,15 @@ async def run_collate_job(
                     result=result,
                     output_format=output_format
                 )
+
+                # Append the newly created section to the Stemmarest Tradition
+                if output_format == "application/json":
+                    await stemmarest_client.upload_section(
+                        trad_id=trad_id,
+                        section_name=r,
+                        file_path=saved_path,
+                        filetype="cxjson"
+                    )
 
                 # Record the successfully collated artifact
                 tradition = Tradition(
