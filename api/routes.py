@@ -113,7 +113,7 @@ async def process_and_collate_resources(
         collection_name = await witness_service.fetcher.get_collection_name(req.resources[0])
 
         # Create Job
-        job = Job(collection_id=collection_name, ref=req.ref)
+        job = Job(collection_id=collection_name, resources=req.resources, ref=req.ref)
         session.add(job)
         await session.commit()
         await session.refresh(job)

@@ -1,10 +1,10 @@
 import uuid
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Optional
+from typing import Optional, List
 
 from sqlmodel import Field, SQLModel
-from sqlalchemy import Column, DateTime
+from sqlalchemy import Column, DateTime, JSON
 from sqlalchemy.sql import func
 
 
@@ -23,6 +23,7 @@ def utc_now() -> datetime:
 class Job(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     collection_id: str
+    resources: List[str] = Field(default_factory=list, sa_column=Column(JSON))
     ref: Optional[str] = None
     status: JobStatus = Field(default=JobStatus.PENDING)
     error_message: Optional[str] = None
@@ -42,6 +43,7 @@ class Job(SQLModel, table=True):
 class Tradition(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
     collection_id: str
+    resources: List[str] = Field(default_factory=list, sa_column=Column(JSON))
     ref: Optional[str] = None
     result_path: str
     job_id: Optional[uuid.UUID] = Field(default=None, foreign_key="job.id")

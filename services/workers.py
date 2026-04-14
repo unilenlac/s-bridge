@@ -79,14 +79,37 @@ async def run_collate_job(
                         filetype="cxjson"
                     )
 
-                # Record the successfully collated artifact
-                tradition = Tradition(
-                    collection_id=collection_name,
-                    ref=r,
-                    result_path=saved_path,
-                    job_id=job.id
+                # Record or update the successfully collated artifact
+                from sqlmodel import select
+                stmt = select(Tradition).where(
+                    Tradition.collection_id == collection_name,
+                    Tradition.ref == r
                 )
-                session.add(tradition)
+                existing_tradition = (await session.execute(stmt)).scalar_one_or_none()
+
+                if existing_tradition:
+                    from sqlalchemy.orm.attributes import flag_modified
+                    
+                    # Merge existing resources with new ones, avoiding duplicates
+                    current_resources = list(existing_tradition.resources) if existing_tradition.resources else []
+                    for r_res in resources:
+                        if r_res not in current_resources:
+                            current_resources.append(r_res)
+                            
+                    existing_tradition.resources = current_resources
+                    existing_tradition.result_path = saved_path
+                    existing_tradition.job_id = job.id
+                    flag_modified(existing_tradition, "resources")
+                    session.add(existing_tradition)
+                else:
+                    tradition = Tradition(
+                        collection_id=collection_name,
+                        resources=resources,
+                        ref=r,
+                        result_path=saved_path,
+                        job_id=job.id
+                    )
+                    session.add(tradition)
                 await session.commit()
 
             if job.status != JobStatus.CANCELLED.value:
