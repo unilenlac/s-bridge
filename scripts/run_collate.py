@@ -6,10 +6,10 @@ def main():
     # 1. CHOOSE YOUR RESOURCES
     # ==========================================
     resources_to_fetch = [
-        "athous-iviron-450",
-        "athous-iviron-476",
-        "brescia-A-III-3-72",
-        "ebe-1027"
+            "athous-iviron-450",
+            "athous-iviron-476",
+            "brescia-A-III-3-72",
+            "ebe-1027"
     ]
 
     # ==========================================
@@ -74,7 +74,7 @@ def main():
                                 
                                 if job_results:
                                     print(f"Success! Collation completed for {len(job_results)} sections.")
-                                    collection = job_results[0].get("resource_id", "Unknown")
+                                    collection = job_results[0].get("collection_id", "Unknown")
                                     print(f"Results stored in '{collection}':")
                                     
                                     results_dict = {}

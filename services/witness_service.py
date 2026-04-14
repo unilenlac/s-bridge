@@ -43,7 +43,7 @@ class WitnessService:
 
         except Exception as e:
             # Catch all exceptions (404s, parsing errors) to prevent crashing the entire API
-            logger.warning(f"Gracefully skipping witness '{resource}': {e}")
+            logger.warning(f"Gracefully skipping witness '{resource}'.")
             return None
 
     async def process_witnesses(

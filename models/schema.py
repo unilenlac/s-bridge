@@ -22,7 +22,7 @@ def utc_now() -> datetime:
 
 class Job(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    resource_id: str
+    collection_id: str
     ref: Optional[str] = None
     status: JobStatus = Field(default=JobStatus.PENDING)
     error_message: Optional[str] = None
@@ -41,7 +41,7 @@ class Job(SQLModel, table=True):
 
 class Tradition(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
-    resource_id: str
+    collection_id: str
     ref: Optional[str] = None
     result_path: str
     job_id: Optional[uuid.UUID] = Field(default=None, foreign_key="job.id")
@@ -49,4 +49,9 @@ class Tradition(SQLModel, table=True):
     created_at: Optional[datetime] = Field(
         default=None,
         sa_column=Column(DateTime(timezone=True), server_default=func.now())
+    )
+
+    updated_at: Optional[datetime] = Field(
+        default=None,
+        sa_column=Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     )

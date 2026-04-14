@@ -81,7 +81,7 @@ async def run_collate_job(
 
                 # Record the successfully collated artifact
                 tradition = Tradition(
-                    resource_id=collection_name,
+                    collection_id=collection_name,
                     ref=r,
                     result_path=saved_path,
                     job_id=job.id
