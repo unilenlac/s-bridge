@@ -43,7 +43,7 @@ class WitnessService:
 
         except Exception as e:
             # Catch all exceptions (404s, parsing errors) to prevent crashing the entire API
-            logger.warning(f"Gracefully skipping witness '{resource}'.")
+            logger.warning(f"Gracefully skipping witness '{resource}' for reference '{ref}.")
             return None
 
     async def process_witnesses(
@@ -129,7 +129,7 @@ class WitnessService:
 
     async def prepare_section_if_needed(
         self,
-        resources: List[str],
+        collection_id: str,
         ref: str,
         converter: Converter,
         options: ProcessingOptions,
@@ -139,10 +139,10 @@ class WitnessService:
         Ensures a specific section is prepared and saved to disk.
         Returns the path to the prepared file.
         """
+        collection_name, resources = await self.fetcher.get_collection_details(collection_id)
+        
         if not resources:
-            raise ValueError("At least one resource is required.")
-
-        collection_name = await self.fetcher.get_collection_name(resources[0])
+            raise ValueError(f"No resources found for collection '{collection_id}'.")
 
         filepath = self.get_section_filepath(collection_name, ref)
 

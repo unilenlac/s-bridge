@@ -12,7 +12,8 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
     
     pipeline: str = "classical"  # Default pipeline (e.g., "modern" or "classical")
-    language: str = "grc"
+    language: str = "anci1242" #anci1242 is ancient greek, also grc
+    # language: str = ""
     tag_config: Optional[str] = None  # Path to a JSON tag dictionary file
     dts_api_base_url: str = "http://ftsr-dev.unil.ch:8000"
     collatex_api_base_url: str = "http://ftsr-dev.unil.ch:7369"

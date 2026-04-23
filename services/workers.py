@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 
 async def run_collate_job(
     job_id: uuid.UUID,
+    collection_id: str,
     collection_name: str,
     refs: List[str],
     resources: List[str],
@@ -57,7 +58,7 @@ async def run_collate_job(
                     break
 
                 # The core NLP processing -> Collatex workflow
-                path = await witness_service.prepare_section_if_needed(resources, r, converter, options)
+                path = await witness_service.prepare_section_if_needed(collection_id, r, converter, options)
                 ready_data = witness_service.load_prepared_section(path)
                 result = await collatex_client.collate(
                     payload=ready_data.model_dump(by_alias=True, exclude_none=True),
@@ -82,7 +83,7 @@ async def run_collate_job(
                 # Record or update the successfully collated artifact
                 from sqlmodel import select
                 stmt = select(Tradition).where(
-                    Tradition.collection_id == collection_name,
+                    Tradition.collection_id == collection_id,
                     Tradition.ref == r
                 )
                 existing_tradition = (await session.execute(stmt)).scalar_one_or_none()
@@ -103,7 +104,7 @@ async def run_collate_job(
                     session.add(existing_tradition)
                 else:
                     tradition = Tradition(
-                        collection_id=collection_name,
+                        collection_id=collection_id,
                         resources=resources,
                         ref=r,
                         result_path=saved_path,
@@ -116,7 +117,7 @@ async def run_collate_job(
                 job.status = JobStatus.COMPLETED.value
                 session.add(job)
                 await session.commit()
-                logger.info(f"Collation job {job_id} successfully completed for collection '{collection_name}'.")
+                logger.warning(f"Collation job {job_id} successfully completed for collection '{collection_name}'.")
 
         except Exception as e:
             logger.error(f"Job {job_id} failed: {e}", exc_info=True)

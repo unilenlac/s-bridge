@@ -12,6 +12,7 @@ class DTSClient:
         :param base_url: The base URL of the DTS API (e.g., "http://ftsr-dev.unil.ch:8000")
         """
         self.base_url = base_url.rstrip("/")
+        self._collection_cache = {}
 
     async def get_document(self, resource: str, ref: Optional[str] = None) -> str:
         """
@@ -78,6 +79,36 @@ class DTSClient:
 
         logger.info(f"Found {len(members)} level-1 refs for resource: {resource}")
         return members
+
+    async def get_collection_details(self, collection_id: str) -> tuple[str, list[str]]:
+        """
+        Fetches the collection name and its document resource IDs.
+        Uses a simple dict cache to avoid N+1 queries.
+        """
+        if collection_id in self._collection_cache:
+            return self._collection_cache[collection_id]
+
+        url = f"{self.base_url}/api/dts/v1/collection/"
+        params = {"id": collection_id}
+        logger.info(f"Fetching collection details for collection: {collection_id}")
+
+        async with httpx.AsyncClient(follow_redirects=True) as client:
+            response = await client.get(url, params=params)
+            response.raise_for_status()
+            data = response.json()
+
+            # The Title
+            title = data.get("title", collection_id)
+            title = title.split(" - ")[0].strip()
+
+            # The Resources
+            members = data.get("member", [])
+            # Usually SubCollectionResource items are documents (represented by @id).
+            resources = [m.get("@id") for m in members if m.get("@type", "Resource") == "Resource" and m.get("@id")]
+            
+            result = (title, resources)
+            self._collection_cache[collection_id] = result
+            return result
 
     async def get_collection_name(self, resource: str) -> str:
         """

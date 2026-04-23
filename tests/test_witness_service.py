@@ -38,6 +38,7 @@ def witness_service(mock_fetcher):
 async def test_prepare_section_smart_update():
     mock_fetcher = AsyncMock()
     mock_fetcher.get_collection_name.return_value = "test_collection"
+    mock_fetcher.get_collection_details.return_value = ("test_collection", ["res1", "res2"])
     
     mock_converter = MagicMock()
     options = ProcessingOptions(normalization="none", filter_del=False)
@@ -61,8 +62,9 @@ async def test_prepare_section_smart_update():
             with patch.object(service, 'process_witnesses', side_effect=process_witnesses_side_effect) as mock_process:
                 
                 # 1. 1st Call - Fresh (no file exists)
+                mock_fetcher.get_collection_details.return_value = ("test_collection", ["res1", "res2"])
                 filepath = await service.prepare_section_if_needed(
-                    resources=["res1", "res2"],
+                    collection_id="mock_col",
                     ref="sec1",
                     converter=mock_converter,
                     options=options
@@ -78,8 +80,9 @@ async def test_prepare_section_smart_update():
                 assert {w.id for w in data.witnesses} == {"res1", "res2"}
 
                 # 2. 2nd Call - Add single missing resource (append mode)
+                mock_fetcher.get_collection_details.return_value = ("test_collection", ["res1", "res2", "res3"])
                 await service.prepare_section_if_needed(
-                    resources=["res1", "res2", "res3"],
+                    collection_id="mock_col",
                     ref="sec1",
                     converter=mock_converter,
                     options=options
@@ -96,8 +99,9 @@ async def test_prepare_section_smart_update():
                 assert {w.id for w in data.witnesses} == {"res1", "res2", "res3"}
 
                 # 3. 3rd Call - Exact Match (no operation)
+                mock_fetcher.get_collection_details.return_value = ("test_collection", ["res1", "res3"])
                 await service.prepare_section_if_needed(
-                    resources=["res1", "res3"], # subset
+                    collection_id="mock_col", # subset
                     ref="sec1",
                     converter=mock_converter,
                     options=options

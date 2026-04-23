@@ -50,7 +50,7 @@ async def convert(req: ConvertRequest,
 # ---------------------------------------------------------------------------
 
 class CollatexWitnessRequest(BaseModel):
-    resources: List[str]
+    collection_id: str
     ref: Optional[str] = None
 
 @router.post("/dts/prepare-collatex/whole",
@@ -70,8 +70,9 @@ async def prepare_collatex_whole(
     converter: Converter = Depends(converter_dep)
 ):
     try:
+        collection_name, resources = await witness_service.fetcher.get_collection_details(req.collection_id)
         result = await witness_service.process_witnesses(
-            resources=req.resources,
+            resources=resources,
             converter=converter,
             options=options,
             ref=req.ref
@@ -103,17 +104,19 @@ async def process_and_collate_resources(
     session: AsyncSession = Depends(get_session)
 ):
     try:
+        collection_name, resources = await dts_client.get_collection_details(req.collection_id)
+        if not resources:
+            raise ValueError(f"No resources found for collection {req.collection_id}")
+
         # Identify refs
         if req.ref:
             refs = [req.ref]
         else:
-            members = await dts_client.get_members(req.resources[0])
+            members = await dts_client.get_members(resources[0])
             refs = [m["identifier"] for m in members]
 
-        collection_name = await witness_service.fetcher.get_collection_name(req.resources[0])
-
         # Create Job
-        job = Job(collection_id=collection_name, resources=req.resources, ref=req.ref)
+        job = Job(collection_id=req.collection_id, resources=resources, ref=req.ref)
         session.add(job)
         await session.commit()
         await session.refresh(job)
@@ -122,9 +125,10 @@ async def process_and_collate_resources(
         background_tasks.add_task(
             run_collate_job,
             job_id=job.id,
+            collection_id=req.collection_id,
             collection_name=collection_name,
             refs=refs,
-            resources=req.resources,
+            resources=resources,
             output_format=output_format,
             options=options,
             converter=converter,

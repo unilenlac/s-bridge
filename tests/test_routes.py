@@ -22,6 +22,7 @@ class MockWitnessService:
     def __init__(self, *args, **kwargs):
         self.fetcher = AsyncMock()
         self.fetcher.get_collection_name.return_value = "MockCollection"
+        self.fetcher.get_collection_details.return_value = ("MockCollection", ["A", "B"])
 
     async def process_witnesses(self, resources, converter, options, ref=None):
         return CollatexResponse(
@@ -44,7 +45,7 @@ class MockWitnessService:
             os.path.join("collections", collection_name, "milestone_108.json"),
         ]
 
-    async def prepare_section_if_needed(self, resources, ref, converter, options, force=False):
+    async def prepare_section_if_needed(self, collection_id, ref, converter, options, force=False):
         return f"/tmp/mock_prepared_{ref}.json"
 
     def load_prepared_section(self, filepath):
@@ -66,8 +67,13 @@ class MockWitnessService:
 def test_prepare_collatex_witness(monkeypatch):
     from api import routes
     monkeypatch.setattr(routes, "witness_service", MockWitnessService())
+    
+    # Also mock dts_client which is used directly in routes in some places
+    mock_dts_client = AsyncMock()
+    mock_dts_client.get_collection_details.return_value = ("MockCollection", ["A", "B"])
+    monkeypatch.setattr(routes, "dts_client", mock_dts_client)
 
-    response = client.post("/dts/prepare-collatex/whole", json={"resources": ["A", "B"]})
+    response = client.post("/dts/prepare-collatex/whole", json={"collection_id": "test_col"})
     assert response.status_code == 200
     data = response.json()
     assert "witnesses" in data
@@ -82,11 +88,18 @@ def test_prepare_collatex_witness(monkeypatch):
 
 def test_prepare_collatex_witness_with_ref(monkeypatch):
     from api import routes
-    monkeypatch.setattr(routes, "witness_service", MockWitnessService())
+    
+    mock_ws = MockWitnessService()
+    mock_ws.fetcher.get_collection_details.return_value = ("MockCollection", ["A"])
+    monkeypatch.setattr(routes, "witness_service", mock_ws)
+    
+    mock_dts_client = AsyncMock()
+    mock_dts_client.get_collection_details.return_value = ("MockCollection", ["A"])
+    monkeypatch.setattr(routes, "dts_client", mock_dts_client)
 
     response = client.post(
         "/dts/prepare-collatex/whole",
-        json={"resources": ["A"], "ref": "109"}
+        json={"collection_id": "test_col", "ref": "109"}
     )
     assert response.status_code == 200
     data = response.json()
@@ -113,11 +126,17 @@ def test_collate_returns_job_id(monkeypatch):
     from api import routes
     from core.database import get_session
     monkeypatch.setattr(routes, "witness_service", MockWitnessService())
+    
+    mock_dts_client = AsyncMock()
+    mock_dts_client.get_collection_details.return_value = ("MockCollection", ["A"])
+    mock_dts_client.get_members.return_value = [{"identifier": "mock_ref"}]
+    monkeypatch.setattr(routes, "dts_client", mock_dts_client)
+    
     app.dependency_overrides[get_session] = override_get_session
 
     response = client.post(
         "/dts/process-and-collate",
-        json={"resources": ["A"], "ref": "mock_ref"}
+        json={"collection_id": "test_col", "ref": "mock_ref"}
     )
     assert response.status_code == 200
     data = response.json()
