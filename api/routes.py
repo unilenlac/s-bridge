@@ -53,36 +53,6 @@ class CollatexWitnessRequest(BaseModel):
     collection_id: str
     ref: Optional[str] = None
 
-@router.post("/dts/prepare-collatex/whole",
-    response_model=CollatexResponse,
-    response_model_exclude_none=True,
-    response_model_exclude_defaults=True,
-    response_model_by_alias=True,
-    description=(
-        "Fetch multiple DTS resources and prepare them for Collatex. "
-        "Optionally scope to a specific passage ref. "
-    ),
-    deprecated=True)
-
-async def prepare_collatex_whole(
-    req: CollatexWitnessRequest,
-    options: ProcessingOptions = Depends(get_processing_options),
-    converter: Converter = Depends(converter_dep)
-):
-    try:
-        collection_name, resources = await witness_service.fetcher.get_collection_details(req.collection_id)
-        result = await witness_service.process_witnesses(
-            resources=resources,
-            converter=converter,
-            options=options,
-            ref=req.ref
-        )
-        return result
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
-
 
 # ---------------------------------------------------------------------------
 # Collate endpoint — fetch witnesses and proxy them to the CollateX Service

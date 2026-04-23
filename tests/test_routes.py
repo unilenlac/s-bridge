@@ -61,49 +61,6 @@ class MockWitnessService:
 
 
 # ---------------------------------------------------------------------------
-# Tests for /dts/prepare-collatex/witness  (renamed from /dts/prepare-collatex)
-# ---------------------------------------------------------------------------
-
-def test_prepare_collatex_witness(monkeypatch):
-    from api import routes
-    monkeypatch.setattr(routes, "witness_service", MockWitnessService())
-    
-    # Also mock dts_client which is used directly in routes in some places
-    mock_dts_client = AsyncMock()
-    mock_dts_client.get_collection_details.return_value = ("MockCollection", ["A", "B"])
-    monkeypatch.setattr(routes, "dts_client", mock_dts_client)
-
-    response = client.post("/dts/prepare-collatex/whole", json={"collection_id": "test_col"})
-    assert response.status_code == 200
-    data = response.json()
-    assert "witnesses" in data
-    assert len(data["witnesses"]) == 2
-
-    assert data["witnesses"][0]["id"] == "A"
-    assert data["witnesses"][0]["tokens"][0]["t"] == "token_for_A"
-
-    assert data["witnesses"][1]["id"] == "B"
-    assert data["witnesses"][1]["tokens"][0]["t"] == "token_for_B"
-
-
-def test_prepare_collatex_witness_with_ref(monkeypatch):
-    from api import routes
-    
-    mock_ws = MockWitnessService()
-    mock_ws.fetcher.get_collection_details.return_value = ("MockCollection", ["A"])
-    monkeypatch.setattr(routes, "witness_service", mock_ws)
-    
-    mock_dts_client = AsyncMock()
-    mock_dts_client.get_collection_details.return_value = ("MockCollection", ["A"])
-    monkeypatch.setattr(routes, "dts_client", mock_dts_client)
-
-    response = client.post(
-        "/dts/prepare-collatex/whole",
-        json={"collection_id": "test_col", "ref": "109"}
-    )
-    assert response.status_code == 200
-    data = response.json()
-    assert len(data["witnesses"]) == 1
 
 
 

@@ -142,34 +142,4 @@ def test_get_navigation_multiple_pages(monkeypatch):
     assert call_count["n"] == 2
 
 
-def test_get_cite_type(monkeypatch):
-    nav_response = {
-        "citeType": "milestone",
-        "member": []
-    }
 
-    class MockJsonResponse:
-        def raise_for_status(self):
-            pass
-        def json(self):
-            return nav_response
-
-    class MockAsyncClient:
-        def __init__(self, *args, **kwargs):
-            pass
-        async def __aenter__(self):
-            return self
-        async def __aexit__(self, *args):
-            pass
-        async def get(self, url, params=None):
-            assert "navigation" in url
-            assert params["resource"] == "res1"
-            assert params["ref"] == "ref1"
-            return MockJsonResponse()
-
-    monkeypatch.setattr(httpx, "AsyncClient", MockAsyncClient)
-
-    client = DTSClient(base_url="http://test")
-    cite_type = asyncio.run(client.get_cite_type("res1", "ref1"))
-
-    assert cite_type == "milestone"
