@@ -126,8 +126,12 @@ async def get_job_status(job_id: uuid.UUID, session: AsyncSession = Depends(get_
     return job
 
 
-@router.put("/dts/jobs/{job_id}/cancel", description="Cancel a pending or processing job.")
+@router.put("/dts/jobs/{job_id}/cancel", description="Cancel a pending or processing job and clear its associated files.")
 async def cancel_job(job_id: uuid.UUID, session: AsyncSession = Depends(get_session)):
+    import os
+    import shutil
+    from sqlmodel import select
+    
     job = await session.get(Job, job_id)
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
@@ -135,8 +139,29 @@ async def cancel_job(job_id: uuid.UUID, session: AsyncSession = Depends(get_sess
     if job.status in [JobStatus.PENDING.value, JobStatus.PROCESSING.value]:
         job.status = JobStatus.CANCELLED.value
         session.add(job)
+        
+        # Cleanup: delete the collection folders and any existing Tradition for this collection
+        try:
+            collection_name, _ = await dts_client.get_collection_details(job.collection_id)
+            post_collation_dir = os.path.join(settings.collation_dir, collection_name)
+            pre_collation_dir = os.path.join(settings.output_dir, collection_name)
+            
+            for directory in [post_collation_dir, pre_collation_dir]:
+                if os.path.exists(directory):
+                    shutil.rmtree(directory)
+                    logger.info(f"Cleanup on cancel: Deleted physical directory at {directory}")
+                
+            stmt = select(Tradition).where(Tradition.collection_id == job.collection_id)
+            existing_tradition = (await session.execute(stmt)).scalar_one_or_none()
+            if existing_tradition:
+                await session.delete(existing_tradition)
+                logger.info(f"Cleanup on cancel: Deleted existing Tradition DB record for {job.collection_id}")
+                
+        except Exception as e:
+            logger.warning(f"Cleanup on cancel encountered an error, some files may remain: {e}")
+            
         await session.commit()
-        return {"status": job.status, "message": "Job cancelled."}
+        return {"status": job.status, "message": "Job cancelled and associated files/records cleaned up."}
     
     raise HTTPException(status_code=400, detail=f"Cannot cancel job in state: {job.status}")
 
