@@ -44,7 +44,7 @@ class Tradition(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
     collection_id: str
     resources: List[str] = Field(default_factory=list, sa_column=Column(JSON))
-    ref: Optional[str] = None
+    number_of_included_sections: int
     result_path: str
     job_id: Optional[uuid.UUID] = Field(default=None, foreign_key="job.id")
     

@@ -39,16 +39,7 @@ async def run_collate_job(
             session.add(job)
             await session.commit()
 
-            from core.config import Settings
-            settings_cfg = Settings()
-            
-            # Ensure the Stemmarest tradition exists for this collection
-            trad_id = await stemmarest_client.get_or_create_tradition(
-                name=collection_name, 
-                language=settings_cfg.language, 
-                direction="LR", 
-                is_public=False
-            )
+            sections_to_upload = []
 
             for r in refs:
                 # Check for cancellation before each large section
@@ -71,34 +62,51 @@ async def run_collate_job(
                     output_format=output_format
                 )
 
-                # Append the newly created section to the Stemmarest Tradition
                 if output_format == "application/json":
+                    sections_to_upload.append((r, saved_path))
+
+
+
+            if job.status != JobStatus.CANCELLED.value:
+                from core.config import Settings
+                settings_cfg = Settings()
+                
+                # Ensure the Stemmarest tradition exists for this collection
+                trad_id = await stemmarest_client.get_or_create_tradition(
+                    name=collection_name, 
+                    language=settings_cfg.language, 
+                    direction="LR", 
+                    is_public=False
+                )
+
+                # Append the newly created sections to the Stemmarest Tradition
+                for section_name, file_path in sections_to_upload:
                     await stemmarest_client.upload_section(
                         trad_id=trad_id,
-                        section_name=r,
-                        file_path=saved_path,
+                        section_name=section_name,
+                        file_path=file_path,
                         filetype="cxjson"
                     )
 
-                # Record or update the successfully collated artifact
+                import os
                 from sqlmodel import select
-                stmt = select(Tradition).where(
-                    Tradition.collection_id == collection_id,
-                    Tradition.ref == r
-                )
+                from sqlalchemy.orm.attributes import flag_modified
+                
+                collection_dir = os.path.join(settings_cfg.collation_dir, collection_name)
+
+                # Create or update single Tradition for the collection
+                stmt = select(Tradition).where(Tradition.collection_id == collection_id)
                 existing_tradition = (await session.execute(stmt)).scalar_one_or_none()
 
                 if existing_tradition:
-                    from sqlalchemy.orm.attributes import flag_modified
-                    
-                    # Merge existing resources with new ones, avoiding duplicates
                     current_resources = list(existing_tradition.resources) if existing_tradition.resources else []
                     for r_res in resources:
                         if r_res not in current_resources:
                             current_resources.append(r_res)
-                            
+                    
                     existing_tradition.resources = current_resources
-                    existing_tradition.result_path = saved_path
+                    existing_tradition.number_of_included_sections = len(sections_to_upload)
+                    existing_tradition.result_path = collection_dir
                     existing_tradition.job_id = job.id
                     flag_modified(existing_tradition, "resources")
                     session.add(existing_tradition)
@@ -106,14 +114,12 @@ async def run_collate_job(
                     tradition = Tradition(
                         collection_id=collection_id,
                         resources=resources,
-                        ref=r,
-                        result_path=saved_path,
+                        number_of_included_sections=len(sections_to_upload),
+                        result_path=collection_dir,
                         job_id=job.id
                     )
                     session.add(tradition)
-                await session.commit()
 
-            if job.status != JobStatus.CANCELLED.value:
                 job.status = JobStatus.COMPLETED.value
                 session.add(job)
                 await session.commit()

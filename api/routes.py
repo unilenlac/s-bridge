@@ -147,20 +147,21 @@ async def get_traditions(session: AsyncSession = Depends(get_session)):
     return result.scalars().all()
 
 
-@router.delete("/dts/traditions/{tradition_id}", description="Safely delete a Tradition's database record and physical disk file.")
+@router.delete("/dts/traditions/{tradition_id}", description="Safely delete a Tradition's database record and physical disk directory.")
 async def delete_tradition(tradition_id: int, session: AsyncSession = Depends(get_session)):
     import os
+    import shutil
     tradition = await session.get(Tradition, tradition_id)
     if not tradition:
         raise HTTPException(status_code=404, detail="Tradition not found in database.")
     
-    # Safely remove the file from the disk if it exists
+    # Safely remove the directory from the disk if it exists
     try:
         if os.path.exists(tradition.result_path):
-            os.remove(tradition.result_path)
-            logger.info(f"Deleted physical Tradition file at {tradition.result_path}")
+            shutil.rmtree(tradition.result_path)
+            logger.info(f"Deleted physical Tradition directory at {tradition.result_path}")
     except Exception as e:
-        logger.warning(f"Could not delete physical file at {tradition.result_path}. It may already be deleted. Error: {e}")
+        logger.warning(f"Could not delete physical directory at {tradition.result_path}. It may already be deleted. Error: {e}")
 
     # Remove the DB record
     await session.delete(tradition)
