@@ -49,7 +49,7 @@ async def run_collate_job(
                     break
 
                 # The core NLP processing -> Collatex workflow
-                path = await witness_service.prepare_section_if_needed(collection_id, r, converter, options)
+                path = await witness_service.prepare_section(collection_id, r, converter, options)
                 ready_data = witness_service.load_prepared_section(path)
                 result = await collatex_client.collate(
                     payload=ready_data.model_dump(by_alias=True, exclude_none=True),

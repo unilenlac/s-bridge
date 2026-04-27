@@ -45,7 +45,7 @@ class MockWitnessService:
             os.path.join("collections", collection_name, "milestone_108.json"),
         ]
 
-    async def prepare_section_if_needed(self, collection_id, ref, converter, options, force=False):
+    async def prepare_section(self, collection_id, ref, converter, options, force=False):
         return f"/tmp/mock_prepared_{ref}.json"
 
     def load_prepared_section(self, filepath):

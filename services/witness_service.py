@@ -127,7 +127,7 @@ class WitnessService:
         logger.info(f"Saved collation result to: {filepath}")
         return filepath
 
-    async def prepare_section_if_needed(
+    async def prepare_section(
         self,
         collection_id: str,
         ref: str,
@@ -136,7 +136,7 @@ class WitnessService:
         force: bool = False
     ) -> str:
         """
-        Ensures a specific section is prepared and saved to disk.
+        Prepares a specific section and saves it to disk by fully regenerating it.
         Returns the path to the prepared file.
         """
         collection_name, resources = await self.fetcher.get_collection_details(collection_id)
@@ -145,40 +145,6 @@ class WitnessService:
             raise ValueError(f"No resources found for collection '{collection_id}'.")
 
         filepath = self.get_section_filepath(collection_name, ref)
-
-        #Section to process only missing refs of a already processed collection if needed.
-        if not force and os.path.exists(filepath):
-            try:
-                existing_data = self.load_prepared_section(filepath)
-                existing_ids = {w.id for w in existing_data.witnesses}
-                missing_resources = [r for r in resources if r not in existing_ids]
-
-                if not missing_resources:
-                    logger.info(f"Using existing prepared file for ref '{ref}' (all resources present): {filepath}")
-                    return filepath
-
-                logger.info(f"Appending {len(missing_resources)} new resources to existing prepared file for '{ref}'...")
-                
-                # Fetch and process ONLY missing resources
-                new_section_data = await self.process_witnesses(
-                    resources=missing_resources,
-                    converter=converter,
-                    options=options,
-                    ref=ref
-                )
-                
-                # Append new witnesses to existing data
-                existing_data.witnesses.extend(new_section_data.witnesses)
-                
-                # Define helper for dumping to avoid repetition
-                self._dump_to_file(existing_data, filepath)
-                
-                logger.info(f"Successfully appended to section: {filepath}")
-                return filepath
-
-            except Exception as e:
-                logger.warning(f"Failed to load or update existing prepared file: {e}. Regenerating completely.")
-                # Fall through to regenerate completely
 
         logger.info(f"Preparing section '{ref}' for collection '{collection_name}' completely...")
         

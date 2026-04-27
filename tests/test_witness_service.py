@@ -35,7 +35,7 @@ def witness_service(mock_fetcher):
 
 
 @pytest.mark.anyio
-async def test_prepare_section_smart_update():
+async def test_prepare_section():
     mock_fetcher = AsyncMock()
     mock_fetcher.get_collection_name.return_value = "test_collection"
     mock_fetcher.get_collection_details.return_value = ("test_collection", ["res1", "res2"])
@@ -61,9 +61,8 @@ async def test_prepare_section_smart_update():
             # Using patch.object to mock process_witnesses logic
             with patch.object(service, 'process_witnesses', side_effect=process_witnesses_side_effect) as mock_process:
                 
-                # 1. 1st Call - Fresh (no file exists)
                 mock_fetcher.get_collection_details.return_value = ("test_collection", ["res1", "res2"])
-                filepath = await service.prepare_section_if_needed(
+                filepath = await service.prepare_section(
                     collection_id="mock_col",
                     ref="sec1",
                     converter=mock_converter,
@@ -78,34 +77,3 @@ async def test_prepare_section_smart_update():
                 data = service.load_prepared_section(filepath)
                 assert len(data.witnesses) == 2
                 assert {w.id for w in data.witnesses} == {"res1", "res2"}
-
-                # 2. 2nd Call - Add single missing resource (append mode)
-                mock_fetcher.get_collection_details.return_value = ("test_collection", ["res1", "res2", "res3"])
-                await service.prepare_section_if_needed(
-                    collection_id="mock_col",
-                    ref="sec1",
-                    converter=mock_converter,
-                    options=options
-                )
-                
-                # Verify that process_witnesses was only called for missing matching ones
-                mock_process.assert_called_once()
-                assert mock_process.call_args.kwargs["resources"] == ["res3"]
-                mock_process.reset_mock()
-                
-                # Verify updated file content
-                data = service.load_prepared_section(filepath)
-                assert len(data.witnesses) == 3
-                assert {w.id for w in data.witnesses} == {"res1", "res2", "res3"}
-
-                # 3. 3rd Call - Exact Match (no operation)
-                mock_fetcher.get_collection_details.return_value = ("test_collection", ["res1", "res3"])
-                await service.prepare_section_if_needed(
-                    collection_id="mock_col", # subset
-                    ref="sec1",
-                    converter=mock_converter,
-                    options=options
-                )
-                
-                # Should not be called since both exist
-                mock_process.assert_not_called()
