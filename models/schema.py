@@ -22,6 +22,7 @@ def utc_now() -> datetime:
 
 class Job(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    dts_base_url: str
     collection_id: str
     resources: List[str] = Field(default_factory=list, sa_column=Column(JSON))
     ref: Optional[str] = None
@@ -42,6 +43,7 @@ class Job(SQLModel, table=True):
 
 class Tradition(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
+    dts_base_url: str
     collection_id: str
     resources: List[str] = Field(default_factory=list, sa_column=Column(JSON))
     number_of_included_sections: int

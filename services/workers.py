@@ -21,7 +21,8 @@ async def run_collate_job(
     converter,
     witness_service,
     collatex_client,
-    stemmarest_client
+    stemmarest_client,
+    dts_base_url: str
 ):
     """
     Background worker that runs the collation task, tracking status to SQLite.
@@ -108,6 +109,7 @@ async def run_collate_job(
                     existing_tradition.number_of_included_sections = len(sections_to_upload)
                     existing_tradition.result_path = collection_dir
                     existing_tradition.job_id = job.id
+                    existing_tradition.dts_base_url = dts_base_url
                     flag_modified(existing_tradition, "resources")
                     session.add(existing_tradition)
                 else:
@@ -116,7 +118,8 @@ async def run_collate_job(
                         resources=resources,
                         number_of_included_sections=len(sections_to_upload),
                         result_path=collection_dir,
-                        job_id=job.id
+                        job_id=job.id,
+                        dts_base_url=dts_base_url
                     )
                     session.add(tradition)
 

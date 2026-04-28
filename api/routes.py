@@ -25,10 +25,8 @@ from sqlmodel import select
 router = APIRouter()
 
 settings = Settings()
-dts_client = DTSClient(base_url=settings.dts_api_base_url)
 collatex_client = CollatexClient(base_url=settings.collatex_api_base_url)
 stemmarest_client = StemmarestClient(base_url=settings.stemmarest_api_base_url)
-witness_service = WitnessService(fetcher=dts_client)
 
 
 class ConvertRequest(BaseModel):
@@ -50,7 +48,7 @@ async def convert(req: ConvertRequest,
 # ---------------------------------------------------------------------------
 
 class CollatexWitnessRequest(BaseModel):
-    collection_id: str
+    collection_url: str
     ref: Optional[str] = None
 
 
@@ -74,9 +72,23 @@ async def process_and_collate_resources(
     session: AsyncSession = Depends(get_session)
 ):
     try:
-        collection_name, resources = await dts_client.get_collection_details(req.collection_id)
+        from urllib.parse import urlparse, parse_qs
+        parsed_url = urlparse(req.collection_url)
+        base_path = parsed_url.path.split('/api/dts/')[0]
+        dts_base_url = f"{parsed_url.scheme}://{parsed_url.netloc}{base_path}"
+        
+        query_params = parse_qs(parsed_url.query)
+        collection_id = query_params.get("id", [""])[0]
+        
+        if not collection_id:
+            raise ValueError(f"Collection ID could not be extracted from {req.collection_url}")
+            
+        dts_client = DTSClient(base_url=dts_base_url)
+        witness_service = WitnessService(fetcher=dts_client)
+
+        collection_name, resources = await dts_client.get_collection_details(collection_id)
         if not resources:
-            raise ValueError(f"No resources found for collection {req.collection_id}")
+            raise ValueError(f"No resources found for collection {collection_id}")
 
         # Identify refs
         if req.ref:
@@ -86,7 +98,7 @@ async def process_and_collate_resources(
             refs = [m["identifier"] for m in members]
 
         # Create Job
-        job = Job(collection_id=req.collection_id, resources=resources, ref=req.ref)
+        job = Job(collection_id=collection_id, dts_base_url=dts_base_url, resources=resources, ref=req.ref)
         session.add(job)
         await session.commit()
         await session.refresh(job)
@@ -95,7 +107,7 @@ async def process_and_collate_resources(
         background_tasks.add_task(
             run_collate_job,
             job_id=job.id,
-            collection_id=req.collection_id,
+            collection_id=collection_id,
             collection_name=collection_name,
             refs=refs,
             resources=resources,
@@ -104,7 +116,8 @@ async def process_and_collate_resources(
             converter=converter,
             witness_service=witness_service,
             collatex_client=collatex_client,
-            stemmarest_client=stemmarest_client
+            stemmarest_client=stemmarest_client,
+            dts_base_url=dts_base_url
         )
 
         return {
@@ -142,6 +155,7 @@ async def cancel_job(job_id: uuid.UUID, session: AsyncSession = Depends(get_sess
         
         # Cleanup: delete the collection folders and any existing Tradition for this collection
         try:
+            dts_client = DTSClient(base_url=job.dts_base_url)
             collection_name, _ = await dts_client.get_collection_details(job.collection_id)
             post_collation_dir = os.path.join(settings.collation_dir, collection_name)
             pre_collation_dir = os.path.join(settings.output_dir, collection_name)

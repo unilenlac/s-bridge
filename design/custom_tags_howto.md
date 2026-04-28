@@ -2,30 +2,6 @@
 
 The `TEIParser` supports dynamic editorial tag configuration. Instead of being limited to the built-in ENLAC tags (`unclear`, `add`, `del`, `abbr`, `seg`, `note`, `head`, `subst`, others), you can define your own tags and the metadata they should produce.
 
-## Quick Start
-
-Pass a `custom_tags` dictionary when creating a `TEIParser`:
-
-```python
-from services.tei_parser import TEIParser
-
-custom_tags = {
-    "damage": {
-        "flags": {"damage": True},
-        "attributes": ["extent"],
-    }
-}
-
-parser = TEIParser(custom_tags=custom_tags)
-clean_text, metadata_map = parser.parse('<root>Some <damage extent="2 chars"/>broken text.</root>')
-# metadata for "broken" → {"damage": True, "damage_extent": "2 chars"}
-```
-
-> [!NOTE]
-> When `custom_tags` is omitted (or `None`), the parser falls back to the default ENLAC tag set automatically.
-
----
-
 ## Config Format
 
 Each key in the dictionary is an XML tag name. Its value is a config object with these optional fields:
@@ -89,35 +65,169 @@ This is what the parser uses when no `custom_tags` are provided:
 ```python
 {
     "unclear": {
-        "flags": {"unclear": True},
-        "attributes": ["reason"],
+        "flags": {
+            "unclear": true
+        },
+        "attributes": [
+            "reason",
+            "atLeast",
+            "atMost"
+        ]
+    },
+    "reproduction": {
+        "flags": {
+            "reproduction": true
+        },
+        "attributes": [
+            "atLeast",
+            "atMost"
+        ]
+    },
+    "supplied": {
+        "flags": {
+            "supplied": true
+        },
+        "attributes": [
+            "low",
+            "medium",
+            "high"
+        ]
+    },
+    "handshift": {
+        "flags": {
+            "handshift": true
+        },
+        "attributes": [
+            "hand"
+        ]
+    },
+    "space": {
+        "flags": {
+            "space": true
+        },
+        "attributes": [
+            "atLeast",
+            "atMost"
+        ]
     },
     "add": {
-        "flags": {"add": True},
-        "attributes": ["hand"],
+        "flags": {
+            "add": true
+        },
+        "attributes": [
+            "hand",
+            "place",
+            "type",
+            "rend"
+        ]
     },
     "del": {
-        "flags": {"del": True},
-        "attribute_map": {"rend": "del_reason"},
-        "defaults": {"del_reason": "other"},
+        "flags": {
+            "del": true
+        },
+        "attributes": [
+            "rend",
+            "hand",
+            "atLeast",
+            "atMost"
+        ]
     },
     "abbr": {
-        "flags": {"abbr": True},
-        "attributes": ["type"],
+        "flags": {
+            "abbr": true
+        },
+        "attributes": [
+            "type"
+        ]
     },
     "seg": {
-        "attributes": ["type", "part"],
+        "flags": {
+            "seg": true
+        },
+        "attributes": [
+            "type",
+            "hand",
+            "place",
+            "part"
+        ]
     },
     "note": {
-        "flags": {"note": True},
-        "attributes": ["type"],
+        "flags": {
+            "note": true
+        },
+        "attributes": [
+            "type"
+        ]
     },
     "head": {
-        "flags": {"head": True},
+        "flags": {
+            "head": true
+        },
+        "attributes": [
+            "type",
+            "place"
+        ]
     },
     "subst": {
-        "flags": {"subst": True},
+        "flags": {
+            "subst": true
+        },
+        "attributes": [
+            "type"
+        ]
     },
+    "gap": {
+        "flags": {
+            "gap": true
+        }
+    },
+    "choice": {
+        "flags": {
+            "choice": true
+        },
+        "attributes": [
+            "place",
+            "hand",
+            "notation"
+        ]
+    },
+    "c": {
+        "flags": {
+            "c": true
+        },
+        "attributes": [
+            "type"
+        ]
+    },
+    "hi": {
+        "flags": {
+            "hi": true
+        }
+    },
+    "name": {
+        "flags": {
+            "name": true
+        }
+    },
+    "num": {
+        "flags": {
+            "num": true
+        },
+        "attributes": [
+            "value",
+            "type"
+        ]
+    },
+    "quote": {
+        "flags": {
+            "quote": true
+        }
+    },
+    "sic": {
+        "flags": {
+            "sic": true
+        }
+    }
 }
 ```
 
@@ -131,17 +241,5 @@ Self-closing tags like `<unclear/>` or `<damage/>` are fully supported. The pars
 - If followed by a space: metadata attaches to the **previous** word.
 
 No special configuration is needed — this works for any tag in your config.
-
----
-
-## Via the API
-
-The `/convert` endpoint accepts an optional `custom_tags` JSON body parameter (Note: using GET with a body is unconventional but supported by some clients, or you may prefer to stick to standard GET params if not using custom tags).
-
-```bash
-curl -X GET "http://localhost:8000/convert?text=..." \
-  -H "Content-Type: application/json" \
-  -d '{"custom_tags": {"myTag": {"flags": {"custom": true}}}}'
-```
 
 When omitted, the ENLAC defaults are used.

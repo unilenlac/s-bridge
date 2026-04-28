@@ -82,18 +82,18 @@ async def override_get_session():
 def test_collate_returns_job_id(monkeypatch):
     from api import routes
     from core.database import get_session
-    monkeypatch.setattr(routes, "witness_service", MockWitnessService())
-    
     mock_dts_client = AsyncMock()
     mock_dts_client.get_collection_details.return_value = ("MockCollection", ["A"])
     mock_dts_client.get_members.return_value = [{"identifier": "mock_ref"}]
-    monkeypatch.setattr(routes, "dts_client", mock_dts_client)
+    
+    monkeypatch.setattr(routes, "DTSClient", MagicMock(return_value=mock_dts_client))
+    monkeypatch.setattr(routes, "WitnessService", MagicMock(return_value=MockWitnessService()))
     
     app.dependency_overrides[get_session] = override_get_session
 
     response = client.post(
         "/dts/process-and-collate",
-        json={"collection_id": "test_col", "ref": "mock_ref"}
+        json={"collection_url": "http://testdts.com/api/dts/v1/collection?id=test_col", "ref": "mock_ref"}
     )
     assert response.status_code == 200
     data = response.json()
