@@ -48,8 +48,6 @@ class ClassicalProcessor:
                 norm_str = lemma_raw
             elif normalization == "text":
                 norm_str = word.string
-            elif normalization == "original":
-                norm_str = word.string
             else:
                 norm_str = f"{lemma_raw}+{pos_tag}"
             
@@ -118,8 +116,6 @@ class ModernProcessor:
                 if normalization == "lemma":
                     norm_str = lemma_raw
                 elif normalization == "text":
-                    norm_str = word.text
-                elif normalization == "original":
                     norm_str = word.text
                 else:
                     norm_str = f"{lemma_raw}+{pos_tag}"

@@ -44,7 +44,7 @@ if __name__ == "__main__":
                         help="Data format of the input file (default: tei)")
     parser.add_argument("--strategy", choices=["enriched", "raw"], default="enriched", 
                         help="Parsing strategy logic (default: enriched)")
-    parser.add_argument("--normalization", choices=["lemma+pos", "lemma", "text", "original"], default="lemma+pos", 
+    parser.add_argument("--normalization", choices=["lemma+pos", "lemma", "text"], default="lemma+pos", 
                         help="Token normalization string (default: lemma+pos)")
     
     args = parser.parse_args()

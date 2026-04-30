@@ -7,8 +7,7 @@ from models.tokenization import Token
 class RawStrategyConverter:
     def __init__(self, proc: Processor):
         self.processor = proc
-    #the normalization default parameter *original" is overrun by fatAPI logic. It is currently useless here. Same for default filder_del bool.
-    def run(self, data: str, normalization: str = "original", filter_del: bool = False) -> List[Token]: 
+    def run(self, data: str, normalization: str = "text", filter_del: bool = False) -> List[Token]: 
         return self.processor.process(data, normalization=normalization)
 
 class EnrichedStrategyConverter:
