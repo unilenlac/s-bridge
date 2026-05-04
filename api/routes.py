@@ -74,7 +74,7 @@ async def process_and_collate_resources(
     try:
         from urllib.parse import urlparse, parse_qs
         parsed_url = urlparse(req.collection_url)
-        base_path = parsed_url.path.split('/api/dts/')[0]
+        base_path = parsed_url.path.split('/collection')[0]
         dts_base_url = f"{parsed_url.scheme}://{parsed_url.netloc}{base_path}"
         
         query_params = parse_qs(parsed_url.query)

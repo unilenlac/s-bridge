@@ -23,7 +23,7 @@ def test_get_document(monkeypatch):
         async def __aexit__(self, exc_type, exc_val, exc_tb):
             pass
         async def get(self, url, params=None):
-            assert url.startswith("http://test/api/dts/v1/document")
+            assert url.startswith("http://test/document")
             assert params["resource"] == "res1"
             assert params["media_type"] == "text/xml"
             if "ref" in params:

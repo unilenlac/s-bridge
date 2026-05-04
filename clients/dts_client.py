@@ -21,7 +21,7 @@ class DTSClient:
         :param ref: Optional passage reference
         :return: The raw XML string
         """
-        url = f"{self.base_url}/api/dts/v1/document/"
+        url = f"{self.base_url}/document/"
         params = {
             "resource": resource,
             "media_type": "text/xml"
@@ -44,7 +44,7 @@ class DTSClient:
         :return: List of dicts with 'identifier' and 'citeType' keys,
                  e.g. [{"identifier": "107", "citeType": "milestone"}, ...]
         """
-        url = f"{self.base_url}/api/dts/v1/navigation/"
+        url = f"{self.base_url}/navigation/"
         members: list[dict] = []
         page = 1
 
@@ -88,7 +88,7 @@ class DTSClient:
         if collection_id in self._collection_cache:
             return self._collection_cache[collection_id]
 
-        url = f"{self.base_url}/api/dts/v1/collection/"
+        url = f"{self.base_url}/collection/"
         params = {"id": collection_id}
         logger.info(f"Fetching collection details for collection: {collection_id}")
 
