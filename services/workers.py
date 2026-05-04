@@ -72,9 +72,13 @@ async def run_collate_job(
                 from core.config import Settings
                 settings_cfg = Settings()
                 
+                from datetime import datetime
+                timestamp = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+                stemmarest_tradition_name = f"{collection_name}_{timestamp}"
+
                 # Ensure the Stemmarest tradition exists for this collection
                 trad_id = await stemmarest_client.get_or_create_tradition(
-                    name=collection_name, 
+                    name=stemmarest_tradition_name, 
                     language=settings_cfg.language, 
                     direction="LR", 
                     is_public=False

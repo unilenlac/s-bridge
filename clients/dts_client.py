@@ -98,8 +98,10 @@ class DTSClient:
             data = response.json()
 
             # The Title
-            title = data.get("title", collection_id)
-            title = title.split(" - ")[0].strip()
+            title = data.get("title")
+            if not title:
+                title = data.get("@id", collection_id)
+            title = str(title).split(" - ")[0].strip()
 
             # The Resources
             members = data.get("member", [])
