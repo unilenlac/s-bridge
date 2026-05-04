@@ -131,6 +131,13 @@ async def process_and_collate_resources(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get("/dts/jobs/pending", description="Fetch all pending and processing jobs.")
+async def get_pending_jobs(session: AsyncSession = Depends(get_session)):
+    stmt = select(Job).where(Job.status.in_([JobStatus.PENDING, JobStatus.PROCESSING]))
+    result = await session.execute(stmt)
+    return result.scalars().all()
+
+
 @router.get("/dts/jobs/{job_id}", description="Fetch the status of a specific job.")
 async def get_job_status(job_id: uuid.UUID, session: AsyncSession = Depends(get_session)):
     job = await session.get(Job, job_id)
