@@ -72,6 +72,12 @@ async def process_and_collate_resources(*,
     session: AsyncSession = Depends(get_session),
     http_client: http_client
 ):
+    if output_format in ["json", "text"]:
+        raise HTTPException(
+            status_code=501,
+            detail=f"The '{output_format}' output format is not currently implemented in the enriched pathway."
+        )
+
     try:
 
         logger.info(f"Received collation request for collection URL: {req.collection_url} with ref: {req.ref}")
@@ -107,6 +113,8 @@ async def process_and_collate_resources(*,
             "message": "Collation job started in the background."
         }
         
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error starting collate job: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
