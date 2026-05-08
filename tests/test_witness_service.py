@@ -35,7 +35,7 @@ def witness_service(mock_fetcher):
 
 
 @pytest.mark.anyio
-async def test_prepare_section():
+async def test_analyse_section():
     mock_fetcher = AsyncMock()
     mock_fetcher.get_collection_name.return_value = "test_collection"
     mock_fetcher.get_collection_details.return_value = ("test_collection", ["res1", "res2"])
@@ -62,7 +62,7 @@ async def test_prepare_section():
             with patch.object(service, 'process_witnesses', side_effect=process_witnesses_side_effect) as mock_process:
                 
                 mock_fetcher.get_collection_details.return_value = ("test_collection", ["res1", "res2"])
-                filepath = await service.prepare_section(
+                filepath = await service.analyse_section(
                     collection_id="mock_col",
                     ref="sec1",
                     converter=mock_converter,

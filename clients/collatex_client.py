@@ -2,6 +2,8 @@ import logging
 import httpx
 from typing import Optional, Dict, Any, Union
 
+from api.dependencies import http_client
+
 logger = logging.getLogger(__name__)
 
 class CollatexClient:
@@ -25,6 +27,7 @@ class CollatexClient:
         self.base_url = base_url.rstrip("/")
         # Using a longer timeout as collation of large texts can be slow
         self.timeout = httpx.Timeout(60.0, connect=10.0) 
+        self.http_client = http_client()
 
     async def collate(
         self, 
@@ -50,20 +53,19 @@ class CollatexClient:
 
         logger.info(f"Sending collation request to {url} (format: {output_format})")
 
-        async with httpx.AsyncClient(timeout=self.timeout) as client:
-            try:
-                response = await client.post(url, json=payload, headers=headers)
-                response.raise_for_status()
+        try:
+            response = await self.http_client.post(url, json=payload, headers=headers, timeout=self.timeout)
+            response.raise_for_status()
+            
+            # Parse JSON if requested, otherwise return raw text
+            if output_format == self.FORMAT_JSON:
+                return response.json()
+            else:
+                return response.text
                 
-                # Parse JSON if requested, otherwise return raw text
-                if output_format == self.FORMAT_JSON:
-                    return response.json()
-                else:
-                    return response.text
-                    
-            except httpx.HTTPStatusError as e:
-                logger.error(f"CollateX returned an HTTP error: {e.response.status_code} - {e.response.text}")
-                raise
-            except httpx.RequestError as e:
-                logger.error(f"Failed to connect to CollateX at {url}: {e}")
-                raise
+        except httpx.HTTPStatusError as e:
+            logger.error(f"CollateX returned an HTTP error: {e.response.status_code} - {e.response.text}")
+            raise
+        except httpx.RequestError as e:
+            logger.error(f"Failed to connect to CollateX at {url}: {e}")
+            raise

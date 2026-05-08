@@ -47,4 +47,5 @@ class CollatexWitness(BaseModel):
     tokens: list[Token]
 
 class CollatexResponse(BaseModel):
+    ref_id: Optional[str] = Field(default=None, description="The reference ID for the collated section", alias="ref_id", serialization_alias="ref_id")
     witnesses: list[CollatexWitness]

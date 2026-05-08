@@ -1,13 +1,14 @@
+import uuid
 import logging
-from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, Response, Query
-from pydantic import BaseModel
 
-logger = logging.getLogger(__name__)
+from typing import Optional
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel
+from urllib.parse import urlparse
 
 from core.interfaces import Converter
-from api.dependencies import converter_dep, get_processing_options, ProcessingOptions
-from models.tokenization import Token, CollatexResponse
+from api.dependencies import converter_dep, get_processing_options, ProcessingOptions, http_client
+from models.tokenization import Token
 from clients.dts_client import DTSClient
 from clients.collatex_client import CollatexClient
 from clients.stemmarest_client import StemmarestClient
@@ -16,10 +17,11 @@ from services.workers import run_collate_job
 from core.database import get_session
 from sqlalchemy.ext.asyncio import AsyncSession
 from models.schema import Job, JobStatus, Tradition
-import uuid
 from fastapi import BackgroundTasks
 from core.config import Settings
 from sqlmodel import select
+
+logger = logging.getLogger('s-bridge')
 
 # APIRouter acts as a mini FastAPI application to structure the routes.
 router = APIRouter()
@@ -28,6 +30,7 @@ settings = Settings()
 collatex_client = CollatexClient(base_url=settings.collatex_api_base_url)
 stemmarest_client = StemmarestClient(base_url=settings.stemmarest_api_base_url)
 
+# todo : terminology note : witnesses = tradition ? if true : - rename WitnessService to TraditionService, CollatexWitnessRequest to CollatexTraditionRequest, etc.
 
 class ConvertRequest(BaseModel):
     text: str
@@ -41,7 +44,6 @@ async def convert(req: ConvertRequest,
     options: ProcessingOptions = Depends(get_processing_options),
     converter: Converter = Depends(converter_dep)):
     return converter.run(req.text, normalization=options.normalization, filter_del=options.filter_del)
-
 
 # ---------------------------------------------------------------------------
 # Witness endpoint — fetch multiple witnesses for Collatex (optional ref)
@@ -63,42 +65,24 @@ class CollatexWitnessRequest(BaseModel):
         "and finally aligns them all together using the CollateX service. "
         "Workloads are executed securely in an asynchronous background job thread. Returns a Job ID to track pipeline status."
     ))
-async def process_and_collate_resources(
+async def process_and_collate_resources(*,
     req: CollatexWitnessRequest,
     background_tasks: BackgroundTasks,
     output_format: str = Query("application/json", description="Output format"),
     options: ProcessingOptions = Depends(get_processing_options),
     converter: Converter = Depends(converter_dep),
-    session: AsyncSession = Depends(get_session)
+    session: AsyncSession = Depends(get_session),
+    http_client: http_client
 ):
     try:
-        from urllib.parse import urlparse, parse_qs
-        parsed_url = urlparse(req.collection_url)
-        base_path = parsed_url.path.split('/collection')[0]
-        dts_base_url = f"{parsed_url.scheme}://{parsed_url.netloc}{base_path}"
-        
-        query_params = parse_qs(parsed_url.query)
-        collection_id = query_params.get("id", [""])[0]
-        
-        if not collection_id:
-            raise ValueError(f"Collection ID could not be extracted from {req.collection_url}")
-            
-        dts_client = DTSClient(base_url=dts_base_url)
-        witness_service = WitnessService(fetcher=dts_client)
 
-        collection_name, resources = await dts_client.get_collection_details(collection_id)
-        if not resources:
-            raise ValueError(f"No resources found for collection {collection_id}")
-
-        # Identify refs
-        if req.ref:
-            refs = [req.ref]
-        else:
-            members = await dts_client.get_members(resources[0])
-            refs = [m["identifier"] for m in members]
+        logger.info(f"Received collation request for collection URL: {req.collection_url} with ref: {req.ref}")
+        witness_service = WitnessService()
 
         # Create Job
-        job = Job(collection_id=collection_id, dts_base_url=dts_base_url, resources=resources, ref=req.ref)
+        # todo : request id is enough to track the job
+        # todo : update Job model to replace the dts_base_url field with collection_url and remove collection_id as there is no way to get this info at the moment (if we stay agnostic)
+        job = Job(collection_id="tmp_name", dts_base_url=req.collection_url, resources=["witnesses"], ref=req.ref)
         session.add(job)
         await session.commit()
         await session.refresh(job)
@@ -107,17 +91,15 @@ async def process_and_collate_resources(
         background_tasks.add_task(
             run_collate_job,
             job_id=job.id,
-            collection_id=collection_id,
-            collection_name=collection_name,
-            refs=refs,
-            resources=resources,
             output_format=output_format,
             options=options,
             converter=converter,
             witness_service=witness_service,
             collatex_client=collatex_client,
             stemmarest_client=stemmarest_client,
-            dts_base_url=dts_base_url
+            dts_base_url=req.collection_url, # todo : redundant can be removed
+            collection_url=req.collection_url,
+            http_client=http_client
         )
 
         return {
@@ -162,7 +144,7 @@ async def cancel_job(job_id: uuid.UUID, session: AsyncSession = Depends(get_sess
         
         # Cleanup: delete the collection folders and any existing Tradition for this collection
         try:
-            dts_client = DTSClient(base_url=job.dts_base_url)
+            dts_client = DTSClient(base_url=job.dts_base_url, http_client=http_client)
             collection_name, _ = await dts_client.get_collection_details(job.collection_id)
             post_collation_dir = os.path.join(settings.collation_dir, collection_name)
             pre_collation_dir = os.path.join(settings.output_dir, collection_name)

@@ -5,18 +5,40 @@ import os
 import tempfile
 from typing import List, Optional, Union, Dict
 
+from httpx import AsyncClient
+
 from core.interfaces import Converter
 from clients.dts_client import DTSClient
-from api.dependencies import ProcessingOptions
+from api.dependencies import ProcessingOptions, http_client
 from models.tokenization import CollatexResponse, CollatexWitness
 from core.config import Settings
+from helpers.helpers import ServerId
+from services.preparators import DtsPreparator
 
+logger = logging.getLogger("s-bridge")
 
-logger = logging.getLogger(__name__)
 
 class WitnessService:
-    def __init__(self, fetcher: DTSClient):
-        self.fetcher = fetcher
+    def __init__(self):
+        self.preparators = {'dts': DtsPreparator}
+    
+    async def preprocess_sections(self, url: str, http_client: AsyncClient) -> str | None:
+        """
+        Placeholder for any preprocessing steps needed before collation.
+        For example, this could handle caching, normalization, or other transformations.
+        """
+        try:
+            server_identity = await ServerId(url, logger, http_client)
+        except Exception as e:
+            logger.warning(f"Could not determine server identity for {url}: {e}")
+            server_identity = "unknown"
+        prearator = self.preparators.get(server_identity.split()[0].lower())
+        if prearator:
+            logger.info(f"Using preparator '{prearator.__name__}' for server '{server_identity}'")
+            return await prearator.run(url, http_client)
+        else:
+            logger.info(f"No specific preparator found for server '{server_identity}'. Using URL as-is.")
+            return None
 
     async def _process_single_witness(
         self,
@@ -28,7 +50,7 @@ class WitnessService:
         """Helper to process a single witness asynchronously and handle its own errors."""
         try:
             # 1. Fetch XML sequence asynchronously
-            xml_data = await self.fetcher.get_document(resource, ref=ref)
+            xml_data = resource.get("content", "")
 
             # 2. Run NLP/TEI conversion in a separate thread (it is heavily CPU-bound)
             tokens = await asyncio.to_thread(
@@ -39,29 +61,33 @@ class WitnessService:
             )
 
             # 3. Return the populated witness
-            return CollatexWitness(id=resource, tokens=tokens)
+            return CollatexWitness(id=resource.get("id"), tokens=tokens)
 
         except Exception as e:
             # Catch all exceptions (404s, parsing errors) to prevent crashing the entire API
-            logger.warning(f"Gracefully skipping witness '{resource}' for reference '{ref}.")
+            logger.warning(f"Gracefully skipping witness '{resource.get('id')}' for reference '{ref}.")
             return None
 
     async def process_witnesses(
         self,
-        resources: List[str],
         converter: Converter,
         options: ProcessingOptions,
-        ref: Optional[str] = None
+        path: Optional[str] = None
     ) -> CollatexResponse:
         """
         Fetches the XML for multiple witnesses concurrently, parses them in parallel threads,
         and packages the tokens into a JSON format expected by Collatex.
         """
 
+        with open(path, "r") as f:
+            data = json.load(f)
+            # witnesses = [CollatexWitness.model_validate(w) for w in data.get("witnesses", [])]
+            # return CollatexResponse(witnesses=witnesses)
+
         # Fire off all witness requests at the exact same time
         tasks = [
-            self._process_single_witness(resource, converter, options, ref)
-            for resource in resources
+            self._process_single_witness(witness, converter, options, data.get("ref_id"))
+            for witness in data.get("witnesses", [])
         ]
 
         # Wait for all network calls and NLP threads to finish
@@ -72,13 +98,14 @@ class WitnessService:
 
         # If absolutely everything failed, let the client know
         if not valid_witnesses:
-             raise ValueError(f"All requested witnesses failed to fetch or parse for ref='{ref}'. Check your IDs and references.")
+             raise ValueError(f"All requested witnesses failed to fetch or parse for ref='{data.get('ref_id')}'. Check your IDs and references.")
 
-        return CollatexResponse(witnesses=valid_witnesses)
+        return CollatexResponse(ref_id=data.get("ref_id"), witnesses=valid_witnesses)
 
+    # todo : moved to a helper func
     def get_section_filepath(self, collection_name: str, ref_id: str) -> str:
         """Standardizes the path for a prepared section file."""
-        settings = Settings()
+        settings = Settings() # this should be passed as dependency not hardcoded here
         return os.path.join(settings.output_dir, collection_name, f"{ref_id}.json")
 
     def load_prepared_section(self, filepath: str) -> CollatexResponse:
@@ -127,39 +154,31 @@ class WitnessService:
         logger.info(f"Saved collation result to: {filepath}")
         return filepath
 
-    async def prepare_section(
+    async def analyse_section(
         self,
-        collection_id: str,
-        ref: str,
         converter: Converter,
         options: ProcessingOptions,
-        force: bool = False
+        path: Optional[str] = None
     ) -> str:
         """
         Prepares a specific section and saves it to disk by fully regenerating it.
         Returns the path to the prepared file.
         """
-        collection_name, resources = await self.fetcher.get_collection_details(collection_id)
-        
-        if not resources:
-            raise ValueError(f"No resources found for collection '{collection_id}'.")
 
-        filepath = self.get_section_filepath(collection_name, ref)
-
-        logger.info(f"Preparing section '{ref}' for collection '{collection_name}' completely...")
+        # this def will open the json file, but it's probably an unecessary def
+        logger.info(f"Preparing section for collection '{path}' completely...")
         
         # Fetch and process all resources
         section_data = await self.process_witnesses(
-            resources=resources,
             converter=converter,
             options=options,
-            ref=ref
+            path=path
         )
 
-        self._dump_to_file(section_data, filepath)
+        self._dump_to_file(section_data, path)
         
-        logger.info(f"Successfully prepared and saved section to: {filepath}")
-        return filepath
+        logger.info(f"Successfully prepared and saved section to: {path}")
+        return path
 
     def _dump_to_file(self, data: CollatexResponse, filepath: str):
         """Helper to write a CollatexResponse to disk as JSON."""

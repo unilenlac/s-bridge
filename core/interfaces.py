@@ -2,6 +2,8 @@
 from typing import Protocol, Any, Dict, List, Tuple, Optional
 import xml.etree.ElementTree as ET
 
+from httpx import AsyncClient
+
 class Processor(Protocol):
     def __init__(self, pipeline: Any):
         ...
@@ -16,4 +18,9 @@ class Parser(Protocol):
     def __init__(self, abbr_file: Optional[str]):
         ...
     def parse(self, data: str) -> Tuple[str, List[Tuple[int, int, Dict[str, Any]]]]:
+        ...
+
+class CollationPreparator(Protocol):
+    @staticmethod
+    async def run(url: str, http_client: AsyncClient) -> str:
         ...

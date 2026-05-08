@@ -1,6 +1,9 @@
+import logging
+
 from pathlib import Path
-from typing import Literal
-from fastapi import Request, Query
+from typing import Literal, Annotated, Optional, Tuple
+from fastapi import Depends, Request, Query
+from httpx import AsyncClient, Timeout
 from pydantic import BaseModel
 
 from core.interfaces import Converter
@@ -50,3 +53,17 @@ def converter_dep(
                 #Technically unreachable due to FastAPI validation but good practice
                 raise ValueError(f"Unsupported format: {format}")
         return EnrichedStrategyConverter(proc=proc, parser=parser)
+
+class ClientParams(BaseModel):
+    # not really necessary. parameters can be passed on the fly at the request level.
+    follow_redirects: bool = False
+    timeout: Optional[str] = None
+    username: Optional[str] = None
+    password: Optional[str] = None
+
+async def http_client(params: ClientParams = Depends()):
+    params = params.model_dump(exclude_none=True)
+    async with AsyncClient(**params) as client:
+        yield client
+
+http_client = Annotated[AsyncClient, Depends(http_client)]

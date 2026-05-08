@@ -1,32 +1,34 @@
-import logging
-from typing import List
+import os
 import uuid
-
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import sessionmaker
-
+import logging
+from sqlmodel import select
+from datetime import datetime
+from core.config import Settings
 from core.database import engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession
 from models.schema import Job, JobStatus, Tradition
+from sqlalchemy.orm.attributes import flag_modified
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("s-bridge")
 
 async def run_collate_job(
     job_id: uuid.UUID,
-    collection_id: str,
-    collection_name: str,
-    refs: List[str],
-    resources: List[str],
     output_format: str,
     options,
     converter,
     witness_service,
     collatex_client,
     stemmarest_client,
-    dts_base_url: str
+    dts_base_url: str,
+    collection_url: str,
+    http_client: AsyncSession
 ):
     """
     Background worker that runs the collation task, tracking status to SQLite.
     """
+
+    # todo : move this to a dependency
     async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
     
     async with async_session() as session:
@@ -41,8 +43,13 @@ async def run_collate_job(
             await session.commit()
 
             sections_to_upload = []
+            # preprocess from here get tmp file path then loop trough tmp file in pre_collation dir
 
-            for r in refs:
+            logger.info(f"Starting collation job {job_id} for collection '{collection_url}' with output format '{output_format}'")
+            res, paths, collection_name, resources = await witness_service.preprocess_sections(collection_url, http_client)
+            if not res:
+                raise Exception("Preprocessing failed, cannot proceed with collation.")
+            for path in paths:
                 # Check for cancellation before each large section
                 await session.refresh(job)
                 if job.status == JobStatus.CANCELLED.value:
@@ -50,7 +57,7 @@ async def run_collate_job(
                     break
 
                 # The core NLP processing -> Collatex workflow
-                path = await witness_service.prepare_section(collection_id, r, converter, options)
+                await witness_service.analyse_section(converter, options, path)
                 ready_data = witness_service.load_prepared_section(path)
                 result = await collatex_client.collate(
                     payload=ready_data.model_dump(by_alias=True, exclude_none=True),
@@ -58,21 +65,18 @@ async def run_collate_job(
                 )
                 saved_path = witness_service.save_collation_result(
                     collection_name=collection_name,
-                    ref_id=r,
+                    ref_id=ready_data.ref_id,
                     result=result,
                     output_format=output_format
                 )
 
                 if output_format == "application/json":
-                    sections_to_upload.append((r, saved_path))
-
-
+                    sections_to_upload.append((ready_data.ref_id, saved_path))
 
             if job.status != JobStatus.CANCELLED.value:
-                from core.config import Settings
+            
                 settings_cfg = Settings()
                 
-                from datetime import datetime
                 timestamp = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
                 stemmarest_tradition_name = f"{collection_name}_{timestamp}"
 
@@ -90,19 +94,17 @@ async def run_collate_job(
                         trad_id=trad_id,
                         section_name=section_name,
                         file_path=file_path,
-                        filetype="cxjson"
+                        filetype="cxjson",
+                        logger=logger
                     )
 
-                import os
-                from sqlmodel import select
-                from sqlalchemy.orm.attributes import flag_modified
-                
                 collection_dir = os.path.join(settings_cfg.collation_dir, collection_name)
 
                 # Create or update single Tradition for the collection
-                stmt = select(Tradition).where(Tradition.collection_id == collection_id)
+                stmt = select(Tradition).where(Tradition.collection_id == collection_name)
                 existing_tradition = (await session.execute(stmt)).scalar_one_or_none()
 
+                # todo : was this the part of the code that was in charge of adding reanalysed sections to an existing tradition ?
                 if existing_tradition:
                     current_resources = list(existing_tradition.resources) if existing_tradition.resources else []
                     for r_res in resources:
@@ -118,7 +120,7 @@ async def run_collate_job(
                     session.add(existing_tradition)
                 else:
                     tradition = Tradition(
-                        collection_id=collection_id,
+                        collection_id=collection_name,
                         resources=resources,
                         number_of_included_sections=len(sections_to_upload),
                         result_path=collection_dir,

@@ -1,17 +1,19 @@
 import logging
-import httpx
+from httpx import AsyncClient
 from typing import Optional
 
 logger = logging.getLogger(__name__)
 
-
+# todo : deprecated can be removed
 class DTSClient:
-    def __init__(self, base_url: str):
+    def __init__(self, base_url: str, http_client: AsyncClient):
         """
         Initializes the DTS Client.
         :param base_url: The base URL of the DTS API (e.g., "http://ftsr-dev.unil.ch:8000")
+        :param http_client: An instance of httpx.AsyncClient
         """
         self.base_url = base_url.rstrip("/")
+        self.http_client = http_client
         self._collection_cache = {}
 
     async def get_document(self, resource: str, ref: Optional[str] = None) -> str:
@@ -31,11 +33,10 @@ class DTSClient:
 
         logger.info(f"Fetching DTS document for resource: {resource}, ref: {ref}")
 
-        async with httpx.AsyncClient(follow_redirects=True) as client:
-            response = await client.get(url, params=params)
-            response.raise_for_status()
-            return response.text
-
+        response = await self.http_client.get(url, params=params, follow_redirects=True)
+        response.raise_for_status()
+        return response.text
+    # this could be renamed to get_sections
     async def get_members(self, resource: str) -> list[dict]:
         """
         Fetches all level-1 CitableUnits for a resource from the Navigation API.
@@ -50,32 +51,32 @@ class DTSClient:
 
         logger.info(f"Fetching navigation for resource: {resource}")
 
-        async with httpx.AsyncClient(follow_redirects=True) as client:
-            while True:
-                params = {
-                    "resource": resource,
-                    #down : 1 to get section like milestone. down 2 would give subsections
-                    "down": 1,
-                    "limit": 100,
-                    "page": page,
-                }
-                response = await client.get(url, params=params)
-                response.raise_for_status()
-                data = response.json()
+        
+        while True:
+            params = {
+                "resource": resource,
+                #down : 1 to get section like milestone. down 2 would give subsections
+                "down": 1,
+                "limit": 100,
+                "page": page,
+            }
+            response = await self.http_client.get(url, params=params, follow_redirects=True)
+            response.raise_for_status()
+            data = response.json()
 
-                for item in data.get("member", []):
-                    members.append({
-                        "identifier": item["identifier"],
-                        "citeType": item.get("citeType", "section"),
-                    })
+            for item in data.get("member", []):
+                members.append({
+                    "identifier": item["identifier"],
+                    "citeType": item.get("citeType", "section"),
+                })
 
-                # Pagination: stop when next == last (no more pages)
-                view = data.get("view", {})
-                next_url = view.get("next", "")
-                last_url = view.get("last", "")
-                if not next_url or next_url == last_url:
-                    break
-                page += 1
+            # Pagination: stop when next == last (no more pages)
+            view = data.get("view", {})
+            next_url = view.get("next", "")
+            last_url = view.get("last", "")
+            if not next_url or next_url == last_url:
+                break
+            page += 1
 
         logger.info(f"Found {len(members)} level-1 refs for resource: {resource}")
         return members
@@ -92,22 +93,22 @@ class DTSClient:
         params = {"id": collection_id}
         logger.info(f"Fetching collection details for collection: {collection_id}")
 
-        async with httpx.AsyncClient(follow_redirects=True) as client:
-            response = await client.get(url, params=params)
-            response.raise_for_status()
-            data = response.json()
+        
+        response = await self.http_client.get(url, params=params, follow_redirects=True)
+        response.raise_for_status()
+        data = response.json()
 
-            # The Title
-            title = data.get("title")
-            if not title:
-                title = data.get("@id", collection_id)
-            title = str(title).split(" - ")[0].strip()
+        # The Title
+        title = data.get("title")
+        if not title:
+            title = data.get("@id", collection_id)
+        title = str(title).split(" - ")[0].strip()
 
-            # The Resources
-            members = data.get("member", [])
-            # Usually SubCollectionResource items are documents (represented by @id).
-            resources = [m.get("@id") for m in members if m.get("@type", "Resource") == "Resource" and m.get("@id")]
-            
-            result = (title, resources)
-            self._collection_cache[collection_id] = result
-            return result
+        # The Resources
+        members = data.get("member", [])
+        # Usually SubCollectionResource items are documents (represented by @id).
+        resources = [m.get("@id") for m in members if m.get("@type", "Resource") == "Resource" and m.get("@id")]
+        
+        result = (title, resources)
+        self._collection_cache[collection_id] = result
+        return result

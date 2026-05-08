@@ -16,6 +16,18 @@ settings = Settings()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # todo : move this to a separate module, add file handler etc..
+    logger = logging.getLogger("s-bridge")
+    logger.setLevel(logging.DEBUG)
+    if not logger.hasHandlers():
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(logging.DEBUG)
+        logger.addHandler(console_handler)
+        formatter = logging.Formatter(
+            "%(asctime)s [%(levelname)s] %(message)s"
+        )
+        console_handler.setFormatter(formatter)
+
     logger.info("Running database migrations...")
     try:
         subprocess.run(["uv", "run", "alembic", "upgrade", "head"], check=True, capture_output=True, text=True)
@@ -36,7 +48,7 @@ async def lifespan(app: FastAPI):
     
     yield
 
-app = FastAPI(title="σ-Bridge NLP Server", description="Remote NLP parsing service using CLTK", lifespan=lifespan)
+app = FastAPI(title="σ-Bridge NLP Server", description="Remote NLP parsing service using CLTK/Stanza", lifespan=lifespan)
 logger = logging.getLogger("nlp_server")
 
 app.include_router(router)
