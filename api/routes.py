@@ -107,8 +107,6 @@ async def process_and_collate_resources(*,
             "message": "Collation job started in the background."
         }
         
-    except HTTPException:
-        raise
     except Exception as e:
         logger.error(f"Error starting collate job: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
