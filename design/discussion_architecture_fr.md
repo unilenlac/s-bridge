@@ -57,21 +57,3 @@ Pour finaliser la vision du code, la base est également nettoyée en traitant l
 *   **Centralisation du Logging :** Comme suggéré dans les commentaires de `main.py`, la configuration du logger a été extraite dans un nouveau module dédié `core/logging.py`. Cela rend le point d'entrée de l'application beaucoup plus lisible et pose une base scalable pour de futurs *file handlers*.
 *   **Gestion des Exceptions :** Les commentaires vides `# todo : handle correctly the Exceptions` présents dans `helpers/helpers.py` ont été remplacés par des blocs `try/except` stricts et explicites, ciblant spécifiquement `httpx.HTTPStatusError` et `httpx.RequestError`. Cela garantit que le serveur ne plantera pas silencieusement et remontera des logs précis en cas de timeout réseau.
 
----
-
-## 5. Le Pattern Client (Défense de DTSClient)
-
-La décision de déprécier `DTSClient` pour éparpiller des appels `httpx.get` bruts dans `helpers.py` et `DtsPreparator` contourne certains principes fondamentaux d'ingénierie logicielle. Le pattern Client existe précisément pour abstraire la complexité des interactions réseau externes du cœur de la logique métier.
-
-Voici les arguments architecturaux en faveur du maintien de la classe `DTSClient` :
-
-*   **Encapsulation et Séparation des Préoccupations :**
-    La logique métier (`WitnessService` ou `DtsPreparator`) ne devrait jamais avoir à se soucier de *comment* parler à un serveur externe. Sans le Client, `DtsPreparator` se retrouve à gérer des paramètres spécifiques à l'API comme `down=1`, `limit=100`, et des boucles `while` pour la pagination. Le Client masque tout cela : le service appelle simplement une méthode de haut niveau et obtient une liste propre. Si l'API cible change sa stratégie de pagination demain, seul le Client doit être mis à jour.
-*   **Testabilité et Mocking :**
-    Avec des appels HTTP dispersés directement dans la logique métier, tester unitairement le pipeline NLP nécessite soit une connexion réseau active, soit des mocks HTTP complexes et fragiles. Une classe Client dédiée est triviale à mocker (ex: substituer une méthode pour renvoyer du faux XML), ce qui permet de tester la logique métier en isolation totale avec fiabilité et rapidité.
-*   **Gestion Centralisée des Erreurs :**
-    Le Client agit comme une couche anti-corruption (Anti-Corruption Layer). Si le serveur externe renvoie un payload d'erreur spécifique, le Client le capture, le logge de manière centralisée, et le traduit en une exception métier standard. Il est très risqué de laisser des processus d'arrière-plan crasher parce qu'ils ne savent pas analyser une réponse HTTP inattendue au milieu d'un fichier utilitaire.
-*   **Respect des Contrats (Approche Agnostique) :**
-    L'approche réellement agnostique repose sur le polymorphisme. En définissant une interface de base, `DTSClient` l'implémente. Si nous ajoutons demain un client pour un autre protocole, il implémentera la même interface. La logique métier reçoit un "Client" abstrait et ignore les spécificités du serveur interrogé. Des fonctions utilitaires éparses (comme `get_xml_from_dts_url()`) créent au contraire un couplage fort avec l'écosystème spécifique.
-*   **Gestion de l'État et Cache :**
-    Les fonctions utilitaires sont sans état (stateless). Chaque appel nécessite potentiellement une nouvelle requête réseau. Un objet Client peut maintenir un état en mémoire (comme c'était le cas avec `self._collection_cache` dans le `DTSClient` d'origine), évitant ainsi de répéter des requêtes HTTP identiques lors de la même opération. En détruisant la classe Client, on perd cette capacité native de mise en cache élégante.

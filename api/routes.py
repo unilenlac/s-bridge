@@ -9,7 +9,6 @@ from urllib.parse import urlparse
 from core.interfaces import Converter
 from api.dependencies import converter_dep, get_processing_options, ProcessingOptions, http_client
 from models.tokenization import Token
-from clients.dts_client import DTSClient
 from clients.collatex_client import CollatexClient
 from clients.stemmarest_client import StemmarestClient
 from services.witness_service import WitnessService
@@ -36,8 +35,7 @@ class ConvertRequest(BaseModel):
 @router.post("/convert", response_model=list[Token],
     response_model_exclude_none=True,
     response_model_exclude_defaults=True,
-    description="[DEPRECATED] Convert input text using the specified converter",
-    deprecated=True)
+    description="Convert input text using the specified converter")
 async def convert(req: ConvertRequest,
     options: ProcessingOptions = Depends(get_processing_options),
     converter: Converter = Depends(converter_dep)):

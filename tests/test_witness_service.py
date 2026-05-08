@@ -30,7 +30,7 @@ def options():
 @pytest.fixture
 def witness_service(mock_fetcher):
     # Setup witness service with a temporary directory
-    service = WitnessService(fetcher=mock_fetcher)
+    service = WitnessService()
     return service
 
 
@@ -43,7 +43,7 @@ async def test_analyse_section():
     mock_converter = MagicMock()
     options = ProcessingOptions(normalization="none", filter_del=False)
 
-    service = WitnessService(fetcher=mock_fetcher)
+    service = WitnessService()
 
     with tempfile.TemporaryDirectory() as temp_dir:
         # Patch the settings output dir explicitly to use temp directory
@@ -52,8 +52,9 @@ async def test_analyse_section():
             
             # Setup dummy responses for process_witnesses
             # Side effect allowing us to mock responses dynamically based on input resources
-            async def process_witnesses_side_effect(resources, converter, options, ref):
+            async def process_witnesses_side_effect(*args, **kwargs):
                 witnesses = []
+                resources = ["res1", "res2"]
                 for res in resources:
                     witnesses.append(CollatexWitness(id=res, tokens=[{"t": "test", "id": "t1", "n": "1", "lem": "test"}]))
                 return CollatexResponse(witnesses=witnesses)
@@ -63,10 +64,10 @@ async def test_analyse_section():
                 
                 mock_fetcher.get_collection_details.return_value = ("test_collection", ["res1", "res2"])
                 filepath = await service.analyse_section(
-                    collection_id="mock_col",
-                    ref="sec1",
                     converter=mock_converter,
-                    options=options
+                    options=options,
+                    http_client=AsyncMock(),
+                    path=os.path.join(temp_dir, "mock_path.json")
                 )
                 
                 assert os.path.exists(filepath)

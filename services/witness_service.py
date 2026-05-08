@@ -8,7 +8,6 @@ from typing import List, Optional, Union, Dict
 from httpx import AsyncClient
 
 from core.interfaces import Converter
-from clients.dts_client import DTSClient
 from api.dependencies import ProcessingOptions
 from models.tokenization import CollatexResponse, CollatexWitness
 from core.config import Settings
