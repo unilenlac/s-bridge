@@ -28,7 +28,7 @@ async def run_collate_job(
     Background worker that runs the collation task, tracking status to SQLite.
     """
 
-    # todo : move this to a dependency
+    # todo : why not using the database/get_session() dependency here ?
     async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
     
     async with async_session() as session:

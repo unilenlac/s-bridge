@@ -2,6 +2,7 @@ import json
 import logging
 import asyncio
 import os
+import pickle
 import tempfile
 from typing import List, Optional, Union, Dict
 
@@ -12,7 +13,7 @@ from clients.dts_client import DTSClient
 from api.dependencies import ProcessingOptions, http_client
 from models.tokenization import CollatexResponse, CollatexWitness
 from core.config import Settings
-from helpers.helpers import ServerId
+from helpers.helpers import ServerId, get_xml_from_dts_url
 from services.preparators import DtsPreparator
 
 logger = logging.getLogger("s-bridge")
@@ -21,6 +22,7 @@ logger = logging.getLogger("s-bridge")
 class WitnessService:
     def __init__(self):
         self.preparators = {'dts': DtsPreparator}
+        self.http_client = http_client()
     
     async def preprocess_sections(self, url: str, http_client: AsyncClient) -> str | None:
         """
@@ -50,7 +52,9 @@ class WitnessService:
         """Helper to process a single witness asynchronously and handle its own errors."""
         try:
             # 1. Fetch XML sequence asynchronously
-            xml_data = resource.get("content", "")
+            content = resource.get("content", "")
+            # todo: this must be selected based on the server identity, for now we assume it's always a DTS url
+            xml_data = await get_xml_from_dts_url(content, self.http_client, logger)  # This is an async generator that yields XML content
 
             # 2. Run NLP/TEI conversion in a separate thread (it is heavily CPU-bound)
             tokens = await asyncio.to_thread(
@@ -79,8 +83,8 @@ class WitnessService:
         and packages the tokens into a JSON format expected by Collatex.
         """
 
-        with open(path, "r") as f:
-            data = json.load(f)
+        with open(path, "rb") as f:
+            data = pickle.load(f)
             # witnesses = [CollatexWitness.model_validate(w) for w in data.get("witnesses", [])]
             # return CollatexResponse(witnesses=witnesses)
 

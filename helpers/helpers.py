@@ -1,5 +1,6 @@
 from logging import Logger
 import os
+from typing import AsyncGenerator
 from httpx import AsyncClient
 
 from core.config import Settings
@@ -18,7 +19,19 @@ async def ServerId(url: str, logger: Logger, client: AsyncClient) -> str:
         logger.warning(f"Could not determine server identity for {url}: {e}")
         return "Unknown Server"
 
-def get_section_filepath(collection_name: str, ref_id: str) -> str:
+def get_section_filepath(collection_name: str, ref_id: str, ext: str = "json") -> str:
         """Standardizes the path for a prepared section file."""
         settings = Settings() # this should be passed as dependency not hardcoded here
-        return os.path.join(settings.output_dir, collection_name, f"{ref_id}.json")
+        return os.path.join(settings.output_dir, collection_name, f"{ref_id}.{ext}")
+
+async def get_xml_from_dts_url(url: str, http_client: AsyncClient, logger: Logger) -> AsyncGenerator[str, None]:
+    """Fetches XML content from a given URL using the provided HTTP client."""
+
+    try:
+        response = await http_client.get(url=url, follow_redirects=True)
+        response.raise_for_status()
+        return response.text
+    except Exception as e:
+        # todo : handle correctly the Exceptions (everywhere in the codebase)
+        logger.error(f"Error fetching XML from {url}: {e}")
+        raise

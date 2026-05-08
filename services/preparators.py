@@ -1,5 +1,7 @@
-import json
 import os
+import json
+import logging
+import pickle
 
 from httpx import AsyncClient
 from uritemplate import URITemplate
@@ -8,14 +10,22 @@ from copy import deepcopy
 
 from helpers.helpers import get_section_filepath
 
+logger = logging.getLogger("s-bridge")
 
 class DtsPreparator:
     
     @staticmethod
     async def run(url: str, http_client: AsyncClient) -> tuple[bool, list[str]]:
         """
-        Prepares the sections for collation by fetching the necessary data from the DTS API.
+        Prepares the sections for collation by fetching the necessary data from a DTS API.
         """
+        document_urls = []
+        refs_list = []
+        collation_model = {
+            "witnesses": []
+        }
+        paths = []
+        
         res = await http_client.get(url, follow_redirects=True)
         if res.status_code != 200:
             raise Exception(f"Failed to fetch data from {url}: {res.status_code} {res.text}")
@@ -23,12 +33,6 @@ class DtsPreparator:
         collection_title = col.get("@id") if col.get("title") == "" else col.get("title")
         navigation_urls = [URITemplate(item.get('navigation')) for item in col.get("member", []) if item.get("@type").lower() == "resource"]
         resources = [item.get('@id') for item in col.get("member", []) if item.get("@type").lower() == "resource"]
-        document_urls = []
-        refs_list = []
-        collation_model = {
-            "witnesses": []
-        }
-        paths = []
 
         for nav in navigation_urls:
         
@@ -69,13 +73,13 @@ class DtsPreparator:
                     we could create an iterator that yields the url request, status validation, content extraction, logging etc and add it into the 'content' field
                     the collation could also be saved to a pickle file instead of json to avoid the json dump overhead and the need to load the whole thing in memory at once. 
                     The iterator would be consumed at the analyser level. """
-                    witness = {"id": params.get("resource", [None])[0], "content": res.text}
+                    witness = {"id": params.get("resource", [None])[0], "content": doc}
                     collation["witnesses"].append(witness)
             collation["ref_id"] = ref
-            filepath = get_section_filepath(collection_name=f"{col.get('@id')}", ref_id=ref)
+            filepath = get_section_filepath(collection_name=f"{col.get('@id')}", ref_id=ref, ext="pkl")
             os.makedirs(os.path.dirname(filepath), exist_ok=True)
-            with open(filepath, "w") as f:
-                json.dump(collation, f)
+            with open(filepath, "wb") as f:
+                pickle.dump(collation, f)
             # save to tmp and return path
             paths.append(filepath)
         return True, paths, collection_title, resources

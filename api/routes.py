@@ -27,6 +27,7 @@ logger = logging.getLogger('s-bridge')
 router = APIRouter()
 
 settings = Settings()
+
 collatex_client = CollatexClient(base_url=settings.collatex_api_base_url)
 stemmarest_client = StemmarestClient(base_url=settings.stemmarest_api_base_url)
 
@@ -77,11 +78,11 @@ async def process_and_collate_resources(*,
     try:
 
         logger.info(f"Received collation request for collection URL: {req.collection_url} with ref: {req.ref}")
+        # todo : Consider making this a dependency if it has state or external connections in the future.
         witness_service = WitnessService()
 
         # Create Job
-        # todo : request id is enough to track the job
-        # todo : update Job model to replace the dts_base_url field with collection_url and remove collection_id as there is no way to get this info at the moment (if we stay agnostic)
+        # todo : request id is enough to track the job, update Job model to replace the dts_base_url field with collection_url and remove collection_id as there is no way to get this info at the moment (if we stay agnostic)
         job = Job(collection_id="tmp_name", dts_base_url=req.collection_url, resources=["witnesses"], ref=req.ref)
         session.add(job)
         await session.commit()
