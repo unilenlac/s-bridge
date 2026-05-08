@@ -4,8 +4,11 @@ import xml.etree.ElementTree as ET
 import logging
 import stanza
 import uvicorn
+import httpx
 from contextlib import asynccontextmanager 
 import subprocess
+
+from core.logging import setup_logging
 
 from services.processors import ClassicalProcessor, ModernProcessor
 from core.config import Settings
@@ -16,17 +19,7 @@ settings = Settings()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # todo : move this to a separate module, add file handler etc..
-    logger = logging.getLogger("s-bridge")
-    logger.setLevel(logging.DEBUG)
-    if not logger.hasHandlers():
-        console_handler = logging.StreamHandler()
-        console_handler.setLevel(logging.DEBUG)
-        logger.addHandler(console_handler)
-        formatter = logging.Formatter(
-            "%(asctime)s [%(levelname)s] %(message)s"
-        )
-        console_handler.setFormatter(formatter)
+    logger = setup_logging()
 
     logger.info("Running database migrations...")
     try:
@@ -44,9 +37,12 @@ async def lifespan(app: FastAPI):
     else:
         proc = ClassicalProcessor(NLP(settings.language, backend="stanza", suppress_banner=True))
     app.state.proc = proc
+    app.state.http_client = httpx.AsyncClient()
     logger.info("CLTK NLP engine initialized successfully.")
     
     yield
+    
+    await app.state.http_client.aclose()
 
 app = FastAPI(title="σ-Bridge NLP Server", description="Remote NLP parsing service using CLTK/Stanza", lifespan=lifespan)
 logger = logging.getLogger("nlp_server")

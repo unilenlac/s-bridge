@@ -1,7 +1,6 @@
 import os
 import json
 import logging
-import pickle
 
 from httpx import AsyncClient
 from uritemplate import URITemplate
@@ -70,16 +69,15 @@ class DtsPreparator:
                     res = await http_client.get(doc, follow_redirects=True)
                     res.raise_for_status()
                     """ todo : this is a bit clumsy. 
-                    we could create an iterator that yields the url request, status validation, content extraction, logging etc and add it into the 'content' field
-                    the collation could also be saved to a pickle file instead of json to avoid the json dump overhead and the need to load the whole thing in memory at once. 
+                    we could create an iterator that yields the url request, status validation, content extraction, logging etc and add it into the 'content' field.
                     The iterator would be consumed at the analyser level. """
                     witness = {"id": params.get("resource", [None])[0], "content": doc}
                     collation["witnesses"].append(witness)
             collation["ref_id"] = ref
-            filepath = get_section_filepath(collection_name=f"{col.get('@id')}", ref_id=ref, ext="pkl")
+            filepath = get_section_filepath(collection_name=f"{col.get('@id')}", ref_id=ref, ext="json")
             os.makedirs(os.path.dirname(filepath), exist_ok=True)
-            with open(filepath, "wb") as f:
-                pickle.dump(collation, f)
+            with open(filepath, "w") as f:
+                json.dump(collation, f)
             # save to tmp and return path
             paths.append(filepath)
         return True, paths, collection_title, resources

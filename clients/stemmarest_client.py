@@ -1,12 +1,12 @@
 import logging
-from api.dependencies import http_client
+from httpx import AsyncClient
 
 logger = logging.getLogger("s-bridge")
 
 class StemmarestClient:
-    def __init__(self, base_url: str):
+    def __init__(self, base_url: str, http_client: AsyncClient):
         self.base_url = base_url.rstrip("/")
-        self.http_client = http_client()
+        self.http_client = http_client
 
     async def get_or_create_tradition(self, name: str, language: str = "grc", direction: str = "LR", is_public: bool = False) -> str:
         """

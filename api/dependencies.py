@@ -61,9 +61,7 @@ class ClientParams(BaseModel):
     username: Optional[str] = None
     password: Optional[str] = None
 
-async def http_client(params: ClientParams = Depends()):
-    params = params.model_dump(exclude_none=True)
-    async with AsyncClient(**params) as client:
-        yield client
+def http_client(request: Request):
+    return request.app.state.http_client
 
 http_client = Annotated[AsyncClient, Depends(http_client)]

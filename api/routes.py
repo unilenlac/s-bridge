@@ -28,10 +28,7 @@ router = APIRouter()
 
 settings = Settings()
 
-collatex_client = CollatexClient(base_url=settings.collatex_api_base_url)
-stemmarest_client = StemmarestClient(base_url=settings.stemmarest_api_base_url)
-
-# todo : terminology note : witnesses = tradition ? if true : - rename WitnessService to TraditionService, CollatexWitnessRequest to CollatexTraditionRequest, etc.
+# collatex_client and stemmarest_client are instantiated per-route to utilize the global http_client pool
 
 class ConvertRequest(BaseModel):
     text: str
@@ -81,9 +78,11 @@ async def process_and_collate_resources(*,
         # todo : Consider making this a dependency if it has state or external connections in the future.
         witness_service = WitnessService()
 
+        collatex_client = CollatexClient(base_url=settings.collatex_api_base_url, http_client=http_client)
+        stemmarest_client = StemmarestClient(base_url=settings.stemmarest_api_base_url, http_client=http_client)
+
         # Create Job
-        # todo : request id is enough to track the job, update Job model to replace the dts_base_url field with collection_url and remove collection_id as there is no way to get this info at the moment (if we stay agnostic)
-        job = Job(collection_id="tmp_name", dts_base_url=req.collection_url, resources=["witnesses"], ref=req.ref)
+        job = Job(collection_url=req.collection_url, resources=["witnesses"], ref=req.ref)
         session.add(job)
         await session.commit()
         await session.refresh(job)
@@ -98,7 +97,6 @@ async def process_and_collate_resources(*,
             witness_service=witness_service,
             collatex_client=collatex_client,
             stemmarest_client=stemmarest_client,
-            dts_base_url=req.collection_url, # todo : redundant can be removed
             collection_url=req.collection_url,
             http_client=http_client
         )
@@ -130,7 +128,11 @@ async def get_job_status(job_id: uuid.UUID, session: AsyncSession = Depends(get_
 
 
 @router.put("/dts/jobs/{job_id}/cancel", description="Cancel a pending or processing job and clear its associated files.")
-async def cancel_job(job_id: uuid.UUID, session: AsyncSession = Depends(get_session)):
+async def cancel_job(
+    job_id: uuid.UUID, 
+    session: AsyncSession = Depends(get_session),
+    http_client: http_client = None
+):
     import os
     import shutil
     from sqlmodel import select
@@ -145,8 +147,14 @@ async def cancel_job(job_id: uuid.UUID, session: AsyncSession = Depends(get_sess
         
         # Cleanup: delete the collection folders and any existing Tradition for this collection
         try:
-            dts_client = DTSClient(base_url=job.dts_base_url, http_client=http_client)
-            collection_name, _ = await dts_client.get_collection_details(job.collection_id)
+            # We fetch the collection title to determine the folder name
+            res = await http_client.get(job.collection_url, follow_redirects=True)
+            if res.status_code == 200:
+                col_data = res.json()
+                collection_name = col_data.get("title") or col_data.get("@id")
+            else:
+                collection_name = "unknown_collection"
+                
             post_collation_dir = os.path.join(settings.collation_dir, collection_name)
             pre_collation_dir = os.path.join(settings.output_dir, collection_name)
             
@@ -155,11 +163,11 @@ async def cancel_job(job_id: uuid.UUID, session: AsyncSession = Depends(get_sess
                     shutil.rmtree(directory)
                     logger.info(f"Cleanup on cancel: Deleted physical directory at {directory}")
                 
-            stmt = select(Tradition).where(Tradition.collection_id == job.collection_id)
+            stmt = select(Tradition).where(Tradition.collection_url == job.collection_url)
             existing_tradition = (await session.execute(stmt)).scalar_one_or_none()
             if existing_tradition:
                 await session.delete(existing_tradition)
-                logger.info(f"Cleanup on cancel: Deleted existing Tradition DB record for {job.collection_id}")
+                logger.info(f"Cleanup on cancel: Deleted existing Tradition DB record for {job.collection_url}")
                 
         except Exception as e:
             logger.warning(f"Cleanup on cancel encountered an error, some files may remain: {e}")

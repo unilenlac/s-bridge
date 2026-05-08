@@ -10,6 +10,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from models.schema import Job, JobStatus, Tradition
 from sqlalchemy.orm.attributes import flag_modified
 
+from httpx import AsyncClient
+
 logger = logging.getLogger("s-bridge")
 
 async def run_collate_job(
@@ -20,15 +22,13 @@ async def run_collate_job(
     witness_service,
     collatex_client,
     stemmarest_client,
-    dts_base_url: str,
     collection_url: str,
-    http_client: AsyncSession
+    http_client: AsyncClient
 ):
     """
     Background worker that runs the collation task, tracking status to SQLite.
     """
 
-    # todo : why not using the database/get_session() dependency here ?
     async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
     
     async with async_session() as session:
@@ -57,7 +57,7 @@ async def run_collate_job(
                     break
 
                 # The core NLP processing -> Collatex workflow
-                await witness_service.analyse_section(converter, options, path)
+                await witness_service.analyse_section(converter, options, http_client, path)
                 ready_data = witness_service.load_prepared_section(path)
                 result = await collatex_client.collate(
                     payload=ready_data.model_dump(by_alias=True, exclude_none=True),
@@ -115,7 +115,7 @@ async def run_collate_job(
                     existing_tradition.number_of_included_sections = len(sections_to_upload)
                     existing_tradition.result_path = collection_dir
                     existing_tradition.job_id = job.id
-                    existing_tradition.dts_base_url = dts_base_url
+                    existing_tradition.collection_url = collection_url
                     flag_modified(existing_tradition, "resources")
                     session.add(existing_tradition)
                 else:
@@ -125,7 +125,7 @@ async def run_collate_job(
                         number_of_included_sections=len(sections_to_upload),
                         result_path=collection_dir,
                         job_id=job.id,
-                        dts_base_url=dts_base_url
+                        collection_url=collection_url
                     )
                     session.add(tradition)
 

@@ -2,7 +2,6 @@ import json
 import logging
 import asyncio
 import os
-import pickle
 import tempfile
 from typing import List, Optional, Union, Dict
 
@@ -10,7 +9,7 @@ from httpx import AsyncClient
 
 from core.interfaces import Converter
 from clients.dts_client import DTSClient
-from api.dependencies import ProcessingOptions, http_client
+from api.dependencies import ProcessingOptions
 from models.tokenization import CollatexResponse, CollatexWitness
 from core.config import Settings
 from helpers.helpers import ServerId, get_xml_from_dts_url
@@ -22,7 +21,6 @@ logger = logging.getLogger("s-bridge")
 class WitnessService:
     def __init__(self):
         self.preparators = {'dts': DtsPreparator}
-        self.http_client = http_client()
     
     async def preprocess_sections(self, url: str, http_client: AsyncClient) -> str | None:
         """
@@ -44,17 +42,18 @@ class WitnessService:
 
     async def _process_single_witness(
         self,
-        resource: str,
+        resource: Dict,
         converter: Converter,
         options: ProcessingOptions,
-        ref: Optional[str]
+        ref: Optional[str],
+        http_client: AsyncClient
     ) -> Optional[CollatexWitness]:
         """Helper to process a single witness asynchronously and handle its own errors."""
         try:
             # 1. Fetch XML sequence asynchronously
             content = resource.get("content", "")
             # todo: this must be selected based on the server identity, for now we assume it's always a DTS url
-            xml_data = await get_xml_from_dts_url(content, self.http_client, logger)  # This is an async generator that yields XML content
+            xml_data = await get_xml_from_dts_url(content, http_client, logger)  # This is an async generator that yields XML content
 
             # 2. Run NLP/TEI conversion in a separate thread (it is heavily CPU-bound)
             tokens = await asyncio.to_thread(
@@ -76,6 +75,7 @@ class WitnessService:
         self,
         converter: Converter,
         options: ProcessingOptions,
+        http_client: AsyncClient,
         path: Optional[str] = None
     ) -> CollatexResponse:
         """
@@ -83,14 +83,12 @@ class WitnessService:
         and packages the tokens into a JSON format expected by Collatex.
         """
 
-        with open(path, "rb") as f:
-            data = pickle.load(f)
-            # witnesses = [CollatexWitness.model_validate(w) for w in data.get("witnesses", [])]
-            # return CollatexResponse(witnesses=witnesses)
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
 
         # Fire off all witness requests at the exact same time
         tasks = [
-            self._process_single_witness(witness, converter, options, data.get("ref_id"))
+            self._process_single_witness(witness, converter, options, data.get("ref_id"), http_client)
             for witness in data.get("witnesses", [])
         ]
 
@@ -105,12 +103,6 @@ class WitnessService:
              raise ValueError(f"All requested witnesses failed to fetch or parse for ref='{data.get('ref_id')}'. Check your IDs and references.")
 
         return CollatexResponse(ref_id=data.get("ref_id"), witnesses=valid_witnesses)
-
-    # todo : moved to a helper func
-    def get_section_filepath(self, collection_name: str, ref_id: str) -> str:
-        """Standardizes the path for a prepared section file."""
-        settings = Settings() # this should be passed as dependency not hardcoded here
-        return os.path.join(settings.output_dir, collection_name, f"{ref_id}.json")
 
     def load_prepared_section(self, filepath: str) -> CollatexResponse:
         """Loads a prepared Collatex JSON file from disk."""
@@ -162,6 +154,7 @@ class WitnessService:
         self,
         converter: Converter,
         options: ProcessingOptions,
+        http_client: AsyncClient,
         path: Optional[str] = None
     ) -> str:
         """
@@ -176,6 +169,7 @@ class WitnessService:
         section_data = await self.process_witnesses(
             converter=converter,
             options=options,
+            http_client=http_client,
             path=path
         )
 

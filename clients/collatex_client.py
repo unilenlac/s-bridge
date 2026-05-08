@@ -2,8 +2,6 @@ import logging
 import httpx
 from typing import Optional, Dict, Any, Union
 
-from api.dependencies import http_client
-
 logger = logging.getLogger(__name__)
 
 class CollatexClient:
@@ -19,7 +17,7 @@ class CollatexClient:
     FORMAT_DOT = "text/plain"
     FORMAT_SVG = "image/svg+xml"
 
-    def __init__(self, base_url: str):
+    def __init__(self, base_url: str, http_client: httpx.AsyncClient):
         """
         Initializes the CollateX Client.
         :param base_url: The base URL of the CollateX API (e.g., "http://localhost:7369")
@@ -27,7 +25,7 @@ class CollatexClient:
         self.base_url = base_url.rstrip("/")
         # Using a longer timeout as collation of large texts can be slow
         self.timeout = httpx.Timeout(60.0, connect=10.0) 
-        self.http_client = http_client()
+        self.http_client = http_client
 
     async def collate(
         self, 

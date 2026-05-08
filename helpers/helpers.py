@@ -1,9 +1,7 @@
 from logging import Logger
 import os
 from typing import AsyncGenerator
-from httpx import AsyncClient
-
-from core.config import Settings
+from httpx import AsyncClient, RequestError, HTTPStatusError
 
 from core.config import Settings
 
@@ -14,9 +12,11 @@ async def ServerId(url: str, logger: Logger, client: AsyncClient) -> str:
         response = await http_client_instance.get(url, timeout=5.0)
         response.raise_for_status()
         return response.headers.get("User-Agent", "dts (1.0)")
-    except Exception as e:
-        # todo : handle correctly the Exceptions (everywhere in the codebase)
-        logger.warning(f"Could not determine server identity for {url}: {e}")
+    except HTTPStatusError as e:
+        logger.warning(f"HTTP error determining server identity for {url}: {e.response.status_code}")
+        return "Unknown Server"
+    except RequestError as e:
+        logger.warning(f"Request error determining server identity for {url}: {e}")
         return "Unknown Server"
 
 def get_section_filepath(collection_name: str, ref_id: str, ext: str = "json") -> str:
@@ -31,7 +31,9 @@ async def get_xml_from_dts_url(url: str, http_client: AsyncClient, logger: Logge
         response = await http_client.get(url=url, follow_redirects=True)
         response.raise_for_status()
         return response.text
-    except Exception as e:
-        # todo : handle correctly the Exceptions (everywhere in the codebase)
-        logger.error(f"Error fetching XML from {url}: {e}")
+    except HTTPStatusError as e:
+        logger.error(f"HTTP error fetching XML from {url}: {e.response.status_code}")
+        raise
+    except RequestError as e:
+        logger.error(f"Request error fetching XML from {url}: {e}")
         raise
