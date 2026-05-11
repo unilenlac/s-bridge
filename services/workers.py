@@ -47,9 +47,12 @@ async def run_collate_job(
             # preprocess from here get tmp file path then loop trough tmp file in pre_collation dir
 
             logger.info(f"Starting collation job {job_id} for collection '{collection_url}' with output format '{output_format}'")
-            res, paths, collection_name, resources = await witness_service.preprocess_sections(collection_url, job.ref, http_client, settings_cfg)
+            res, paths, collection_name, resources = await witness_service.preprocess_sections(collection_url, job.ref, str(job.id), http_client, settings_cfg)
             if not res:
                 raise Exception("Preprocessing failed, cannot proceed with collation.")
+                
+            stemmarest_tradition_name = f"{collection_name}_{job.id}"
+
             for path in paths:
                 # Check for cancellation before each large section
                 await session.refresh(job)
@@ -65,7 +68,7 @@ async def run_collate_job(
                     output_format=output_format
                 )
                 saved_path = witness_service.save_collation_result(
-                    collection_name=collection_name,
+                    collection_name=stemmarest_tradition_name,
                     ref_id=ready_data.ref_id,
                     result=result,
                     output_format=output_format,
@@ -78,9 +81,7 @@ async def run_collate_job(
             if job.status != JobStatus.CANCELLED.value:
             
                 # settings_cfg is already instantiated above
-                
-                timestamp = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
-                stemmarest_tradition_name = f"{collection_name}_{timestamp}"
+
 
                 # Ensure the Stemmarest tradition exists for this collection
                 trad_id = await stemmarest_client.get_or_create_tradition(
@@ -100,22 +101,17 @@ async def run_collate_job(
                         logger=logger
                     )
 
-                collection_dir = os.path.join(settings_cfg.collation_dir, collection_name)
+                collection_dir = os.path.join(settings_cfg.collation_dir, stemmarest_tradition_name)
 
-                # Create or update single Tradition for the collection
-                stmt = select(Tradition).where(Tradition.collection_id == collection_name)
-                tradition = (await session.execute(stmt)).scalar_one_or_none()
-
-                if not tradition:
-                    tradition = Tradition(collection_id=collection_name)
+                tradition = Tradition(
+                    collection_id=stemmarest_tradition_name,
+                    resources=resources,
+                    number_of_included_sections=len(sections_to_upload),
+                    result_path=collection_dir,
+                    job_id=job.id,
+                    collection_url=collection_url
+                )
                 
-                tradition.resources = resources
-                tradition.number_of_included_sections = len(sections_to_upload)
-                tradition.result_path = collection_dir
-                tradition.job_id = job.id
-                tradition.collection_url = collection_url
-                
-                flag_modified(tradition, "resources")
                 session.add(tradition)
 
                 job.status = JobStatus.COMPLETED.value

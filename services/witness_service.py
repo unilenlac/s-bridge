@@ -22,7 +22,7 @@ class WitnessService:
         self.preparators = {'dts': DtsPreparator}
         self.fetchers = {'dts': get_xml_from_dts_url}
     
-    async def preprocess_sections(self, url: str, ref: Optional[str], http_client: AsyncClient, settings: Settings) -> tuple[bool, list[str], str, list[str]] | None:
+    async def preprocess_sections(self, url: str, ref: Optional[str], job_id: str, http_client: AsyncClient, settings: Settings) -> tuple[bool, list[str], str, list[str]] | None:
         """
         Placeholder for any preprocessing steps needed before collation.
         For example, this could handle caching, normalization, or other transformations.
@@ -35,7 +35,7 @@ class WitnessService:
         preparator = self.preparators.get(server_identity.split()[0].lower())
         if preparator:
             logger.info(f"Using preparator '{preparator.__name__}' for server '{server_identity}'")
-            return await preparator.run(url, ref, http_client, settings)
+            return await preparator.run(url, ref, job_id, http_client, settings)
         else:
             logger.info(f"No specific preparator found for server '{server_identity}'. Using URL as-is.")
             return None

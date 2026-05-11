@@ -16,7 +16,7 @@ logger = logging.getLogger("s-bridge")
 class DtsPreparator:
     
     @staticmethod
-    async def run(url: str, target_ref: Optional[str], http_client: AsyncClient, settings: Settings) -> tuple[bool, list[str], str, list[str]]:
+    async def run(url: str, target_ref: Optional[str], job_id: str, http_client: AsyncClient, settings: Settings) -> tuple[bool, list[str], str, list[str]]:
         """
         Prepares the sections for collation by fetching the necessary data from a DTS API.
         """
@@ -62,6 +62,7 @@ class DtsPreparator:
         
         refs_list = list(dict.fromkeys(refs_list))
         
+        #gives the possibility for a specific section/ref in relation to origin ref parameter
         if target_ref:
             if target_ref in refs_list:
                 refs_list = [target_ref]
@@ -88,7 +89,7 @@ class DtsPreparator:
                     }
                     collation["witnesses"].append(witness)
             collation["ref_id"] = ref
-            filepath = get_section_filepath(settings, collection_name=f"{col.get('@id')}", ref_id=ref, ext="json")
+            filepath = get_section_filepath(settings, collection_name=f"{col.get('@id')}_{job_id}", ref_id=ref, ext="json")
             os.makedirs(os.path.dirname(filepath), exist_ok=True)
             with open(filepath, "w") as f:
                 json.dump(collation, f)

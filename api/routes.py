@@ -73,7 +73,7 @@ async def process_and_collate_resources(*,
     try:
 
         logger.info(f"Received collation request for collection URL: {req.collection_url} with ref: {req.ref}")
-        # todo : Consider making this a dependency if it has state or external connections in the future.
+        # todo : Consider making this a dependency if it has state or external connections in the future. (no state as of 11.05.26)
         witness_service = WitnessService()
 
         collatex_client = CollatexClient(base_url=settings.collatex_api_base_url, http_client=http_client)
@@ -149,23 +149,25 @@ async def cancel_job(
             res = await http_client.get(job.collection_url, follow_redirects=True)
             if res.status_code == 200:
                 col_data = res.json()
-                collection_name = col_data.get("title") or col_data.get("@id")
+                collection_id_val = col_data.get("@id", "unknown_collection")
+                collection_name = col_data.get("title") or collection_id_val
             else:
                 collection_name = "unknown_collection"
+                collection_id_val = "unknown_collection"
                 
-            post_collation_dir = os.path.join(settings.collation_dir, collection_name)
-            pre_collation_dir = os.path.join(settings.output_dir, collection_name)
+            post_collation_dir = os.path.join(settings.collation_dir, f"{collection_name}_{job.id}")
+            pre_collation_dir = os.path.join(settings.output_dir, f"{collection_id_val}_{job.id}")
             
             for directory in [post_collation_dir, pre_collation_dir]:
                 if os.path.exists(directory):
                     shutil.rmtree(directory)
                     logger.info(f"Cleanup on cancel: Deleted physical directory at {directory}")
                 
-            stmt = select(Tradition).where(Tradition.collection_url == job.collection_url)
+            stmt = select(Tradition).where(Tradition.job_id == job.id)
             existing_tradition = (await session.execute(stmt)).scalar_one_or_none()
             if existing_tradition:
                 await session.delete(existing_tradition)
-                logger.info(f"Cleanup on cancel: Deleted existing Tradition DB record for {job.collection_url}")
+                logger.info(f"Cleanup on cancel: Deleted existing Tradition DB record for job {job.id}")
                 
         except Exception as e:
             logger.warning(f"Cleanup on cancel encountered an error, some files may remain: {e}")
