@@ -8,13 +8,14 @@ from urllib.parse import urlparse, parse_qs
 from copy import deepcopy
 
 from helpers.helpers import get_section_filepath
+from core.config import Settings
 
 logger = logging.getLogger("s-bridge")
 
 class DtsPreparator:
     
     @staticmethod
-    async def run(url: str, http_client: AsyncClient) -> tuple[bool, list[str]]:
+    async def run(url: str, http_client: AsyncClient, settings: Settings) -> tuple[bool, list[str]]:
         """
         Prepares the sections for collation by fetching the necessary data from a DTS API.
         """
@@ -74,7 +75,7 @@ class DtsPreparator:
                     witness = {"id": params.get("resource", [None])[0], "content": doc}
                     collation["witnesses"].append(witness)
             collation["ref_id"] = ref
-            filepath = get_section_filepath(collection_name=f"{col.get('@id')}", ref_id=ref, ext="json")
+            filepath = get_section_filepath(settings, collection_name=f"{col.get('@id')}", ref_id=ref, ext="json")
             os.makedirs(os.path.dirname(filepath), exist_ok=True)
             with open(filepath, "w") as f:
                 json.dump(collation, f)

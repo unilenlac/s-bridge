@@ -21,7 +21,7 @@ class WitnessService:
     def __init__(self):
         self.preparators = {'dts': DtsPreparator}
     
-    async def preprocess_sections(self, url: str, http_client: AsyncClient) -> str | None:
+    async def preprocess_sections(self, url: str, http_client: AsyncClient, settings: Settings) -> str | None:
         """
         Placeholder for any preprocessing steps needed before collation.
         For example, this could handle caching, normalization, or other transformations.
@@ -34,7 +34,7 @@ class WitnessService:
         prearator = self.preparators.get(server_identity.split()[0].lower())
         if prearator:
             logger.info(f"Using preparator '{prearator.__name__}' for server '{server_identity}'")
-            return await prearator.run(url, http_client)
+            return await prearator.run(url, http_client, settings)
         else:
             logger.info(f"No specific preparator found for server '{server_identity}'. Using URL as-is.")
             return None
@@ -117,12 +117,12 @@ class WitnessService:
         collection_name: str, 
         ref_id: str, 
         result: Union[Dict, str], 
-        output_format: str
+        output_format: str,
+        settings: Settings
     ) -> str:
         """
         Saves a collation result to a file and returns the path.
         """
-        settings = Settings()
         target_dir = os.path.join(settings.collation_dir, collection_name)
         os.makedirs(target_dir, exist_ok=True)
 

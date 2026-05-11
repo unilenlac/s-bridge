@@ -22,5 +22,5 @@ class Parser(Protocol):
 
 class CollationPreparator(Protocol):
     @staticmethod
-    async def run(url: str, http_client: AsyncClient) -> str:
+    async def run(url: str, http_client: AsyncClient, settings: Any) -> Any:
         ...

@@ -19,9 +19,8 @@ async def ServerId(url: str, logger: Logger, client: AsyncClient) -> str:
         logger.warning(f"Request error determining server identity for {url}: {e}")
         return "Unknown Server"
 
-def get_section_filepath(collection_name: str, ref_id: str, ext: str = "json") -> str:
+def get_section_filepath(settings: Settings, collection_name: str, ref_id: str, ext: str = "json") -> str:
         """Standardizes the path for a prepared section file."""
-        settings = Settings() # this should be passed as dependency not hardcoded here
         return os.path.join(settings.output_dir, collection_name, f"{ref_id}.{ext}")
 
 async def get_xml_from_dts_url(url: str, http_client: AsyncClient, logger: Logger) -> AsyncGenerator[str, None]:

@@ -29,6 +29,7 @@ async def run_collate_job(
     Background worker that runs the collation task, tracking status to SQLite.
     """
 
+    settings_cfg = Settings()
     async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
     
     async with async_session() as session:
@@ -46,7 +47,7 @@ async def run_collate_job(
             # preprocess from here get tmp file path then loop trough tmp file in pre_collation dir
 
             logger.info(f"Starting collation job {job_id} for collection '{collection_url}' with output format '{output_format}'")
-            res, paths, collection_name, resources = await witness_service.preprocess_sections(collection_url, http_client)
+            res, paths, collection_name, resources = await witness_service.preprocess_sections(collection_url, http_client, settings_cfg)
             if not res:
                 raise Exception("Preprocessing failed, cannot proceed with collation.")
             for path in paths:
@@ -67,7 +68,8 @@ async def run_collate_job(
                     collection_name=collection_name,
                     ref_id=ready_data.ref_id,
                     result=result,
-                    output_format=output_format
+                    output_format=output_format,
+                    settings=settings_cfg
                 )
 
                 if output_format == "application/json":
@@ -75,7 +77,7 @@ async def run_collate_job(
 
             if job.status != JobStatus.CANCELLED.value:
             
-                settings_cfg = Settings()
+                # settings_cfg is already instantiated above
                 
                 timestamp = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
                 stemmarest_tradition_name = f"{collection_name}_{timestamp}"
@@ -102,37 +104,24 @@ async def run_collate_job(
 
                 # Create or update single Tradition for the collection
                 stmt = select(Tradition).where(Tradition.collection_id == collection_name)
-                existing_tradition = (await session.execute(stmt)).scalar_one_or_none()
+                tradition = (await session.execute(stmt)).scalar_one_or_none()
 
-                # todo : was this the part of the code that was in charge of adding reanalysed sections to an existing tradition ?
-                if existing_tradition:
-                    current_resources = list(existing_tradition.resources) if existing_tradition.resources else []
-                    for r_res in resources:
-                        if r_res not in current_resources:
-                            current_resources.append(r_res)
-                    
-                    existing_tradition.resources = current_resources
-                    existing_tradition.number_of_included_sections = len(sections_to_upload)
-                    existing_tradition.result_path = collection_dir
-                    existing_tradition.job_id = job.id
-                    existing_tradition.collection_url = collection_url
-                    flag_modified(existing_tradition, "resources")
-                    session.add(existing_tradition)
-                else:
-                    tradition = Tradition(
-                        collection_id=collection_name,
-                        resources=resources,
-                        number_of_included_sections=len(sections_to_upload),
-                        result_path=collection_dir,
-                        job_id=job.id,
-                        collection_url=collection_url
-                    )
-                    session.add(tradition)
+                if not tradition:
+                    tradition = Tradition(collection_id=collection_name)
+                
+                tradition.resources = resources
+                tradition.number_of_included_sections = len(sections_to_upload)
+                tradition.result_path = collection_dir
+                tradition.job_id = job.id
+                tradition.collection_url = collection_url
+                
+                flag_modified(tradition, "resources")
+                session.add(tradition)
 
                 job.status = JobStatus.COMPLETED.value
                 session.add(job)
                 await session.commit()
-                logger.warning(f"Collation job {job_id} successfully completed for collection '{collection_name}'.")
+                logger.info(f"Collation job {job_id} successfully completed for collection '{collection_name}'.")
 
         except Exception as e:
             logger.error(f"Job {job_id} failed: {e}", exc_info=True)
