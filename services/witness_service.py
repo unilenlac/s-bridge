@@ -20,6 +20,7 @@ logger = logging.getLogger("s-bridge")
 class WitnessService:
     def __init__(self):
         self.preparators = {'dts': DtsPreparator}
+        self.fetchers = {'dts': get_xml_from_dts_url}
     
     async def preprocess_sections(self, url: str, http_client: AsyncClient, settings: Settings) -> str | None:
         """
@@ -31,10 +32,10 @@ class WitnessService:
         except Exception as e:
             logger.warning(f"Could not determine server identity for {url}: {e}")
             server_identity = "unknown"
-        prearator = self.preparators.get(server_identity.split()[0].lower())
-        if prearator:
-            logger.info(f"Using preparator '{prearator.__name__}' for server '{server_identity}'")
-            return await prearator.run(url, http_client, settings)
+        preparator = self.preparators.get(server_identity.split()[0].lower())
+        if preparator:
+            logger.info(f"Using preparator '{preparator.__name__}' for server '{server_identity}'")
+            return await preparator.run(url, http_client, settings)
         else:
             logger.info(f"No specific preparator found for server '{server_identity}'. Using URL as-is.")
             return None
@@ -51,8 +52,13 @@ class WitnessService:
         try:
             # 1. Fetch XML sequence asynchronously
             content = resource.get("content", "")
-            # todo: this must be selected based on the server identity, for now we assume it's always a DTS url
-            xml_data = await get_xml_from_dts_url(content, http_client, logger)  # This is an async generator that yields XML content
+            
+            witness_type = resource.get("type", "dts")
+            fetcher_func = self.fetchers.get(witness_type)
+            if not fetcher_func:
+                raise ValueError(f"No fetcher configured for witness type: '{witness_type}'")
+                
+            xml_data = await fetcher_func(content, http_client, logger)
 
             # 2. Run NLP/TEI conversion in a separate thread (it is heavily CPU-bound)
             tokens = await asyncio.to_thread(

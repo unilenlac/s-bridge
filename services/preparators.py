@@ -72,7 +72,11 @@ class DtsPreparator:
                     """ todo : this is a bit clumsy. 
                     we could create an iterator that yields the url request, status validation, content extraction, logging etc and add it into the 'content' field.
                     The iterator would be consumed at the analyser level. """
-                    witness = {"id": params.get("resource", [None])[0], "content": doc}
+                    witness = {
+                        "id": params.get("resource", [None])[0], 
+                        "content": doc,
+                        "type": "dts"
+                    }
                     collation["witnesses"].append(witness)
             collation["ref_id"] = ref
             filepath = get_section_filepath(settings, collection_name=f"{col.get('@id')}", ref_id=ref, ext="json")
