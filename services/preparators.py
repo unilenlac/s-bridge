@@ -6,6 +6,7 @@ from httpx import AsyncClient
 from uritemplate import URITemplate
 from urllib.parse import urlparse, parse_qs
 from copy import deepcopy
+from typing import Optional
 
 from helpers.helpers import get_section_filepath
 from core.config import Settings
@@ -15,7 +16,7 @@ logger = logging.getLogger("s-bridge")
 class DtsPreparator:
     
     @staticmethod
-    async def run(url: str, http_client: AsyncClient, settings: Settings) -> tuple[bool, list[str]]:
+    async def run(url: str, target_ref: Optional[str], http_client: AsyncClient, settings: Settings) -> tuple[bool, list[str], str, list[str]]:
         """
         Prepares the sections for collation by fetching the necessary data from a DTS API.
         """
@@ -60,6 +61,14 @@ class DtsPreparator:
                 page += 1
         
         refs_list = list(dict.fromkeys(refs_list))
+        
+        if target_ref:
+            if target_ref in refs_list:
+                refs_list = [target_ref]
+            else:
+                logger.warning(f"Target ref '{target_ref}' not found in collection '{url}'")
+                return False, [], collection_title, resources
+
         for ref in refs_list:
             document_url = list(filter(lambda url: f"ref={ref}" in url, document_urls))
             collation = deepcopy(collation_model)

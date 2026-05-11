@@ -47,7 +47,7 @@ async def run_collate_job(
             # preprocess from here get tmp file path then loop trough tmp file in pre_collation dir
 
             logger.info(f"Starting collation job {job_id} for collection '{collection_url}' with output format '{output_format}'")
-            res, paths, collection_name, resources = await witness_service.preprocess_sections(collection_url, http_client, settings_cfg)
+            res, paths, collection_name, resources = await witness_service.preprocess_sections(collection_url, job.ref, http_client, settings_cfg)
             if not res:
                 raise Exception("Preprocessing failed, cannot proceed with collation.")
             for path in paths:
