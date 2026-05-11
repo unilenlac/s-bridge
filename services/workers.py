@@ -51,7 +51,7 @@ async def run_collate_job(
             if not res:
                 raise Exception("Preprocessing failed, cannot proceed with collation.")
                 
-            stemmarest_tradition_name = f"{collection_name}_{job.id}"
+            local_job_dir_name = f"{collection_name}_{job.id}"
 
             for path in paths:
                 # Check for cancellation before each large section
@@ -68,7 +68,7 @@ async def run_collate_job(
                     output_format=output_format
                 )
                 saved_path = witness_service.save_collation_result(
-                    collection_name=stemmarest_tradition_name,
+                    collection_name=local_job_dir_name,
                     ref_id=ready_data.ref_id,
                     result=result,
                     output_format=output_format,
@@ -81,7 +81,9 @@ async def run_collate_job(
             if job.status != JobStatus.CANCELLED.value:
             
                 # settings_cfg is already instantiated above
-
+                
+                timestamp = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+                stemmarest_tradition_name = f"{collection_name}_{timestamp}"
 
                 # Ensure the Stemmarest tradition exists for this collection
                 trad_id = await stemmarest_client.get_or_create_tradition(
@@ -101,7 +103,7 @@ async def run_collate_job(
                         logger=logger
                     )
 
-                collection_dir = os.path.join(settings_cfg.collation_dir, stemmarest_tradition_name)
+                collection_dir = os.path.join(settings_cfg.collation_dir, local_job_dir_name)
 
                 tradition = Tradition(
                     collection_id=stemmarest_tradition_name,
