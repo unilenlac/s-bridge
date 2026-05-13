@@ -15,6 +15,11 @@ class PipelineEnum(str, Enum):
     modern = "modern"
 
 
+class EnvironmentEnum(str, Enum):
+    dev = "DEV"
+    prod = "PROD"
+
+
 class LanguageEnum(str, Enum):
     lati1261 = "lati1261"  # Latin
     anci1242 = "anci1242"  # Ancient Greek
@@ -39,6 +44,8 @@ class Settings(BaseSettings):
     stemmarest_api_base_url: str = "http://ftsr-dev.unil.ch:7070/stemmarest/api"
     output_dir: Path = Path("/tmp/s-bridge/pre_collation")
     collation_dir: Path = Path("/tmp/s-bridge/post_collation")
+    environment: EnvironmentEnum = EnvironmentEnum.dev
+    log_file: Optional[Path] = Path("/var/log/s-bridge/s-bridge.log")
 
     @property
     def database_url(self) -> str:

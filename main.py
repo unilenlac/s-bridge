@@ -19,7 +19,7 @@ settings = Settings()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger = setup_logging()
+    logger = setup_logging(settings)
 
     logger.info("Running database migrations...")
     try:
