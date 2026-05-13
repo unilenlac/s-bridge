@@ -77,11 +77,6 @@ class DtsPreparator:
                 while len(document_url):
                     doc = document_url.pop()
                     params = parse_qs(urlparse(doc).query)
-                    #res = await http_client.get(doc, follow_redirects=True)
-                    #res.raise_for_status()
-                    """ todo : this is a bit clumsy. 
-                    we could create an iterator that yields the url request, status validation, content extraction, logging etc and add it into the 'content' field.
-                    The iterator would be consumed at the analyser level. """
                     witness = {
                         "id": params.get("resource", [None])[0], 
                         "content": doc,
