@@ -222,6 +222,21 @@ def test_aggressive_hyphenation():
     clean_text, meta = parser.parse(xml)
     assert clean_text == "This is completely a hyphenated word."
 
+def test_lb_break_no_attribute_without_hyphen():
+    xml = "<root>δεύτερον γενό<lb break='no'/>\nμενον ἐπίσκοπον</root>"
+    parser = get_parser()
+    clean_text, meta = parser.parse(xml)
+    assert clean_text == "δεύτερον γενόμενον ἐπίσκοπον"
+
+def test_lb_break_no_attribute_without_hyphen_first_child():
+    xml = "<root>δεύτερον <add>γενό<lb break='no'/>\nμενον</add> ἐπίσκοπον</root>"
+    parser = get_parser()
+    clean_text, meta = parser.parse(xml)
+    assert clean_text == "δεύτερον γενόμενον ἐπίσκοπον"
+    start, end = find_word_range(clean_text, "γενόμενον")
+    word_meta = get_metadata_for_word(start, end, meta)
+    assert word_meta.get("add") is True
+
 def test_seg_tag_metadata():
     xml = '<root>Here is a <seg type="rubric" part="I">heading segment</seg>.</root>'
     parser = get_parser()

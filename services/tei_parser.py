@@ -91,23 +91,34 @@ class TEIParser:
                     node_with_text, attr_name = self._get_rightmost_text_node(parent, child_index)
                     prior_text = getattr(node_with_text, attr_name) or ""
                     
+                    is_hyphenated = prior_text.rstrip().endswith('-')
+                    is_no_break = child.get('break') == 'no'
+                    
                     if child_index > 0:
                         # Case A: Not the first child. We attach the lb's tail to the prev sibling
                         prev_sibling = parent[child_index - 1]
                         
-                        if prior_text.rstrip().endswith('-'):
-                            # Strip hyphen from wherever it was natively found
-                            setattr(node_with_text, attr_name, prior_text.rstrip()[:-1])
+                        if is_hyphenated or is_no_break:
+                            if is_hyphenated:
+                                # Strip hyphen from wherever it was natively found
+                                setattr(node_with_text, attr_name, prior_text.rstrip()[:-1])
+                            else:
+                                # Strip trailing whitespaces before merging tightly
+                                setattr(node_with_text, attr_name, prior_text.rstrip())
+                                
                             # Merge tails tightly without space
                             prev_sibling.tail = (prev_sibling.tail or "") + (child.tail or "").lstrip()
                         else:
-                            # Not hyphenated. Attach with a space
+                            # Not hyphenated and break != 'no'. Attach with a space
                             prev_sibling.tail = (prev_sibling.tail or "") + " " + (child.tail or "")
                     else:
                         # Case B: First child. Attach the lb's tail strictly to the parent's text
-                        if prior_text.rstrip().endswith('-'):
-                            # attr_name is guaranteed to be 'text' here since child_index == 0
-                            parent.text = prior_text.rstrip()[:-1] + (child.tail or "").lstrip()
+                        if is_hyphenated or is_no_break:
+                            if is_hyphenated:
+                                # attr_name is guaranteed to be 'text' here since child_index == 0
+                                parent.text = prior_text.rstrip()[:-1] + (child.tail or "").lstrip()
+                            else:
+                                parent.text = prior_text.rstrip() + (child.tail or "").lstrip()
                         else:
                             parent.text = prior_text + " " + (child.tail or "")
                             

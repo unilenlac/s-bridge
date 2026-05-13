@@ -59,7 +59,8 @@ class CollatexWitnessRequest(BaseModel):
         "End-to-End NLP Collation Pipeline. This route orchestrates fetching XML resources from the DTS service, "
         "processes them through a CLTK/Stanza NLP engine (or similar) to convert text into deep-normalized token lists, "
         "and finally aligns them all together using the CollateX service. "
-        "Workloads are executed securely in an asynchronous background job thread. Returns a Job ID to track pipeline status."
+        "Workloads are executed securely in an asynchronous background job thread. Returns a Job ID to track pipeline status. "
+        "Prototype route: http://ftsr-dev.unil.ch:8000/api/dts/v1/collection?id=s-bridge "
     ))
 async def process_and_collate_resources(*,
     req: CollatexWitnessRequest,
