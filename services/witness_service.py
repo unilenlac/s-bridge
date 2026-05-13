@@ -3,11 +3,12 @@ import logging
 import asyncio
 import os
 import tempfile
-from typing import List, Optional, Union, Dict
+from typing import List, Optional, Union, Dict, Tuple
 
 from httpx import AsyncClient
 
 from core.interfaces import Converter
+from core.exceptions import DtsError
 from api.dependencies import ProcessingOptions
 from models.tokenization import CollatexResponse, CollatexWitness
 from core.config import Settings
@@ -32,13 +33,16 @@ class WitnessService:
         except Exception as e:
             logger.warning(f"Could not determine server identity for {url}: {e}")
             server_identity = "unknown"
-        preparator = self.preparators.get(server_identity.split()[0].lower())
-        if preparator:
-            logger.info(f"Using preparator '{preparator.__name__}' for server '{server_identity}'")
-            return await preparator.run(url, ref, job_id, http_client, settings)
-        else:
-            logger.info(f"No specific preparator found for server '{server_identity}'. Using URL as-is.")
-            return None
+        try:
+            preparator = self.preparators.get(server_identity.split()[0].lower())
+            if preparator:
+                logger.info(f"Using preparator '{preparator.__name__}' for server '{server_identity}'")
+                return await preparator.run(url, ref, job_id, http_client, settings)
+            else:
+                logger.info(f"No specific preparator found for server '{server_identity}'. Using URL as-is.")
+                return None
+        except Exception as e:
+            raise DtsError(f"Preprocessing failed for '{url}': {e}") from e
 
     async def _process_single_witness(
         self,
@@ -47,8 +51,11 @@ class WitnessService:
         options: ProcessingOptions,
         ref: Optional[str],
         http_client: AsyncClient
-    ) -> Optional[CollatexWitness]:
-        """Helper to process a single witness asynchronously and handle its own errors."""
+    ) -> Tuple[Optional[CollatexWitness], Optional[str]]:
+        """Helper to process a single witness asynchronously.
+        Returns (witness, None) on success or (None, error_message) on failure.
+        """
+        witness_id = resource.get("id", "<unknown>")
         try:
             # 1. Fetch XML sequence asynchronously
             content = resource.get("content", "")
@@ -69,12 +76,12 @@ class WitnessService:
             )
 
             # 3. Return the populated witness
-            return CollatexWitness(id=resource.get("id"), tokens=tokens)
+            return CollatexWitness(id=witness_id, tokens=tokens), None
 
         except Exception as e:
-            # Catch all exceptions (404s, parsing errors) to prevent crashing the entire API
-            logger.warning(f"Gracefully skipping witness '{resource.get('id')}' for reference '{ref}.")
-            return None
+            reason = str(e) or type(e).__name__
+            logger.warning(f"Skipping witness '{witness_id}' for ref '{ref}': {reason}")
+            return None, f"{witness_id}: {reason}"
 
     async def process_witnesses(
         self,
@@ -100,12 +107,14 @@ class WitnessService:
         # Wait for all network calls and NLP threads to finish
         results = await asyncio.gather(*tasks)
 
-        # Filter out the witnesses that failed (returned None)
-        valid_witnesses = [w for w in results if w is not None]
+        # Separate successes from failures
+        valid_witnesses = [w for w, _ in results if w is not None]
+        failure_reasons = [err for _, err in results if err is not None]
 
-        # If absolutely everything failed, let the client know
+        # If absolutely everything failed, let the client know with full detail
         if not valid_witnesses:
-             raise ValueError(f"All requested witnesses failed to fetch or parse for ref='{data.get('ref_id')}'. Check your IDs and references.")
+            detail = "; ".join(failure_reasons) or "unknown error"
+            raise DtsError(f"All witnesses failed for ref='{data.get('ref_id')}': {detail}")
 
         return CollatexResponse(ref_id=data.get("ref_id"), witnesses=valid_witnesses)
 

@@ -2,6 +2,8 @@ import logging
 import httpx
 from typing import Optional, Dict, Any, Union
 
+from core.exceptions import CollatexError
+
 logger = logging.getLogger(__name__)
 
 class CollatexClient:
@@ -62,8 +64,10 @@ class CollatexClient:
                 return response.text
                 
         except httpx.HTTPStatusError as e:
-            logger.error(f"CollateX returned an HTTP error: {e.response.status_code} - {e.response.text}")
-            raise
+            msg = f"CollateX returned HTTP {e.response.status_code}: {e.response.text[:200]}"
+            logger.error(msg)
+            raise CollatexError(msg) from e
         except httpx.RequestError as e:
-            logger.error(f"Failed to connect to CollateX at {url}: {e}")
-            raise
+            msg = f"CollateX server unreachable at {url}: {e}"
+            logger.error(msg)
+            raise CollatexError(msg) from e

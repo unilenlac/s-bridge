@@ -2,12 +2,13 @@ import os
 import json
 import logging
 
-from httpx import AsyncClient
+from httpx import AsyncClient, HTTPStatusError
 from uritemplate import URITemplate
 from urllib.parse import urlparse, parse_qs
 from copy import deepcopy
 from typing import Optional
 
+from core.exceptions import DtsError
 from helpers.helpers import get_section_filepath
 from core.config import Settings
 
@@ -29,7 +30,7 @@ class DtsPreparator:
         
         res = await http_client.get(url, follow_redirects=True)
         if res.status_code != 200:
-            raise Exception(f"Failed to fetch data from {url}: {res.status_code} {res.text}")
+            raise DtsError(f"DTS collection endpoint returned HTTP {res.status_code} for {url}")
         col = res.json()
         collection_title = col.get("@id") if col.get("title") == "" else col.get("title")
         navigation_urls = [URITemplate(item.get('navigation')) for item in col.get("member", []) if item.get("@type").lower() == "resource"]
@@ -44,8 +45,12 @@ class DtsPreparator:
                     "down": 1,
                     "page": page,
                 }
-                res = await http_client.get(nav.expand(**params), follow_redirects=True)
-                res.raise_for_status()
+                expanded_nav = nav.expand(**params)
+                try:
+                    res = await http_client.get(expanded_nav, follow_redirects=True)
+                    res.raise_for_status()
+                except HTTPStatusError as e:
+                    raise DtsError(f"DTS navigation request failed — HTTP {e.response.status_code} for {expanded_nav}") from e
                 data = res.json()
                 document_url = URITemplate(data.get("resource").get('document'))
                 

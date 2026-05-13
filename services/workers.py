@@ -124,6 +124,6 @@ async def run_collate_job(
         except Exception as e:
             logger.error(f"Job {job_id} failed: {e}", exc_info=True)
             job.status = JobStatus.FAILED.value
-            job.error_message = str(e)
+            job.error_message = str(e)[:500]
             session.add(job)
             await session.commit()

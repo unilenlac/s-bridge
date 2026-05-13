@@ -1,5 +1,7 @@
 import logging
-from httpx import AsyncClient
+from httpx import AsyncClient, HTTPStatusError, RequestError
+
+from core.exceptions import StemmarestError
 
 logger = logging.getLogger("s-bridge")
 
@@ -15,7 +17,8 @@ class StemmarestClient:
         """
         
         resp = await self.http_client.get(f"{self.base_url}/traditions")
-        resp.raise_for_status()
+        if not resp.is_success:
+            raise StemmarestError(f"Stemmarest: failed to list traditions — HTTP {resp.status_code}: {resp.text[:200]}")
         traditions = resp.json()
         
         for trad in traditions:
@@ -40,8 +43,9 @@ class StemmarestClient:
         resp = await self.http_client.post(f"{self.base_url}/tradition", data={"name":name}, files=files, auth=("user", "userpass"))
         
         if not resp.is_success:
-            logger.error(f"Failed to create Stemmarest tradition '{name}': {resp.text}")
-            resp.raise_for_status()
+            msg = f"Stemmarest: failed to create tradition '{name}' — HTTP {resp.status_code}: {resp.text[:200]}"
+            logger.error(msg)
+            raise StemmarestError(msg)
             
         trad_dict = resp.json()
         # If it returns the ID directly as string, or `{ "id": "..." }` or `{ "tradId": "..." }`
@@ -76,8 +80,9 @@ class StemmarestClient:
             )
             
             if not resp.is_success:
-                logger.error(f"Failed to upload section '{section_name}' for tradition '{trad_id}': {resp.text}")
-                resp.raise_for_status()
+                msg = f"Stemmarest: failed to upload section '{section_name}' to tradition '{trad_id}' — HTTP {resp.status_code}: {resp.text[:200]}"
+                logger.error(msg)
+                raise StemmarestError(msg)
                 
             result = resp.json()
             logger.info(f"Successfully uploaded section '{section_name}', Neo4j node ID: {result}")

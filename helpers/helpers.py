@@ -3,6 +3,8 @@ import os
 from typing import AsyncGenerator
 from httpx import AsyncClient, RequestError, HTTPStatusError
 
+from core.exceptions import DtsError
+
 from core.config import Settings
 
 async def ServerId(url: str, logger: Logger, client: AsyncClient) -> str:
@@ -31,8 +33,10 @@ async def get_xml_from_dts_url(url: str, http_client: AsyncClient, logger: Logge
         response.raise_for_status()
         return response.text
     except HTTPStatusError as e:
-        logger.error(f"HTTP error fetching XML from {url}: {e.response.status_code}")
-        raise
+        msg = f"DTS server returned HTTP {e.response.status_code} for {url}"
+        logger.error(msg)
+        raise DtsError(msg) from e
     except RequestError as e:
-        logger.error(f"Request error fetching XML from {url}: {e}")
-        raise
+        msg = f"DTS server unreachable at {url}: {e}"
+        logger.error(msg)
+        raise DtsError(msg) from e
