@@ -408,22 +408,31 @@ def test_load_tag_dictionary_valid_file(tmp_path):
     assert result == tag_data
 
 def test_load_tag_dictionary_file_not_found():
-    """load_tag_dictionary() raises FileNotFoundError on a missing file."""
+    """Settings construction raises ValidationError when tag_config points to a missing file.
+    
+    Since the model_validator now runs load_tag_dictionary() at construction time,
+    the underlying ValueError is wrapped in a pydantic ValidationError.
+    Note: FileNotFoundError was changed to ValueError so Pydantic can wrap it.
+    """
     from core.config import Settings
+    from pydantic import ValidationError
     import pytest
 
-    s = Settings(tag_config="/nonexistent/path/tags.json")
-    with pytest.raises(FileNotFoundError, match="Tag config file not found"):
-        s.load_tag_dictionary()
+    with pytest.raises(ValidationError, match="Tag config file not found"):
+        Settings(tag_config="/nonexistent/path/tags.json")
 
 def test_load_tag_dictionary_invalid_json(tmp_path):
-    """load_tag_dictionary() raises ValueError on malformed JSON."""
+    """Settings construction raises ValidationError when tag_config contains malformed JSON.
+
+    Since the model_validator now runs load_tag_dictionary() at construction time,
+    the underlying ValueError is wrapped in a pydantic ValidationError.
+    """
     from core.config import Settings
+    from pydantic import ValidationError
     import pytest
 
     bad_file = tmp_path / "bad.json"
     bad_file.write_text("{not valid json", encoding="utf-8")
 
-    s = Settings(tag_config=str(bad_file))
-    with pytest.raises(ValueError, match="invalid JSON"):
-        s.load_tag_dictionary()
+    with pytest.raises(ValidationError, match="invalid JSON"):
+        Settings(tag_config=str(bad_file))
