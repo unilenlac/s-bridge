@@ -1,5 +1,6 @@
 import logging
 from httpx import AsyncClient, HTTPStatusError, RequestError
+from json import JSONDecodeError
 
 from core.exceptions import StemmarestError
 
@@ -10,24 +11,28 @@ class StemmarestClient:
         self.base_url = base_url.rstrip("/")
         self.http_client = http_client
 
-    async def get_or_create_tradition(self, name: str, language: str = "grc", direction: str = "LR", is_public: bool = False) -> str:
-        """
-        Looks up a tradition by name. If it exists, returns its ID.
-        Otherwise, creates a new one with the given default metadata.
-        """
-        
+    async def _make_request(self, method: str, endpoint: str, **kwargs) -> dict | str:
+        """Helper to handle HTTP requests, error parsing, and JSON decoding."""
+        url = f"{self.base_url}{endpoint}"
         try:
-            resp = await self.http_client.get(f"{self.base_url}/traditions")
+            resp = await self.http_client.request(method, url, **kwargs)
             resp.raise_for_status()
+            return resp.json()
         except HTTPStatusError as e:
-            msg = f"Stemmarest: failed to list traditions — HTTP {e.response.status_code}: {e.response.text[:200]}"
+            msg = f"Stemmarest HTTP error {e.response.status_code} at {endpoint}"
             logger.error(msg)
             raise StemmarestError(msg) from e
         except RequestError as e:
-            msg = f"Stemmarest server unreachable at {self.base_url}/traditions: {e}"
+            msg = f"Stemmarest server unreachable at {endpoint}: {e}"
             logger.error(msg)
             raise StemmarestError(msg) from e
-        traditions = resp.json()
+        except JSONDecodeError as e:
+            msg = f"Stemmarest returned invalid JSON at {endpoint}: {e}"
+            logger.error(msg)
+            raise StemmarestError(msg) from e
+
+    async def get_or_create_tradition(self, name: str, language: str = "grc", direction: str = "LR", is_public: bool = False) -> str:
+        traditions = await self._make_request("GET", "/traditions")
         
         for trad in traditions:
             if trad.get("name") == name:
@@ -40,28 +45,16 @@ class StemmarestClient:
             "language": language,
             "direction": direction,
             "public": str(is_public).lower(),
-            "userId": "user",  # Required by stemmarest
+            "userId": "user",
             "filetype": "graphml"
         }
-        empty_graphml = b'''<?xml version="1.0" encoding="UTF-8"?><graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd"><graph id="G" edgedefault="directed"></graph></graphml>'''
+        empty_graphml = b'''<?xml version="1.0" encoding="UTF-8"?><graphml xmlns="[http://graphml.graphdrawing.org/xmlns](http://graphml.graphdrawing.org/xmlns)" xmlns:xsi="http://www.w3.```org/2001/XMLSchema-instance" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd"><graph id="G" edgedefault="directed"></graph></graphml>'''
         
         files = {k: (None, str(v)) for k, v in payload.items()}
         files["file"] = ("empty.xml", empty_graphml, "application/xml")
 
-        try:
-            resp = await self.http_client.post(f"{self.base_url}/tradition", data={"name":name}, files=files, auth=("user", "userpass"))
-            resp.raise_for_status()
-        except HTTPStatusError as e:
-            msg = f"Stemmarest: failed to create tradition '{name}' — HTTP {e.response.status_code}: {e.response.text[:200]}"
-            logger.error(msg)
-            raise StemmarestError(msg) from e
-        except RequestError as e:
-            msg = f"Stemmarest server unreachable at {self.base_url}/tradition: {e}"
-            logger.error(msg)
-            raise StemmarestError(msg) from e
+        trad_dict = await self._make_request("POST", "/tradition", data={"name": name}, files=files, auth=("user", "userpass"))
             
-        trad_dict = resp.json()
-        # If it returns the ID directly as string, or `{ "id": "..." }` or `{ "tradId": "..." }`
         if isinstance(trad_dict, str):
             trad_id = trad_dict
         else:
@@ -70,38 +63,25 @@ class StemmarestClient:
         logger.info(f"Successfully created Stemmarest tradition '{name}' with ID: {trad_id}")
         return trad_id
 
-    async def upload_section(self, trad_id: str, section_name: str, file_path: str, filetype: str = "collatex", logger: logging.Logger = None) -> dict:
-        """
-        Uploads a collatex JSON file as a new section to an existing tradition.
-        """
+    async def upload_section(self, trad_id: str, section_name: str, file_path: str, filetype: str = "collatex") -> dict:
         logger.info(f"Uploading section '{section_name}' to tradition '{trad_id}' from {file_path}")
         
-        with open(file_path, "rb") as f:
-            files = {
-                "file": (file_path.split("/")[-1], f, "application/json")
-            }
-            data = {
-                "name": section_name,
-                "filetype": filetype
-            }
-            
-            try:
-                resp = await self.http_client.post(
-                    f"{self.base_url}/tradition/{trad_id}/section",
-                    data=data,
-                    files=files,
-                    auth=("user", "userpass")
-                )
-                resp.raise_for_status()
-            except HTTPStatusError as e:
-                msg = f"Stemmarest: failed to upload section '{section_name}' to tradition '{trad_id}' — HTTP {e.response.status_code}: {e.response.text[:200]}"
-                logger.error(msg)
-                raise StemmarestError(msg) from e
-            except RequestError as e:
-                msg = f"Stemmarest server unreachable at {self.base_url}/tradition/{trad_id}/section: {e}"
-                logger.error(msg)
-                raise StemmarestError(msg) from e
+        try:
+            with open(file_path, "rb") as f:
+                files = {
+                    "file": (file_path.split("/")[-1], f, "application/json")
+                }
+                data = {
+                    "name": section_name,
+                    "filetype": filetype
+                }
                 
-            result = resp.json()
-            logger.info(f"Successfully uploaded section '{section_name}', Neo4j node ID: {result}")
-            return result
+                result = await self._make_request("POST", f"/tradition/{trad_id}/section", data=data, files=files, auth=("user", "userpass"))
+                
+                logger.info(f"Successfully uploaded section '{section_name}', Neo4j node ID: {result}")
+                return result
+
+        except OSError as e:
+            msg = f"Failed to read file {file_path} for upload: {e}"
+            logger.error(msg)
+            raise StemmarestError(msg) from e

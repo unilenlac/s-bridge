@@ -101,7 +101,6 @@ async def run_collate_job(
                         section_name=section_name,
                         file_path=file_path,
                         filetype="cxjson",
-                        logger=logger
                     )
 
                 collection_dir = os.path.join(settings_cfg.collation_dir, local_job_dir_name)
