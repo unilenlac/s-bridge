@@ -28,21 +28,21 @@ class WitnessService:
         Placeholder for any preprocessing steps needed before collation.
         For example, this could handle caching, normalization, or other transformations.
         """
-        try:
-            server_identity = await ServerId(url, logger, http_client)
-        except Exception as e:
-            logger.warning(f"Could not determine server identity for {url}: {e}")
-            server_identity = "unknown"
-        try:
-            preparator = self.preparators.get(server_identity.split()[0].lower())
-            if preparator:
-                logger.info(f"Using preparator '{preparator.__name__}' for server '{server_identity}'")
+        server_identity = await ServerId(url, logger, http_client)
+        preparator = self.preparators.get(server_identity.split()[0].lower())
+        
+        if preparator:
+            logger.info(f"Using preparator '{preparator.__name__}' for server '{server_identity}'")
+            try:
                 return await preparator.run(url, ref, job_id, http_client, settings)
-            else:
-                logger.info(f"No specific preparator found for server '{server_identity}'. Using URL as-is.")
-                return None
-        except Exception as e:
-            raise DtsError(f"Preprocessing failed for '{url}': {e}") from e
+            except Exception as e:
+                if isinstance(e, DtsError):
+                    raise
+                raise DtsError(f"Preprocessing failed for '{url}': {e}") from e
+        else:
+            msg = f"No specific preparator found for server '{server_identity}'."
+            logger.error(msg)
+            raise DtsError(msg)
 
     async def _process_single_witness(
         self,

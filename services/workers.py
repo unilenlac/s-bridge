@@ -9,6 +9,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.asyncio import AsyncSession
 from models.schema import Job, JobStatus, Tradition
 from sqlalchemy.orm.attributes import flag_modified
+from core.exceptions import DtsError, CollatexError, StemmarestError
 
 from httpx import AsyncClient
 
@@ -49,7 +50,7 @@ async def run_collate_job(
             logger.info(f"Starting collation job {job_id} for collection '{collection_url}' with output format '{output_format}'")
             res, paths, collection_name, resources = await witness_service.preprocess_sections(collection_url, job.ref, str(job.id), http_client, settings_cfg)
             if not res:
-                raise Exception("Preprocessing failed, cannot proceed with collation.")
+                raise DtsError("Preprocessing failed, cannot proceed with collation.")
                 
             local_job_dir_name = f"{collection_name}_{job.id}"
 
@@ -124,6 +125,16 @@ async def run_collate_job(
         except Exception as e:
             logger.error(f"Job {job_id} failed: {e}", exc_info=True)
             job.status = JobStatus.FAILED.value
-            job.error_message = str(e)[:500]
+            
+            if isinstance(e, DtsError):
+                error_prefix = "DTS Error"
+            elif isinstance(e, CollatexError):
+                error_prefix = "CollateX Error"
+            elif isinstance(e, StemmarestError):
+                error_prefix = "Stemmarest Error"
+            else:
+                error_prefix = "Internal Error"
+                
+            job.error_message = f"{error_prefix}: {str(e)}"[:500]
             session.add(job)
             await session.commit()

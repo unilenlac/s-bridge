@@ -9,17 +9,13 @@ from core.config import Settings
 
 async def ServerId(url: str, logger: Logger, client: AsyncClient) -> str:
     # return server identity based on the URL and the user-agent value
-    http_client_instance = client
     try:
-        response = await http_client_instance.get(url, timeout=5.0)
-        response.raise_for_status()
+        response = await client.get(url, timeout=5.0)
         return response.headers.get("User-Agent", "dts (1.0)")
-    except HTTPStatusError as e:
-        logger.warning(f"HTTP error determining server identity for {url}: {e.response.status_code}")
-        return "Unknown Server"
     except RequestError as e:
-        logger.warning(f"Request error determining server identity for {url}: {e}")
-        return "Unknown Server"
+        msg = f"Request error determining server identity for {url}: {e}"
+        logger.warning(msg)
+        raise DtsError(msg) from e
 
 def get_section_filepath(settings: Settings, collection_name: str, ref_id: str, ext: str = "json") -> str:
         """Standardizes the path for a prepared section file."""
