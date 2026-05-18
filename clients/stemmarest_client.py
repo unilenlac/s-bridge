@@ -16,9 +16,17 @@ class StemmarestClient:
         Otherwise, creates a new one with the given default metadata.
         """
         
-        resp = await self.http_client.get(f"{self.base_url}/traditions")
-        if not resp.is_success:
-            raise StemmarestError(f"Stemmarest: failed to list traditions — HTTP {resp.status_code}: {resp.text[:200]}")
+        try:
+            resp = await self.http_client.get(f"{self.base_url}/traditions")
+            resp.raise_for_status()
+        except HTTPStatusError as e:
+            msg = f"Stemmarest: failed to list traditions — HTTP {e.response.status_code}: {e.response.text[:200]}"
+            logger.error(msg)
+            raise StemmarestError(msg) from e
+        except RequestError as e:
+            msg = f"Stemmarest server unreachable at {self.base_url}/traditions: {e}"
+            logger.error(msg)
+            raise StemmarestError(msg) from e
         traditions = resp.json()
         
         for trad in traditions:
@@ -40,12 +48,17 @@ class StemmarestClient:
         files = {k: (None, str(v)) for k, v in payload.items()}
         files["file"] = ("empty.xml", empty_graphml, "application/xml")
 
-        resp = await self.http_client.post(f"{self.base_url}/tradition", data={"name":name}, files=files, auth=("user", "userpass"))
-        
-        if not resp.is_success:
-            msg = f"Stemmarest: failed to create tradition '{name}' — HTTP {resp.status_code}: {resp.text[:200]}"
+        try:
+            resp = await self.http_client.post(f"{self.base_url}/tradition", data={"name":name}, files=files, auth=("user", "userpass"))
+            resp.raise_for_status()
+        except HTTPStatusError as e:
+            msg = f"Stemmarest: failed to create tradition '{name}' — HTTP {e.response.status_code}: {e.response.text[:200]}"
             logger.error(msg)
-            raise StemmarestError(msg)
+            raise StemmarestError(msg) from e
+        except RequestError as e:
+            msg = f"Stemmarest server unreachable at {self.base_url}/tradition: {e}"
+            logger.error(msg)
+            raise StemmarestError(msg) from e
             
         trad_dict = resp.json()
         # If it returns the ID directly as string, or `{ "id": "..." }` or `{ "tradId": "..." }`
@@ -72,17 +85,22 @@ class StemmarestClient:
                 "filetype": filetype
             }
             
-            resp = await self.http_client.post(
-                f"{self.base_url}/tradition/{trad_id}/section",
-                data=data,
-                files=files,
-                auth=("user", "userpass")
-            )
-            
-            if not resp.is_success:
-                msg = f"Stemmarest: failed to upload section '{section_name}' to tradition '{trad_id}' — HTTP {resp.status_code}: {resp.text[:200]}"
+            try:
+                resp = await self.http_client.post(
+                    f"{self.base_url}/tradition/{trad_id}/section",
+                    data=data,
+                    files=files,
+                    auth=("user", "userpass")
+                )
+                resp.raise_for_status()
+            except HTTPStatusError as e:
+                msg = f"Stemmarest: failed to upload section '{section_name}' to tradition '{trad_id}' — HTTP {e.response.status_code}: {e.response.text[:200]}"
                 logger.error(msg)
-                raise StemmarestError(msg)
+                raise StemmarestError(msg) from e
+            except RequestError as e:
+                msg = f"Stemmarest server unreachable at {self.base_url}/tradition/{trad_id}/section: {e}"
+                logger.error(msg)
+                raise StemmarestError(msg) from e
                 
             result = resp.json()
             logger.info(f"Successfully uploaded section '{section_name}', Neo4j node ID: {result}")
