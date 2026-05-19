@@ -1,8 +1,11 @@
+import os
+import shutil
 import uuid
 import logging
 
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from urllib.parse import urlparse
 
@@ -48,6 +51,11 @@ async def convert(req: ConvertRequest,
 class CollatexWitnessRequest(BaseModel):
     collection_url: str
     ref: Optional[str] = None
+
+
+class CollatexWitnessFileRequest(BaseModel):
+    collection_url: str
+    ref: str  # Required for this route
 
 
 # ---------------------------------------------------------------------------
@@ -107,6 +115,86 @@ async def process_and_collate_resources(*,
         
     except Exception as e:
         logger.error(f"Error starting collate job: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/dts/collate-to-file", response_class=FileResponse,
+    description=(
+        "Synchronous Collation Pipeline for a single section. Fetches XML resources from the DTS service for a specific reference, "
+        "processes them through a CLTK/Stanza NLP engine to convert text into tokens, "
+        "and aligns them using the CollateX service. The result is returned as a downloadable file. "
+        "Example http://ftsr-dev.unil.ch:8000/api/dts/v1/collection?id=s-bridge"
+    ))
+async def collate_to_file(*,
+    req: CollatexWitnessFileRequest,
+    background_tasks: BackgroundTasks,
+    output_format: str = Query("application/json", description="Supported output format (application/json, application/tei+xml, application/graphml+xml, text/plain, image/svg+xml)"),
+    options: ProcessingOptions = Depends(get_processing_options),
+    converter: Converter = Depends(converter_dep),
+    http_client: http_client
+):
+    try:
+        logger.info(f"Received synchronous file collation request for collection URL: {req.collection_url} with ref: {req.ref}")
+        
+        witness_service = WitnessService()
+        collatex_client = CollatexClient(base_url=settings.collatex_api_base_url, http_client=http_client)
+        
+        # We don't save to DB, but we need a unique ID for the directory paths
+        temp_job_id = str(uuid.uuid4())
+        
+        # 1. Preprocess
+        res, paths, collection_name, resources = await witness_service.preprocess_sections(
+            req.collection_url, req.ref, temp_job_id, http_client, settings
+        )
+        
+        if not res or not paths:
+            raise HTTPException(status_code=400, detail="Failed to preprocess the specified reference. It might not exist in the collection.")
+            
+        path = paths[0]
+        
+        # 2. Analyse
+        await witness_service.analyse_section(converter, options, http_client, path)
+        ready_data = witness_service.load_prepared_section(path)
+        
+        # 3. Collate
+        result = await collatex_client.collate(
+            payload=ready_data.model_dump(by_alias=True, exclude_none=True),
+            output_format=output_format
+        )
+        
+        local_job_dir_name = f"{collection_name}_{temp_job_id}"
+        
+        # 4. Save result
+        saved_path = witness_service.save_collation_result(
+            collection_name=local_job_dir_name,
+            ref_id=ready_data.ref_id,
+            result=result,
+            output_format=output_format,
+            settings=settings
+        )
+        
+        # 5. Cleanup task
+        def cleanup_temp_dirs():
+            try:
+                post_collation_dir = os.path.join(settings.collation_dir, local_job_dir_name)
+                pre_collation_dir = os.path.join(settings.output_dir, f"{collection_name}_{temp_job_id}")
+                for directory in [post_collation_dir, pre_collation_dir]:
+                    if os.path.exists(directory):
+                        shutil.rmtree(directory)
+                        logger.info(f"Cleanup: Deleted temp directory at {directory}")
+            except Exception as e:
+                logger.warning(f"Error cleaning up temp directories: {e}")
+                
+        background_tasks.add_task(cleanup_temp_dirs)
+        
+        return FileResponse(
+            path=saved_path, 
+            media_type="application/octet-stream", 
+            filename=os.path.basename(saved_path)
+        )
+        
+    except Exception as e:
+        logger.error(f"Error during synchronous collation to file: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 
