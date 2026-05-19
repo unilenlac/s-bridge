@@ -117,6 +117,13 @@ async def get_pending_jobs(session: AsyncSession = Depends(get_session)):
     return result.scalars().all()
 
 
+@router.get("/dts/jobs/failed", description="Fetch the last 5 failed jobs in reverse chronological order.")
+async def get_failed_jobs(session: AsyncSession = Depends(get_session)):
+    stmt = select(Job).where(Job.status == JobStatus.FAILED).order_by(Job.created_at.desc()).limit(5)
+    result = await session.execute(stmt)
+    return result.scalars().all()
+
+
 @router.get("/dts/jobs/{job_id}", description="Fetch the status of a specific job.")
 async def get_job_status(job_id: uuid.UUID, session: AsyncSession = Depends(get_session)):
     job = await session.get(Job, job_id)
