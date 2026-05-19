@@ -128,7 +128,7 @@ async def process_and_collate_resources(*,
 async def collate_to_file(*,
     req: CollatexWitnessFileRequest,
     background_tasks: BackgroundTasks,
-    output_format: str = Query("application/json", description="Supported output format (application/json, application/tei+xml, application/graphml+xml, text/plain, image/svg+xml)"),
+    output_format: str = Query("text/plain", description="Supported output format (application/json, application/tei+xml, application/graphml+xml, text/plain, image/svg+xml)"),
     options: ProcessingOptions = Depends(get_processing_options),
     converter: Converter = Depends(converter_dep),
     http_client: http_client
