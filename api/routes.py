@@ -80,7 +80,7 @@ async def process_and_collate_resources(*,
         stemmarest_client = StemmarestClient(base_url=settings.stemmarest_api_base_url, http_client=http_client)
 
         # Create Job
-        job = Job(collection_url=req.collection_url, resources=["witnesses"], ref=req.ref)
+        job = Job(collection_url=req.collection_url, resources=[], ref=req.ref)
         session.add(job)
         await session.commit()
         await session.refresh(job)

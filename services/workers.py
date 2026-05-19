@@ -51,6 +51,11 @@ async def run_collate_job(
             res, paths, collection_name, resources = await witness_service.preprocess_sections(collection_url, job.ref, str(job.id), http_client, settings_cfg)
             if not res:
                 raise DtsError("Preprocessing failed, cannot proceed with collation.")
+            
+            job.resources = resources
+            flag_modified(job, "resources")
+            session.add(job)
+            await session.commit()
                 
             local_job_dir_name = f"{collection_name}_{job.id}"
 
