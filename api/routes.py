@@ -50,7 +50,7 @@ async def convert(req: ConvertRequest,
 
 class CollatexWitnessRequest(BaseModel):
     collection_url: str
-    ref: Optional[str] = None
+    ref: Optional[str] = ""
 
 
 class CollatexWitnessFileRequest(BaseModel):
