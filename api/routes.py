@@ -199,7 +199,7 @@ async def collate_to_file(*,
 
 @router.get("/dts/jobs", description="Fetch all jobs sorted in reverse chronological order with pagination.")
 async def get_all_jobs(
-    limit: int = Query(default=10, ge=1, le=100, description="Maximum number of jobs to return"),
+    limit: int = Query(default=20, ge=1, le=100, description="Maximum number of jobs to return"),
     offset: int = Query(default=0, ge=0, description="Number of jobs to skip"),
     session: AsyncSession = Depends(get_session)
 ):
