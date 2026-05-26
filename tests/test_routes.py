@@ -98,3 +98,29 @@ def test_collate_returns_job_id(monkeypatch):
     assert "job_id" in data
     assert data["status"] == JobStatus.PENDING.value
 
+
+def test_get_all_jobs():
+    from core.database import get_session
+    mock_session = MagicMock()
+    mock_session.execute = AsyncMock()
+    
+    mock_job = Job(id=uuid.uuid4(), collection_url="http://testdts.com/col")
+    
+    mock_result = MagicMock()
+    mock_result.scalars.return_value.all.return_value = [mock_job]
+    mock_session.execute.return_value = mock_result
+    
+    async def override_session():
+        yield mock_session
+        
+    app.dependency_overrides[get_session] = override_session
+    
+    with TestClient(app) as client:
+        response = client.get("/dts/jobs?limit=10&offset=0")
+        
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 1
+    assert data[0]["collection_url"] == "http://testdts.com/col"
+
+

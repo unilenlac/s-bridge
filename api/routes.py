@@ -197,6 +197,16 @@ async def collate_to_file(*,
         logger.error(f"Error during synchronous collation to file: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.get("/dts/jobs", description="Fetch all jobs sorted in reverse chronological order with pagination.")
+async def get_all_jobs(
+    limit: int = Query(default=10, ge=1, le=100, description="Maximum number of jobs to return"),
+    offset: int = Query(default=0, ge=0, description="Number of jobs to skip"),
+    session: AsyncSession = Depends(get_session)
+):
+    stmt = select(Job).order_by(Job.created_at.desc()).offset(offset).limit(limit)
+    result = await session.execute(stmt)
+    return result.scalars().all()
+
 
 @router.get("/dts/jobs/pending", description="Fetch all pending and processing jobs.")
 async def get_pending_jobs(session: AsyncSession = Depends(get_session)):
