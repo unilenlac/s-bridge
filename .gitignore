@@ -1,11 +1,11 @@
-# todo : - add .vscode/ to gitignore, db, .env, uv.lock, launch.json (vs-code) etc
+# todo : - add .vscode/ to gitignore, db, uv.lock, launch.json (vs-code) etc
 .vscode/
 db/
-.env
 # todo: remove uv.lock from remote repo
 uv.lock
 launch.json
 data/
+.uv
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
