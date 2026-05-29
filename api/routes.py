@@ -236,10 +236,6 @@ async def cancel_job(
     session: AsyncSession = Depends(get_session),
     http_client: http_client = None
 ):
-    import os
-    import shutil
-    from sqlmodel import select
-    
     job = await session.get(Job, job_id)
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
