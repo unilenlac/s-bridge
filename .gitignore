@@ -1,8 +1,7 @@
 # todo : - add .vscode/ to gitignore, db, uv.lock, launch.json (vs-code) etc
 .vscode/
 db/
-# todo: remove uv.lock from remote repo
-uv.lock
+
 launch.json
 data/
 .uv
