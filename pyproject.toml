@@ -22,7 +22,17 @@ dependencies = [
     "stanza>=1.11.0",
     "uritemplate>=4.2.0",
     "uvicorn>=0.41.0",
+    "torch",
 ]
 
 [tool.pytest.ini_options]
 pythonpath = "."
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
+

@@ -6,7 +6,6 @@ import stanza
 import uvicorn
 import httpx
 from contextlib import asynccontextmanager 
-import subprocess
 
 from core.logging import setup_logging
 
@@ -20,15 +19,6 @@ settings = Settings()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger = setup_logging(settings)
-
-    logger.info("Running database migrations...")
-    try:
-        subprocess.run(["uv", "run", "alembic", "upgrade", "head"], check=True, capture_output=True, text=True)
-        logger.info("Database check/migration completed successfully.")
-    except subprocess.CalledProcessError as e:
-        logger.error(f"Database migration failed: {e.stderr}")
-    except Exception as e:
-        logger.error(f"Database migration generated an unexpected error: {e}")
 
     logger.info("Initializing NLP engine...")
     

@@ -177,7 +177,7 @@ async def collate_to_file(*,
         def cleanup_temp_dirs():
             try:
                 post_collation_dir = os.path.join(settings.collation_dir, local_job_dir_name)
-                pre_collation_dir = os.path.join(settings.output_dir, f"{collection_name}_{temp_job_id}")
+                pre_collation_dir = os.path.join(settings.nlp_analysis_dir, f"{collection_name}_{temp_job_id}")
                 for directory in [post_collation_dir, pre_collation_dir]:
                     if os.path.exists(directory):
                         shutil.rmtree(directory)
@@ -257,7 +257,7 @@ async def cancel_job(
                 collection_id_val = "unknown_collection"
                 
             post_collation_dir = os.path.join(settings.collation_dir, f"{collection_name}_{job.id}")
-            pre_collation_dir = os.path.join(settings.output_dir, f"{collection_id_val}_{job.id}")
+            pre_collation_dir = os.path.join(settings.nlp_analysis_dir, f"{collection_id_val}_{job.id}")
             
             for directory in [post_collation_dir, pre_collation_dir]:
                 if os.path.exists(directory):

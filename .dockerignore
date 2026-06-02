@@ -1,0 +1,14 @@
+.git/
+.venv/
+.pytest_cache/
+.ruff_cache/
+.uv/
+data/
+tests/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+.python-version
+*.log

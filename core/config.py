@@ -42,7 +42,7 @@ class Settings(BaseSettings):
     tag_config: Optional[str] = None  # Path to a JSON tag dictionary file
     collatex_api_base_url: str = "http://ftsr-dev.unil.ch:7369"
     stemmarest_api_base_url: str = "http://ftsr-dev.unil.ch:7070/stemmarest/api"
-    output_dir: Path = Path("/tmp/s-bridge/pre_collation")
+    nlp_analysis_dir: Path = Path("/tmp/s-bridge/pre_collation")
     collation_dir: Path = Path("/tmp/s-bridge/post_collation")
     environment: EnvironmentEnum = EnvironmentEnum.dev
     log_file: Optional[Path] = Path("/var/log/s-bridge/s-bridge.log")
@@ -56,7 +56,7 @@ class Settings(BaseSettings):
         self.load_tag_dictionary()
         return self
 
-    @field_validator("output_dir", "collation_dir")
+    @field_validator("nlp_analysis_dir", "collation_dir")
     @classmethod
     def ensure_posix_path(cls, v: Path) -> Path:
         if not v.is_absolute():
