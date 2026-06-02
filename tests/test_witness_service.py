@@ -48,7 +48,7 @@ async def test_analyse_section():
     with tempfile.TemporaryDirectory() as temp_dir:
         # Patch the settings output dir explicitly to use temp directory
         with patch("services.witness_service.Settings") as mock_settings:
-            mock_settings.return_value.output_dir = temp_dir
+            mock_settings.return_value.nlp_analysis_dir = temp_dir
             
             # Setup dummy responses for process_witnesses
             # Side effect allowing us to mock responses dynamically based on input resources

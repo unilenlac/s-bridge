@@ -44,6 +44,7 @@ ENV COLLATION_DIR=/tmp/s-bridge/post_collation
 ENV DATA_DIR=/app/data
 
 #USER appuser
+#Not used cause one can't run the entrypoint.sh after. 
 
 EXPOSE 8500
 

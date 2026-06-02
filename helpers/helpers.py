@@ -19,7 +19,7 @@ async def ServerId(url: str, logger: Logger, client: AsyncClient) -> str:
 
 def get_section_filepath(settings: Settings, collection_name: str, ref_id: str, ext: str = "json") -> str:
         """Standardizes the path for a prepared section file."""
-        return os.path.join(settings.output_dir, collection_name, f"{ref_id}.{ext}")
+        return os.path.join(settings.nlp_analysis_dir, collection_name, f"{ref_id}.{ext}")
 
 async def get_xml_from_dts_url(url: str, http_client: AsyncClient, logger: Logger) -> AsyncGenerator[str, None]:
     """Fetches XML content from a given URL using the provided HTTP client."""
