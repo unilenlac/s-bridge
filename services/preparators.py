@@ -14,30 +14,55 @@ from core.config import Settings
 
 logger = logging.getLogger("s-bridge")
 
+
 class DtsPreparator:
-    
     @staticmethod
-    async def run(url: str, target_ref: Optional[str], job_id: str, http_client: AsyncClient, settings: Settings) -> tuple[bool, list[str], str, list[str]]:
+    async def run(
+        url: str,
+        target_ref: Optional[str],
+        job_id: str,
+        http_client: AsyncClient,
+        settings: Settings,
+    ) -> tuple[bool, list[str], str, list[str]]:
         """
         Prepares the sections for collation by fetching the necessary data from a DTS API.
         """
         document_urls = []
         refs_list = []
-        collation_model = {
-            "witnesses": []
-        }
+        collation_model = {"witnesses": []}
         paths = []
-        
+
         res = await http_client.get(url, follow_redirects=True)
         if res.status_code != 200:
-            raise DtsError(f"DTS collection endpoint returned HTTP {res.status_code} for {url}")
+            raise DtsError(
+                f"DTS collection endpoint returned HTTP {res.status_code} for {url}"
+            )
         col = res.json()
-        collection_title = col.get("@id") if col.get("title") == "" else col.get("title")
-        navigation_urls = [URITemplate(item.get('navigation')) for item in col.get("member", []) if item.get("@type").lower() == "resource"]
-        resources = [item.get('@id') for item in col.get("member", []) if item.get("@type").lower() == "resource"]
+        collection_title = (
+            col.get("@id") if col.get("title") == "" else col.get("title")
+        )
+        members = col.get("member") or []
+
+        # Check if members have collection type
+        for item in members:
+            item_type = item.get("@type")
+            if isinstance(item_type, str) and item_type.lower() == "collection":
+                raise DtsError("DTS Error: resources are collection type")
+
+        navigation_urls = [
+            URITemplate(item.get("navigation"))
+            for item in members
+            if isinstance(item.get("@type"), str)
+            and item.get("@type").lower() == "resource"
+        ]
+        resources = [
+            item.get("@id")
+            for item in members
+            if isinstance(item.get("@type"), str)
+            and item.get("@type").lower() == "resource"
+        ]
 
         for nav in navigation_urls:
-        
             page = 1
 
             while True:
@@ -50,29 +75,33 @@ class DtsPreparator:
                     res = await http_client.get(expanded_nav, follow_redirects=True)
                     res.raise_for_status()
                 except HTTPStatusError as e:
-                    raise DtsError(f"DTS navigation request failed — HTTP {e.response.status_code} for {expanded_nav}") from e
+                    raise DtsError(
+                        f"DTS navigation request failed — HTTP {e.response.status_code} for {expanded_nav}"
+                    ) from e
                 data = res.json()
-                document_url = URITemplate(data.get("resource").get('document'))
-                
+                document_url = URITemplate(data.get("resource").get("document"))
+
                 for ref in data.get("member", []):
                     refs_list.append(ref.get("identifier"))
                     document_urls.append(document_url.expand(ref=ref.get("identifier")))
-                
+
                 view = data.get("view", {})
                 next_url = view.get("next", "")
                 last_url = view.get("last", "")
                 if not next_url or next_url == last_url:
                     break
                 page += 1
-        
+
         refs_list = list(dict.fromkeys(refs_list))
-        
-        #gives the possibility for a specific section/ref in relation to origin ref parameter
+
+        # gives the possibility for a specific section/ref in relation to origin ref parameter
         if target_ref:
             if target_ref in refs_list:
                 refs_list = [target_ref]
             else:
-                logger.warning(f"Target ref '{target_ref}' not found in collection '{url}'")
+                logger.warning(
+                    f"Target ref '{target_ref}' not found in collection '{url}'"
+                )
                 return False, [], collection_title, resources
 
         for ref in refs_list:
@@ -83,13 +112,18 @@ class DtsPreparator:
                     doc = document_url.pop()
                     params = parse_qs(urlparse(doc).query)
                     witness = {
-                        "id": params.get("resource", [None])[0], 
+                        "id": params.get("resource", [None])[0],
                         "content": doc,
-                        "type": "dts"
+                        "type": "dts",
                     }
                     collation["witnesses"].append(witness)
             collation["ref_id"] = ref
-            filepath = get_section_filepath(settings, collection_name=f"{col.get('@id')}_{job_id}", ref_id=ref, ext="json")
+            filepath = get_section_filepath(
+                settings,
+                collection_name=f"{col.get('@id')}_{job_id}",
+                ref_id=ref,
+                ext="json",
+            )
             os.makedirs(os.path.dirname(filepath), exist_ok=True)
             with open(filepath, "w") as f:
                 json.dump(collation, f)
