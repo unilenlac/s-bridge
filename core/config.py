@@ -34,6 +34,18 @@ class LanguageEnum(str, Enum):
     oldr1238 = "oldr1238"  # Old Russian (Old East Slavic)
 
 
+class TimezoneEnum(str, Enum):
+    zurich = "Europe/Zurich"
+    london = "Europe/London"
+    paris = "Europe/Paris"
+    berlin = "Europe/Berlin"
+    rome = "Europe/Rome"
+    brussels = "Europe/Brussels"
+    vienna = "Europe/Vienna"
+    athens = "Europe/Athens"
+    utc = "UTC"
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
     
@@ -46,7 +58,8 @@ class Settings(BaseSettings):
     collation_dir: Path = Path("/tmp/s-bridge/post_collation")
     environment: EnvironmentEnum = EnvironmentEnum.dev
     log_file: Optional[Path] = Path("/var/log/s-bridge/s-bridge.log")
-    timezone: str = "Europe/Zurich"
+    timezone: TimezoneEnum | str = TimezoneEnum.zurich
+
 
     @property
     def database_url(self) -> str:
@@ -63,6 +76,21 @@ class Settings(BaseSettings):
         if not v.is_absolute():
             raise ValueError(f"Path '{v}' must be an absolute POSIX path.")
         return v
+
+    @field_validator("timezone")
+    @classmethod
+    def validate_timezone(cls, v: str) -> str:
+        from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+        try:
+            tz_str = v.value if hasattr(v, "value") else str(v)
+            ZoneInfo(tz_str)
+            return tz_str
+        except ZoneInfoNotFoundError:
+            raise ValueError(
+                f"Timezone '{v}' is not a valid IANA timezone name. "
+                "Please use standard values like 'Europe/Zurich', 'UTC', or other valid timezone names."
+            )
+
 
 
     def load_tag_dictionary(self) -> Dict[str, Any]:
