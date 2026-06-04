@@ -43,23 +43,24 @@ class DtsPreparator:
         )
         members = col.get("member") or []
 
-        # Check if members have collection type
-        for item in members:
-            item_type = item.get("@type")
-            if isinstance(item_type, str) and item_type.lower() == "collection":
-                raise DtsError("DTS Error: resources are collection type")
-
-        navigation_urls = [
-            URITemplate(item.get("navigation"))
+        # Select only members of type "resource"
+        resource_members = [
+            item
             for item in members
             if isinstance(item.get("@type"), str)
             and item.get("@type").lower() == "resource"
         ]
+
+        if not resource_members:
+            raise DtsError("DTS Error: not a single resource found")
+
+        navigation_urls = [
+            URITemplate(item.get("navigation"))
+            for item in resource_members
+        ]
         resources = [
             item.get("@id")
-            for item in members
-            if isinstance(item.get("@type"), str)
-            and item.get("@type").lower() == "resource"
+            for item in resource_members
         ]
 
         for nav in navigation_urls:
