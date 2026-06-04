@@ -23,6 +23,13 @@ def setup_logging(settings: "Settings | None" = None) -> logging.Logger:
           redirected to the same file so they don't leak to stdout.
           Falls back to stdout if the log file cannot be opened.
     """
+    if settings is not None:
+        import os
+        import time
+        os.environ["TZ"] = settings.timezone
+        if hasattr(time, "tzset"):
+            time.tzset()
+
     logger = logging.getLogger("s-bridge")
     logger.setLevel(logging.DEBUG)
 

@@ -46,6 +46,7 @@ class Settings(BaseSettings):
     collation_dir: Path = Path("/tmp/s-bridge/post_collation")
     environment: EnvironmentEnum = EnvironmentEnum.dev
     log_file: Optional[Path] = Path("/var/log/s-bridge/s-bridge.log")
+    timezone: str = "Europe/Zurich"
 
     @property
     def database_url(self) -> str:
