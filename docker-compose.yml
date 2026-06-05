@@ -8,6 +8,9 @@ services:
       - "127.0.0.1:8500:8500"
     volumes:
       - ./data:/app/data:Z
+      # Uncomment the lines below to inspect temporary collation files on the host:
+      # - ./tmp/pre_collation:/tmp/s-bridge/pre_collation:Z
+      # - ./tmp/post_collation:/tmp/s-bridge/post_collation:Z
     env_file:
       - .env
     restart: unless-stopped
