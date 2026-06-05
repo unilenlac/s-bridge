@@ -1,24 +1,27 @@
+# Auto-detect container orchestration engine
+COMPOSE := $(shell command -v podman-compose 2> /dev/null || echo "docker compose")
+
 .DEFAULT_GOAL := help
 
 .PHONY: build
-build: ## Build the Docker image via docker compose
-	docker compose build
+build: ## Build the Docker image via compose
+	$(COMPOSE) build
 
 .PHONY: up
-up: ## Start the application stack in Docker Compose (background)
-	docker compose up -d
+up: ## Start the application stack in Compose (background)
+	$(COMPOSE) up -d
 
 .PHONY: down
 down: ## Stop the application stack and remove containers
-	docker compose down
+	$(COMPOSE) down
 
 .PHONY: logs
 logs: ## Follow container logs
-	docker compose logs -f
+	$(COMPOSE) logs -f
 
 .PHONY: shell
 shell: ## Access the bash shell in the running container for debugging
-	docker compose exec web bash
+	$(COMPOSE) exec web bash
 
 .PHONY: clean
 clean: ## Clean up temporary files, cache directories, and virtual environment
