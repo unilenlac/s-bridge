@@ -1,15 +1,16 @@
 import httpx
 import json
 
+
 def main():
     # ==========================================
     # 1. CHOOSE YOUR RESOURCES
     # ==========================================
     resources_to_fetch = [
-            "athous-iviron-450",
-            "athous-iviron-476",
-            "brescia-A-III-3-72",
-            "ebe-1027"
+        "athous-iviron-450",
+        "athous-iviron-476",
+        "brescia-A-III-3-72",
+        "ebe-1027",
     ]
 
     # ==========================================
@@ -41,7 +42,9 @@ def main():
             params = {"output_format": output_format}
 
             print(f"\nCalling: {url}")
-            print("Please wait, NLP processing and collation may take a few seconds...\n")
+            print(
+                "Please wait, NLP processing and collation may take a few seconds...\n"
+            )
 
             response = client.post(url, json=payload, params=params)
             if response.status_code == 200:
@@ -51,17 +54,20 @@ def main():
                 print("Polling for completion...")
 
                 import time
+
                 while True:
                     time.sleep(3)
                     job_resp = client.get(f"{base_url}/dts/jobs/{job_id}")
                     if job_resp.status_code != 200:
-                        print(f"Error polling job status... status code {job_resp.status_code}")
+                        print(
+                            f"Error polling job status... status code {job_resp.status_code}"
+                        )
                         break
-                    
+
                     job_data = job_resp.json()
                     status = job_data.get("status")
                     print(f"Current Status: {status}...")
-                    
+
                     if status in ["COMPLETED", "FAILED", "CANCELLED"]:
                         print(f"\nJob finished with final state: {status}")
                         if status == "FAILED":
@@ -70,30 +76,51 @@ def main():
                             trad_resp = client.get(f"{base_url}/dts/traditions")
                             if trad_resp.status_code == 200:
                                 all_traditions = trad_resp.json()
-                                job_results = [t for t in all_traditions if t.get("job_id") == job_id]
-                                
+                                job_results = [
+                                    t
+                                    for t in all_traditions
+                                    if t.get("job_id") == job_id
+                                ]
+
                                 if job_results:
-                                    print(f"Success! Collation completed for {len(job_results)} sections.")
-                                    collection = job_results[0].get("collection_id", "Unknown")
+                                    print(
+                                        f"Success! Collation completed for {len(job_results)} sections."
+                                    )
+                                    collection = job_results[0].get(
+                                        "collection_id", "Unknown"
+                                    )
                                     print(f"Results stored in '{collection}':")
-                                    
+
                                     results_dict = {}
                                     for t in job_results:
                                         print(f"  [{t['ref']}]: {t['result_path']}")
-                                        results_dict[t['ref']] = t['result_path']
-                                    
+                                        results_dict[t["ref"]] = t["result_path"]
+
                                     summary_data = {
                                         "collection": collection,
                                         "job_id": str(job_id),
                                         "total_sections": len(job_results),
-                                        "results": results_dict
+                                        "results": results_dict,
                                     }
-                                    
-                                    with open("collate_results_summary.json", "w", encoding="utf-8") as f:
-                                        json.dump(summary_data, f, indent=2, ensure_ascii=False)
-                                    print(f"\nSummary written to 'collate_results_summary.json'")
+
+                                    with open(
+                                        "collate_results_summary.json",
+                                        "w",
+                                        encoding="utf-8",
+                                    ) as f:
+                                        json.dump(
+                                            summary_data,
+                                            f,
+                                            indent=2,
+                                            ensure_ascii=False,
+                                        )
+                                    print(
+                                        f"\nSummary written to 'collate_results_summary.json'"
+                                    )
                                 else:
-                                    print("\nJob completed, but no physical results were tracked in the database.")
+                                    print(
+                                        "\nJob completed, but no physical results were tracked in the database."
+                                    )
                         break
             else:
                 _print_error(response)

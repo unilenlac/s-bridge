@@ -24,16 +24,25 @@ class ProcessingOptions(BaseModel):
     normalization: str
     filter_del: bool
 
+
 async def get_processing_options(
-    normalization: str = Query("lemma+pos", description="Token normalization string. Options: lemma+pos, lemma, text"),
-    filter_del: bool = Query(True, description="Filter out tokens that are marked as deleted")
+    normalization: str = Query(
+        "lemma+pos",
+        description="Token normalization string. Options: lemma+pos, lemma, text",
+    ),
+    filter_del: bool = Query(
+        True, description="Filter out tokens that are marked as deleted"
+    ),
 ) -> ProcessingOptions:
     return ProcessingOptions(normalization=normalization, filter_del=filter_del)
 
+
 def converter_dep(
-    request: Request, 
-    format: FormatType = Query("tei", description="Input data format"), 
-    strategy: StrategyType = Query("enriched", description="Parsing complexity strategy"),
+    request: Request,
+    format: FormatType = Query("tei", description="Input data format"),
+    strategy: StrategyType = Query(
+        "enriched", description="Parsing complexity strategy"
+    ),
 ) -> Converter:
     proc = request.app.state.proc
 
@@ -47,12 +56,13 @@ def converter_dep(
                 abbr_file = utils_dir / "abbr_classical_greek.csv"
                 parser = TEIParser(abbr_file=str(abbr_file), custom_tags=_tag_dict)
             case "json":
-                #Not implemented
+                # Not implemented
                 raise NotImplementedError("JSON Support is coming soon! TM")
             case _:
-                #Technically unreachable due to FastAPI validation but good practice
+                # Technically unreachable due to FastAPI validation but good practice
                 raise ValueError(f"Unsupported format: {format}")
         return EnrichedStrategyConverter(proc=proc, parser=parser)
+
 
 class ClientParams(BaseModel):
     # not really necessary. parameters can be passed on the fly at the request level.
@@ -61,7 +71,9 @@ class ClientParams(BaseModel):
     username: Optional[str] = None
     password: Optional[str] = None
 
+
 def http_client(request: Request):
     return request.app.state.http_client
+
 
 http_client = Annotated[AsyncClient, Depends(http_client)]

@@ -26,12 +26,11 @@ engine = create_async_engine(
     future=True,
 )
 
+
 async def get_session() -> AsyncSession:
     """
     FastAPI dependency that provides an SQLAlchemy AsyncSession.
     """
-    async_session = sessionmaker(
-        engine, class_=AsyncSession, expire_on_commit=False
-    )
+    async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
     async with async_session() as session:
         yield session

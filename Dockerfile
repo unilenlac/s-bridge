@@ -22,17 +22,14 @@ FROM python:3.14-slim
 
 WORKDIR /app
 
-# Create system user and application paths cleanly in one layer
-RUN groupadd -g 10001 appgroup && \
-    useradd -u 10001 -g appgroup -m -s /bin/bash appuser && \
-    mkdir -p /app/data /tmp/s-bridge/pre_collation /tmp/s-bridge/post_collation && \
-    chown -R appuser:appgroup /app /tmp/s-bridge
+# Create application directories
+RUN mkdir -p /app/data /tmp/s-bridge/pre_collation /tmp/s-bridge/post_collation
 
-# Copy the built virtual environment with the correct ownership directly
-COPY --from=builder --chown=appuser:appgroup /app/.venv /app/.venv
+# Copy the built virtual environment directly
+COPY --from=builder /app/.venv /app/.venv
 
 # Copy all source files in a single layer (Assumes a configured .dockerignore file)
-COPY --chown=appuser:appgroup . .
+COPY . .
 
 # Place virtual environment executables at the beginning of PATH
 ENV PATH="/app/.venv/bin:$PATH"
@@ -42,9 +39,6 @@ ENV ENVIRONMENT=PROD
 ENV NLP_ANALYSIS_DIR=/tmp/s-bridge/pre_collation
 ENV COLLATION_DIR=/tmp/s-bridge/post_collation
 ENV DATA_DIR=/app/data
-
-#USER appuser
-#Not used cause one can't run the entrypoint.sh after. 
 
 EXPOSE 8500
 

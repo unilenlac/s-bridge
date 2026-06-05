@@ -55,13 +55,9 @@ class DtsPreparator:
             raise DtsError("DTS Error: not a single resource found")
 
         navigation_urls = [
-            URITemplate(item.get("navigation"))
-            for item in resource_members
+            URITemplate(item.get("navigation")) for item in resource_members
         ]
-        resources = [
-            item.get("@id")
-            for item in resource_members
-        ]
+        resources = [item.get("@id") for item in resource_members]
 
         for nav in navigation_urls:
             page = 1

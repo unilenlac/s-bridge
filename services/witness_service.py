@@ -20,19 +20,28 @@ logger = logging.getLogger("s-bridge")
 
 class WitnessService:
     def __init__(self):
-        self.preparators = {'dts': DtsPreparator}
-        self.fetchers = {'dts': get_xml_from_dts_url}
-    
-    async def preprocess_sections(self, url: str, ref: Optional[str], job_id: str, http_client: AsyncClient, settings: Settings) -> tuple[bool, list[str], str, list[str]] | None:
+        self.preparators = {"dts": DtsPreparator}
+        self.fetchers = {"dts": get_xml_from_dts_url}
+
+    async def preprocess_sections(
+        self,
+        url: str,
+        ref: Optional[str],
+        job_id: str,
+        http_client: AsyncClient,
+        settings: Settings,
+    ) -> tuple[bool, list[str], str, list[str]] | None:
         """
         Placeholder for any preprocessing steps needed before collation.
         For example, this could handle caching, normalization, or other transformations.
         """
         server_identity = await ServerId(url, logger, http_client)
         preparator = self.preparators.get(server_identity.split()[0].lower())
-        
+
         if preparator:
-            logger.info(f"Using preparator '{preparator.__name__}' for server '{server_identity}'")
+            logger.info(
+                f"Using preparator '{preparator.__name__}' for server '{server_identity}'"
+            )
             try:
                 return await preparator.run(url, ref, job_id, http_client, settings)
             except Exception as e:
@@ -50,7 +59,7 @@ class WitnessService:
         converter: Converter,
         options: ProcessingOptions,
         ref: Optional[str],
-        http_client: AsyncClient
+        http_client: AsyncClient,
     ) -> Tuple[Optional[CollatexWitness], Optional[str]]:
         """Helper to process a single witness asynchronously.
         Returns (witness, None) on success or (None, error_message) on failure.
@@ -59,12 +68,14 @@ class WitnessService:
         try:
             # 1. Fetch XML sequence asynchronously
             content = resource.get("content", "")
-            
+
             witness_type = resource.get("type", "dts")
             fetcher_func = self.fetchers.get(witness_type)
             if not fetcher_func:
-                raise ValueError(f"No fetcher configured for witness type: '{witness_type}'")
-                
+                raise ValueError(
+                    f"No fetcher configured for witness type: '{witness_type}'"
+                )
+
             xml_data = await fetcher_func(content, http_client, logger)
 
             # 2. Run NLP/TEI conversion in a separate thread (it is heavily CPU-bound)
@@ -72,7 +83,7 @@ class WitnessService:
                 converter.run,
                 xml_data,
                 normalization=options.normalization,
-                filter_del=options.filter_del
+                filter_del=options.filter_del,
             )
 
             # 3. Return the populated witness
@@ -88,7 +99,7 @@ class WitnessService:
         converter: Converter,
         options: ProcessingOptions,
         http_client: AsyncClient,
-        path: Optional[str] = None
+        path: Optional[str] = None,
     ) -> CollatexResponse:
         """
         Fetches the XML for multiple witnesses concurrently, parses them in parallel threads,
@@ -100,7 +111,9 @@ class WitnessService:
 
         # Fire off all witness requests at the exact same time
         tasks = [
-            self._process_single_witness(witness, converter, options, data.get("ref_id"), http_client)
+            self._process_single_witness(
+                witness, converter, options, data.get("ref_id"), http_client
+            )
             for witness in data.get("witnesses", [])
         ]
 
@@ -114,7 +127,9 @@ class WitnessService:
         # If absolutely everything failed, let the client know with full detail
         if not valid_witnesses:
             detail = "; ".join(failure_reasons) or "unknown error"
-            raise DtsError(f"All witnesses failed for ref='{data.get('ref_id')}': {detail}")
+            raise DtsError(
+                f"All witnesses failed for ref='{data.get('ref_id')}': {detail}"
+            )
 
         return CollatexResponse(ref_id=data.get("ref_id"), witnesses=valid_witnesses)
 
@@ -122,18 +137,18 @@ class WitnessService:
         """Loads a prepared Collatex JSON file from disk."""
         if not os.path.exists(filepath):
             raise FileNotFoundError(f"Prepared section file not found: {filepath}")
-        
+
         with open(filepath, "r", encoding="utf-8") as f:
             data = json.load(f)
             return CollatexResponse.model_validate(data)
 
     def save_collation_result(
-        self, 
-        collection_name: str, 
-        ref_id: str, 
-        result: Union[Dict, str], 
+        self,
+        collection_name: str,
+        ref_id: str,
+        result: Union[Dict, str],
         output_format: str,
-        settings: Settings
+        settings: Settings,
     ) -> str:
         """
         Saves a collation result to a file and returns the path.
@@ -150,7 +165,7 @@ class WitnessService:
             "image/svg+xml": ".svg",
         }
         ext = format_map.get(output_format, ".txt")
-        
+
         filename = f"{ref_id}{ext}"
         filepath = os.path.join(target_dir, filename)
 
@@ -169,7 +184,7 @@ class WitnessService:
         converter: Converter,
         options: ProcessingOptions,
         http_client: AsyncClient,
-        path: Optional[str] = None
+        path: Optional[str] = None,
     ) -> str:
         """
         Prepares a specific section and saves it to disk by fully regenerating it.
@@ -178,17 +193,14 @@ class WitnessService:
 
         # this def will open the json file, but it's probably an unecessary def
         logger.info(f"Preparing section for collection '{path}' completely...")
-        
+
         # Fetch and process all resources
         section_data = await self.process_witnesses(
-            converter=converter,
-            options=options,
-            http_client=http_client,
-            path=path
+            converter=converter, options=options, http_client=http_client, path=path
         )
 
         self._dump_to_file(section_data, path)
-        
+
         logger.info(f"Successfully prepared and saved section to: {path}")
         return path
 
@@ -206,4 +218,3 @@ class WitnessService:
                 indent=2,
                 ensure_ascii=False,
             )
-

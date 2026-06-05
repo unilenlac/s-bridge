@@ -17,6 +17,7 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 from sqlmodel import SQLModel
+
 # Import all models here so SQLModel.metadata registers them
 import models.schema
 from core.config import Settings
@@ -58,7 +59,9 @@ def run_migrations_offline() -> None:
 
 
 def do_run_migrations(connection: Connection) -> None:
-    context.configure(connection=connection, target_metadata=target_metadata, render_as_batch=True)
+    context.configure(
+        connection=connection, target_metadata=target_metadata, render_as_batch=True
+    )
 
     with context.begin_transaction():
         context.run_migrations()

@@ -129,7 +129,7 @@ async def test_dts_preparator_mixed_members():
     from core.config import Settings
 
     mock_client = AsyncMock()
-    
+
     # Mocking first call: get collection (returns mixed members)
     mock_collection_response = MagicMock()
     mock_collection_response.status_code = 200
@@ -147,23 +147,17 @@ async def test_dts_preparator_mixed_members():
                 "@id": "sb-ab-res",
                 "@type": "Resource",
                 "navigation": "/api/dts/v1/navigation?id=sb-ab-res{?id,page,nav,down}",
-            }
+            },
         ],
     }
-    
+
     # Mocking navigation call for the resource
     mock_navigation_response = MagicMock()
     mock_navigation_response.status_code = 200
     mock_navigation_response.json.return_value = {
-        "resource": {
-            "document": "/api/dts/v1/document?id=sb-ab-res{&ref}"
-        },
-        "member": [
-            {
-                "identifier": "1"
-            }
-        ],
-        "view": {}
+        "resource": {"document": "/api/dts/v1/document?id=sb-ab-res{&ref}"},
+        "member": [{"identifier": "1"}],
+        "view": {},
     }
 
     async def get_side_effect(url, *args, **kwargs):
@@ -178,7 +172,7 @@ async def test_dts_preparator_mixed_members():
     with tempfile.TemporaryDirectory() as temp_dir:
         settings = Settings()
         settings.nlp_analysis_dir = temp_dir
-        
+
         success, paths, title, resources = await DtsPreparator.run(
             url="http://ftsr-dev.unil.ch:8000/api/dts/v1/collection?id=s-bridge",
             target_ref=None,
@@ -186,7 +180,7 @@ async def test_dts_preparator_mixed_members():
             http_client=mock_client,
             settings=settings,
         )
-        
+
         assert success is True
         assert resources == ["sb-ab-res"]
         assert len(paths) == 1

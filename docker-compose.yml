@@ -1,0 +1,13 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: s-bridge-api
+    ports:
+      - "127.0.0.1:8500:8500"
+    volumes:
+      - ./data:/app/data
+    env_file:
+      - .env
+    restart: unless-stopped

@@ -47,8 +47,10 @@ class TimezoneEnum(str, Enum):
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
-    
+    model_config = SettingsConfigDict(
+        env_file=".env", env_file_encoding="utf-8", extra="ignore"
+    )
+
     pipeline: PipelineEnum = PipelineEnum.classical
     language: LanguageEnum = LanguageEnum.anci1242
     tag_config: Optional[str] = None  # Path to a JSON tag dictionary file
@@ -59,7 +61,6 @@ class Settings(BaseSettings):
     environment: EnvironmentEnum = EnvironmentEnum.dev
     log_file: Optional[Path] = Path("/var/log/s-bridge/s-bridge.log")
     timezone: TimezoneEnum | str = TimezoneEnum.zurich
-
 
     @property
     def database_url(self) -> str:
@@ -81,6 +82,7 @@ class Settings(BaseSettings):
     @classmethod
     def validate_timezone(cls, v: str) -> str:
         from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+
         try:
             tz_str = v.value if hasattr(v, "value") else str(v)
             ZoneInfo(tz_str)
@@ -90,8 +92,6 @@ class Settings(BaseSettings):
                 f"Timezone '{v}' is not a valid IANA timezone name. "
                 "Please use standard values like 'Europe/Zurich', 'UTC', or other valid timezone names."
             )
-
-
 
     def load_tag_dictionary(self) -> Dict[str, Any]:
         """Load and validate a tag dictionary from the JSON file at ``tag_config``.
@@ -110,9 +110,7 @@ class Settings(BaseSettings):
 
         path = Path(path_str)
         if not path.is_file():
-            raise ValueError(
-                f"Tag config file not found: '{path_str}'."
-            )
+            raise ValueError(f"Tag config file not found: '{path_str}'.")
 
         try:
             raw = json.loads(path.read_text(encoding="utf-8"))
@@ -127,8 +125,7 @@ class Settings(BaseSettings):
 
 
 def _validate_tag_dictionary(data: Any, source: str) -> None:
-    """Validate the top-level structure of a tag dictionary.
-    """
+    """Validate the top-level structure of a tag dictionary."""
     if not isinstance(data, dict):
         raise ValueError(
             f"Tag config '{source}': expected a JSON object at the top level, got {type(data).__name__}."

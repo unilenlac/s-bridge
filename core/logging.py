@@ -26,6 +26,7 @@ def setup_logging(settings: "Settings | None" = None) -> logging.Logger:
     if settings is not None:
         import os
         import time
+
         os.environ["TZ"] = settings.timezone
         if hasattr(time, "tzset"):
             time.tzset()
@@ -56,7 +57,9 @@ def setup_logging(settings: "Settings | None" = None) -> logging.Logger:
             # or Python's logging machinery may have already installed.
             root = logging.getLogger()
             for h in list(root.handlers):
-                if isinstance(h, logging.StreamHandler) and not isinstance(h, RotatingFileHandler):
+                if isinstance(h, logging.StreamHandler) and not isinstance(
+                    h, RotatingFileHandler
+                ):
                     root.removeHandler(h)
             root.addHandler(handler)
             root.setLevel(logging.INFO)
@@ -78,7 +81,8 @@ def setup_logging(settings: "Settings | None" = None) -> logging.Logger:
             handler.setLevel(logging.DEBUG)
             logger.warning(
                 "PROD mode: could not open log file '%s' (%s). Falling back to stdout.",
-                log_path, exc,
+                log_path,
+                exc,
             )
     else:
         handler = logging.StreamHandler()

@@ -5,7 +5,7 @@ import logging
 import stanza
 import uvicorn
 import httpx
-from contextlib import asynccontextmanager 
+from contextlib import asynccontextmanager
 
 from core.logging import setup_logging
 
@@ -16,25 +16,35 @@ from api.routes import router
 
 settings = Settings()
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger = setup_logging(settings)
 
     logger.info("Initializing NLP engine...")
-    
+
     if settings.pipeline == "modern":
-        proc = ModernProcessor(stanza.Pipeline(settings.language, processors="tokenize,pos,lemma"))
+        proc = ModernProcessor(
+            stanza.Pipeline(settings.language, processors="tokenize,pos,lemma")
+        )
     else:
-        proc = ClassicalProcessor(NLP(settings.language, backend="stanza", suppress_banner=True))
+        proc = ClassicalProcessor(
+            NLP(settings.language, backend="stanza", suppress_banner=True)
+        )
     app.state.proc = proc
     app.state.http_client = httpx.AsyncClient()
     logger.info("CLTK NLP engine initialized successfully.")
-    
+
     yield
-    
+
     await app.state.http_client.aclose()
 
-app = FastAPI(title="σ-Bridge NLP Server", description="Remote NLP parsing service using CLTK/Stanza", lifespan=lifespan)
+
+app = FastAPI(
+    title="σ-Bridge NLP Server",
+    description="Remote NLP parsing service using CLTK/Stanza",
+    lifespan=lifespan,
+)
 logger = logging.getLogger("nlp_server")
 
 app.include_router(router)
