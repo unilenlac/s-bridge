@@ -37,7 +37,7 @@ def main():
 
     try:
         with httpx.Client(timeout=300.0) as client:
-            url = f"{base_url}/dts/process-and-collate"
+            url = f"{base_url}/process-and-collate"
             payload = {"resources": resources_to_fetch, "ref": ref}
             params = {"output_format": output_format}
 
@@ -57,7 +57,7 @@ def main():
 
                 while True:
                     time.sleep(3)
-                    job_resp = client.get(f"{base_url}/dts/jobs/{job_id}")
+                    job_resp = client.get(f"{base_url}/jobs/{job_id}")
                     if job_resp.status_code != 200:
                         print(
                             f"Error polling job status... status code {job_resp.status_code}"
@@ -73,7 +73,7 @@ def main():
                         if status == "FAILED":
                             print(f"Error Message: {job_data.get('error_message')}")
                         elif status == "COMPLETED":
-                            trad_resp = client.get(f"{base_url}/dts/traditions")
+                            trad_resp = client.get(f"{base_url}/traditions")
                             if trad_resp.status_code == 200:
                                 all_traditions = trad_resp.json()
                                 job_results = [
@@ -115,7 +115,7 @@ def main():
                                             ensure_ascii=False,
                                         )
                                     print(
-                                        f"\nSummary written to 'collate_results_summary.json'"
+                                        "\nSummary written to 'collate_results_summary.json'"
                                     )
                                 else:
                                     print(

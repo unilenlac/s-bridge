@@ -4,7 +4,7 @@ import json
 
 def get_traditions():
     base_url = "http://127.0.0.1:8000"
-    url = f"{base_url}/dts/traditions"
+    url = f"{base_url}/traditions"
 
     print(f"Fetching completed traditions from {url}...\n")
     try:

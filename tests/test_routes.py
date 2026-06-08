@@ -1,10 +1,12 @@
-import pytest
 import os
+import uuid
+from unittest.mock import AsyncMock, MagicMock
 
 from fastapi.testclient import TestClient
 from main import app
 from api.dependencies import converter_dep
 from models.tokenization import CollatexResponse, CollatexWitness, Token
+from models.schema import Job, JobStatus
 
 client = TestClient(app)
 
@@ -18,8 +20,6 @@ def get_mock_converter():
 
 
 app.dependency_overrides[converter_dep] = get_mock_converter
-
-from unittest.mock import AsyncMock
 
 
 class MockWitnessService:
@@ -75,11 +75,8 @@ class MockWitnessService:
 
 
 # ---------------------------------------------------------------------------
-# Tests for /dts/collate
+# Tests for collate
 # ---------------------------------------------------------------------------
-from unittest.mock import AsyncMock, MagicMock
-from models.schema import Job, JobStatus
-import uuid
 
 
 async def override_get_session():
@@ -105,7 +102,7 @@ def test_collate_returns_job_id(monkeypatch):
 
     with TestClient(app) as client:
         response = client.post(
-            "/dts/process-and-collate",
+            "/process-and-collate",
             json={
                 "collection_url": "http://testdts.com/api/dts/v1/collection?id=test_col",
                 "ref": "mock_ref",
@@ -135,7 +132,7 @@ def test_get_all_jobs():
     app.dependency_overrides[get_session] = override_session
 
     with TestClient(app) as client:
-        response = client.get("/dts/jobs?limit=10&offset=0")
+        response = client.get("/jobs?limit=10&offset=0")
 
     assert response.status_code == 200
     data = response.json()

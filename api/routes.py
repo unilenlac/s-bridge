@@ -7,7 +7,6 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
-from urllib.parse import urlparse
 
 from core.interfaces import Converter
 from api.dependencies import (
@@ -80,7 +79,7 @@ class CollatexWitnessFileRequest(BaseModel):
 
 
 @router.post(
-    "/dts/process-and-collate",
+    "/process-and-collate",
     description=(
         "End-to-End NLP Collation Pipeline. This route orchestrates fetching XML resources from the DTS service, "
         "processes them through a CLTK/Stanza NLP engine (or similar) to convert text into deep-normalized token lists, "
@@ -144,7 +143,7 @@ async def process_and_collate_resources(
 
 
 @router.post(
-    "/dts/collate-to-file",
+    "/collate-to-file",
     response_class=FileResponse,
     description=(
         "Synchronous Collation Pipeline for a single section. Fetches XML resources from the DTS service for a specific reference, "
@@ -247,7 +246,7 @@ async def collate_to_file(
 
 
 @router.get(
-    "/dts/jobs",
+    "/jobs",
     description="Fetch all jobs sorted in reverse chronological order with pagination.",
 )
 async def get_all_jobs(
@@ -262,7 +261,7 @@ async def get_all_jobs(
     return result.scalars().all()
 
 
-@router.get("/dts/jobs/pending", description="Fetch all pending and processing jobs.")
+@router.get("/jobs/pending", description="Fetch all pending and processing jobs.")
 async def get_pending_jobs(session: AsyncSession = Depends(get_session)):
     stmt = select(Job).where(Job.status.in_([JobStatus.PENDING, JobStatus.PROCESSING]))
     result = await session.execute(stmt)
@@ -270,7 +269,7 @@ async def get_pending_jobs(session: AsyncSession = Depends(get_session)):
 
 
 @router.get(
-    "/dts/jobs/failed",
+    "/jobs/failed",
     description="Fetch the last 5 failed jobs in reverse chronological order.",
 )
 async def get_failed_jobs(session: AsyncSession = Depends(get_session)):
@@ -284,7 +283,7 @@ async def get_failed_jobs(session: AsyncSession = Depends(get_session)):
     return result.scalars().all()
 
 
-@router.get("/dts/jobs/{job_id}", description="Fetch the status of a specific job.")
+@router.get("/jobs/{job_id}", description="Fetch the status of a specific job.")
 async def get_job_status(
     job_id: uuid.UUID, session: AsyncSession = Depends(get_session)
 ):
@@ -295,7 +294,7 @@ async def get_job_status(
 
 
 @router.put(
-    "/dts/jobs/{job_id}/cancel",
+    "/jobs/{job_id}/cancel",
     description="Cancel a pending or processing job and clear its associated files.",
 )
 async def cancel_job(
@@ -361,16 +360,14 @@ async def cancel_job(
     )
 
 
-@router.get(
-    "/dts/traditions", description="List all successfully completed traditions."
-)
+@router.get("/traditions", description="List all successfully completed traditions.")
 async def get_traditions(session: AsyncSession = Depends(get_session)):
     result = await session.execute(select(Tradition))
     return result.scalars().all()
 
 
 @router.delete(
-    "/dts/traditions/{tradition_id}",
+    "/traditions/{tradition_id}",
     description="Safely delete a Tradition's database record and physical disk directory.",
 )
 async def delete_tradition(
