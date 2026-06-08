@@ -1,6 +1,5 @@
 # processor protocol
 from typing import Protocol, Any, Dict, List, Tuple, Optional
-import xml.etree.ElementTree as ET
 
 from httpx import AsyncClient
 

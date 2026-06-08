@@ -1,6 +1,6 @@
 import logging
 import httpx
-from typing import Optional, Dict, Any, Union
+from typing import Dict, Any, Union
 
 from core.exceptions import CollatexError
 

@@ -1,4 +1,3 @@
-import xml.etree.ElementTree as ET
 from typing import List
 
 from core.interfaces import Processor, Parser

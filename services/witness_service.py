@@ -2,8 +2,7 @@ import json
 import logging
 import asyncio
 import os
-import tempfile
-from typing import List, Optional, Union, Dict, Tuple
+from typing import Optional, Union, Dict, Tuple
 
 from httpx import AsyncClient
 

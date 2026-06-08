@@ -1,9 +1,7 @@
-import logging
-
 from pathlib import Path
-from typing import Literal, Annotated, Optional, Tuple
+from typing import Literal, Annotated, Optional
 from fastapi import Depends, Request, Query
-from httpx import AsyncClient, Timeout
+from httpx import AsyncClient
 from pydantic import BaseModel
 
 from core.interfaces import Converter

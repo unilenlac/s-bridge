@@ -1,7 +1,6 @@
 import os
 import uuid
 import logging
-from sqlmodel import select
 from datetime import datetime
 from core.config import Settings
 from core.database import engine

@@ -1,6 +1,5 @@
 from cltk import NLP
 from fastapi import FastAPI
-import xml.etree.ElementTree as ET
 import logging
 import stanza
 import uvicorn
