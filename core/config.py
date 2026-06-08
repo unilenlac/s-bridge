@@ -54,8 +54,8 @@ class Settings(BaseSettings):
     pipeline: PipelineEnum = PipelineEnum.classical
     language: LanguageEnum = LanguageEnum.anci1242
     tag_config: Optional[str] = None  # Path to a JSON tag dictionary file
-    collatex_api_base_url: str = "http://ftsr-dev.unil.ch:7369"
-    stemmarest_api_base_url: str = "http://ftsr-dev.unil.ch:7070/stemmarest/api"
+    collatex_api_base_url: str = None
+    stemmarest_api_base_url: str = None
     nlp_analysis_dir: Path = Path("/tmp/s-bridge/pre_collation")
     collation_dir: Path = Path("/tmp/s-bridge/post_collation")
     environment: EnvironmentEnum = EnvironmentEnum.dev

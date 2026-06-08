@@ -34,15 +34,10 @@ COPY . .
 # Place virtual environment executables at the beginning of PATH
 ENV PATH="/app/.venv/bin:$PATH"
 
-# Production environment variables
-ENV ENVIRONMENT=PROD
-ENV NLP_ANALYSIS_DIR=/tmp/s-bridge/pre_collation
-ENV COLLATION_DIR=/tmp/s-bridge/post_collation
-ENV DATA_DIR=/app/data
 
 EXPOSE 8500
 
 ENTRYPOINT ["/app/entrypoint.sh"]
 
 #To construct the docker, run "docker build -t s-bridge:latest ."
-#Once built, run "docker run -p 8500:8500 s-bridge:latest"
+#Once built, run "docker run -p xxxx:xxxx s-bridge:latest"
