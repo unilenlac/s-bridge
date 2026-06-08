@@ -1,69 +1,109 @@
 # σ-Bridge
-Create a Tradition from a DTS Collection
 
-### Demande :
+σ-Bridge is a FastAPI-based service designed to fetch manuscript transcriptions via a DTS (Distributed Text Services) endpoint, tokenize/lemmatize/parse them using NLP pipelines, perform collations via CollateX, and import/update traditions on the Stemmarest server.
 
-Dans le cadre du projet ENLAC "Editer numériquement la littérature apocryphe chrétienne", nous utilisons actuellement un programme (https://github.com/unilenlac/xml2stemmarest) qui nous permet de charger des textes (concrètement des transcriptions de manuscrits) au format XML vers un programme complet d’analyse et d'édition critique qui s’appel Stemmaweb (https://github.com/unilenlac/stemmaweb).
+---
 
-Le programme comporte plusieurs faiblesses : 
+##  Quick Start with Docker (Recommended)
 
-Il est lancé depuis un ordinateur personnel.
-Il utilise des transcriptions de manuscrits qui se trouvent nécessairement stockées sur ordinateur personnel.
-Le programme n’accepte que les transcriptions qui mobilisent une DTD précise.
-Il n’applique aucune méthode complexe sur la transcription pour la nettoyer, la "neutraliser", la lemmatiser etc, ce qui limite les possibilités de traitement avec Stemmaweb.
-Il n'est pas possible d'ajouter une nouvelle transcription une fois le processus de collation ou d'édition critique lancé, sauf à revenir au point de départ. 
+To run the production deployment using Docker Compose (if you do not have Docker installed, follow the official [Docker Installation Guide](https://docs.docker.com/get-docker/)):
 
-Actuellement, les documents se trouvent dans une base de données et il est possible de l'interroger via une interface de programmation (API). Par ailleurs, le programme qui permet de faire les analyses est complet, c'est-à-dire couvre toutes les étapes de l'édition critique, et nous permet maintenant d’exporter des éditions critiques au format XML. Ce dernier possède aussi une interface de programmation (https://github.com/unilenlac/tradition_repo).
+### 1. Clone & Navigate
+```bash
+git clone https://github.com/unilenlac/s-bridge.git
+cd s-bridge
+```
 
-Nous souhaitons à présent faire en sorte de lier les deux interfaces via une application intermédiaire. 
+### 2. Configure Environment
+Copy the example environment file and customize it to match your target services:
+```bash
+cp .env.example .env
+```
+Ensure that `COLLATEX_API_BASE_URL` and `STEMMAREST_API_BASE_URL` point to your running CollateX and Stemmarest instances.
 
-La demande est principalement la suivante : **créer une API qui permette à un utilisateur de charger une tradition manuscrite lemmatisée et tokenizée dans Stemmarest via un lien DTS.**
+> [!NOTE]
+> **Network Binding & Ports**: By default, the service binds to the local loopback interface (`127.0.0.1:8500`) in [docker-compose.yml]. For production server deployment, adapt the `ports` configuration in [docker-compose.yml] to bind to your specific host IP (e.g., `"192.168.1.50:8500:8500"`) or expose it publicly (e.g., `"0.0.0.0:8500:8500"`).
 
-Le programme doit comporter les fonctions suivantes :
+### 3. Start the Application
+Build and run the stack:
+```bash
+docker compose up --build -d
+```
+*(Or if you have `make` installed—which can be installed via `sudo apt install make` on Debian/Ubuntu—run `make build && make up`)*
 
-- Permettre de récupérer dans une base de données les textes (concrètement des transcriptions de manuscrits) qui doivent être édités critiquement et qui ne se limitent pas à la littérature apocryphe chrétienne. La récupération se fait via un endpoint DTS (https://distributed-text-services.github.io/specifications/).
-- Permettre d'appliquer un processus discret de tokenisation, de lemmatisation et d'analyse morpho syntaxique (POS) des transcriptions récupérées.
-- Permettre de soumettre des transcriptions ou des extraits de transcriptions à Collatex pour en récupérer une Collation.
-- Permettre d'injecter ensuite les transcriptions collationnées dans Stemmarest via son API.
-- Idéalement, mettre à jour une tradition via un manuscrit référencé par une API DTS.
+The service will automatically run database migrations on start and listen on port `8500`.
+- **API Documentation (Swagger UI)**: [http://yourhost:8500/docs]
+- **API ReDoc**: [http://yourhost:8500/redoc]
 
+---
 
-#### La demande en détail :
+## Or run the Local Development Setup (Not recommended)
 
-|id| Tâches|Type|Facultatif|Notes|
-|---|---|---|---|---|
-|1|Étendre l’interface web Stemmaweb avec un composant graphique “importer via DTS"  : le composant permet d'indiquer le lien d'une collection DTS et de définir une série de paramètres pour l'importation.|Module web|Non||
-|2|Développer un système σ en charge de récupérer des traditions manuscrites via un lien DTS, de produire des sections (set de versions), de lemmatiser et de tokenizer le contenu des versions, de produire des collations via Collatex et de générer des traditions via Stemmarest.|Backend app / backend feature|Non||
-|2.1|Créer un module en charge de récupérer le contenu d'une collection, via un lien DTS, et d'établir un set de section à analyser via le module 2.2|module|non||
-|[2.2](./design/DESIGN.md#analysisclient-specifications)|Intégrer dans σ un pipeline de tâches NLP de base (tokenization, lemmatisation, POS) spécialisées pour le grec ancien (choix libre des algos/modèles). |Module|Non|La chaîne peut mobiliser un LLM en local, si utile/disponible.|
-|2.3|Intégrer dans σ la capacité de communiquer avec l’application CollateX pour générer et récupérer des collations.|Module|Non||
-|2.4|Intégrer dans σ la capacité de communiquer avec l’API Stemmarest et (directement ou indirectement) pour y importer ou mettre à jour des Collations. |Module|Non||
-|2.5|Prévoir dans σ la possibilité de mémoriser des set de versions, de les enrichir avec de nouveaux textes et de mettre à jour les graphs existants sur l’API Stemmarest.|Module|Oui||
-|3|Créer une image Docker de σ et fournir la documentation technique nécessaire à son déploiement et à son utilisation.|DevOps / Documentation|Non||
+If you wish to run the project locally without Docker:
 
-### Stack demandée
+### Prerequisites
+- Python 3.14+
+- [uv](https://github.com/astral-sh/uv) (recommended Python package manager)
 
-- Langage pour σ-Bridge : Python
-- Framework web pour σ-Bridge : FastAPI
-- Conteneurisation : Docker
-- Dépendances NLP : SpaCy ou CLTK (à discuter), possibilité d'utiliser un LLM en local via Ollama
-- Autres dépendances : requests, lxml, etc.
-- Langage pour le module de l'interface web (Stemmaweb) : Javascript
-- portail API: Kong
+### 1. Install Dependencies
+```bash
+uv sync
+```
+*(Or use `make install`)*
 
-### Livrables attendus
-- Code source complet de σ-Bridge hébergé sur un dépôt GitHub
-- Documentation technique détaillée pour l'installation, la configuration et l'utilisation de σ-Bridge
-- Image Docker de σ-Bridge prête à être déployée
-- Tests unitaires et d'intégration pour assurer la fiabilité et la robustesse de σ-Bridge
+### 2. Configure Environment
+Copy and adjust the environment template (make sure directories like `LOG_FILE` are writable locally):
+```bash
+cp .env.example .env
+```
 
-### resources utiles
-- [DTS Specifications](https://distributed-text-services.github.io/specifications/)
-- [DTS API demo (collection endpoint)](https://py-dts-demo.onrender.com/api/dts/v1/collection?id=1-1)
-- [Implementation DTS en Python](https://github.com/rerouj/py-dts)
-- [Repo Stemmarest (API Tradition Repo)](https://github.com/unilenlac/tradition_repo)
-- [documentation Stemmarest API](https://dhuniwien.github.io/tradition_repo/)
-- [Repo Stemmaweb (interface Web)](https://github.com/unilenlac/stemmaweb)
-- [Repo xml2stemmarest (ancienne version de σ-Bridge)](https://github.com/unilenlac/xml2stemmarest)
-- [CollateX Documentation](https://collatex.net/documentation/)
+### 3. Run Database Migrations
+Apply Alembic migrations to set up the SQLite database:
+```bash
+uv run alembic upgrade head
+```
+*(Or use `make db-migrate`)*
 
+### 4. Start the Development Server
+```bash
+uv run uvicorn main:app --reload --host 127.0.0.1 --port 8500
+```
+*(Or use `make dev`)*
+
+### 5. Running Tests
+To execute the test suite:
+```bash
+uv run pytest
+```
+*(Or use `make test`)*
+
+---
+
+## Configuration
+
+Settings are managed via environment variables (defined in [core/config.py] and loaded from `.env`). Edit either or.
+
+Key parameters:
+
+| Variable | Description | Default |
+|---|---|---|
+| `PIPELINE` | Processing pipeline (`classical` or `modern`) | `classical` |
+| `LANGUAGE` | Language ISO 639-3 code (e.g. `anci1242` for Ancient Greek) | `anci1242` |
+| `COLLATEX_API_BASE_URL` | Base URL of the CollateX API service |  |
+| `STEMMAREST_API_BASE_URL`| Base URL of the Stemmarest API service |  |
+| `ENVIRONMENT` | Target environment tier (`DEV` or `PROD`) | `DEV` (local default) |
+| `TIMEZONE` | System timezone (e.g. `Europe/Zurich`) | `Europe/Zurich` |
+| `TAG_CONFIG` | Absolute path to custom JSON tag dictionary file | `None` (defaults to [/utils/enlac_tags.json]) |
+
+### Linguistic & XML Configuration
+- **Custom XML Tags**: The TEI XML parser maps custom tags based on [utils/enlac_tags.json]. You can customize this mapping by creating your own JSON file and passing its absolute path via the `TAG_CONFIG` environment variable.
+- **Classical Greek Abbreviations**: The parser expands Classical Greek abbreviations during token normalization using the static dictionary defined in [abbr_classical_greek.csv](file:///home/jbidaux/s-bridge/utils/abbr_classical_greek.csv).
+
+---
+
+## Key Files & Directories
+
+- [Dockerfile](file:///home/jbidaux/s-bridge/Dockerfile): Multi-stage production Docker build configuration.
+- [docker-compose.yml](file:///home/jbidaux/s-bridge/docker-compose.yml): Docker Compose service definitions.
+- [.env.example](file:///home/jbidaux/s-bridge/.env.example): Template for environment configurations.
+- [Makefile](file:///home/jbidaux/s-bridge/Makefile): Target shortcuts for building, running, formatting, and database management.
