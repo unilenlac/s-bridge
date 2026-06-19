@@ -13,7 +13,7 @@ client = TestClient(app)
 
 def get_mock_converter():
     class MockConverter:
-        def run(self, data, normalization="lemma+pos", filter_del=True):
+        def run(self, data, normalization="lemma", filter_del=True):
             return []
 
     return MockConverter()

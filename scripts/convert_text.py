@@ -9,7 +9,7 @@ def convert_text(
     output_file,
     format="tei",
     strategy="enriched",
-    normalization="lemma+pos",
+    normalization="lemma",
 ):
     """
     Sends Greek text from an input file to the NLP server and saves the JSON output.
@@ -67,8 +67,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--normalization",
         choices=["lemma+pos", "lemma", "text"],
-        default="lemma+pos",
-        help="Token normalization string (default: lemma+pos)",
+        default="lemma",
+        help="Token normalization string (default: lemma)",
     )
 
     args = parser.parse_args()

@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
 from sqlmodel import SQLModel
+
 # Import all models here so SQLModel.metadata registers them
 from core.config import Settings
 import models.schema  # noqa: F401

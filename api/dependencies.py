@@ -25,7 +25,7 @@ class ProcessingOptions(BaseModel):
 
 async def get_processing_options(
     normalization: str = Query(
-        "lemma+pos",
+        "lemma",
         description="Token normalization string. Options: lemma+pos, lemma, text",
     ),
     filter_del: bool = Query(

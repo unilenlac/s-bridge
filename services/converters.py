@@ -35,7 +35,7 @@ class EnrichedStrategyConverter:
         self.parser = parser
 
     def run(
-        self, data: str, normalization: str = "lemma+pos", filter_del: bool = True
+        self, data: str, normalization: str = "lemma", filter_del: bool = True
     ) -> List[Token]:
         # 1. Extract clean text and offset metadata using the TEI Parser
         clean_text, metadata_map = self.parser.parse(data)

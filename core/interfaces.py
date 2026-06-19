@@ -6,12 +6,12 @@ from httpx import AsyncClient
 
 class Processor(Protocol):
     def __init__(self, pipeline: Any): ...
-    def process(self, data: Any, normalization: str = "lemma+pos") -> Any: ...
+    def process(self, data: Any, normalization: str = "lemma") -> Any: ...
 
 
 class Converter(Protocol):
     def run(
-        self, data: str, normalization: str = "lemma+pos", filter_del: bool = True
+        self, data: str, normalization: str = "lemma", filter_del: bool = True
     ) -> Any: ...
 
 

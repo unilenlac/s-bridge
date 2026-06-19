@@ -8,7 +8,7 @@ class ClassicalProcessor:
         # Initialize any necessary resources for processing Greek text
         self.pipeline = pipeline
 
-    def process(self, data, normalization="lemma+pos"):
+    def process(self, data, normalization="lemma"):
         # Run the NLP pipeline
         cltk_doc = self.pipeline.analyze(data)
 
@@ -84,7 +84,7 @@ class ModernProcessor:
         # Initialize any necessary resources for processing modern text
         self.pipeline = pipeline
 
-    def process(self, data, normalization="lemma+pos"):
+    def process(self, data, normalization="lemma"):
         stanza_doc = self.pipeline(data)
         tokens = []
         for sentence in stanza_doc.sentences:
