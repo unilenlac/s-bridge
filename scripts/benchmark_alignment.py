@@ -421,7 +421,7 @@ async def run_benchmark():
 
     # Group and sum stats by config name for aggregation
     agg_stats = {}
-    if len(all_results) > 1:
+    if all_results:
         for ref, results in all_results.items():
             for res in results:
                 cfg_name = res["config_name"]
@@ -457,34 +457,23 @@ async def run_benchmark():
             density = (cells - gaps) / cells if cells > 0 else 0
             agg_stats[cfg]["density"] = round(density, 3)
 
-    # Assemble JSON structure
-    output_data = {"references": all_results}
+    # Format lookalike stdout text table
+    stdout_table = ""
     if agg_stats:
-        output_data["aggregated"] = agg_stats
-
-    # Save overall summary statistics to file
-    summary_path = Path(args.output_dir) / "benchmark_summary.json"
-    os.makedirs(Path(args.output_dir), exist_ok=True)
-    with open(summary_path, "w", encoding="utf-8") as f:
-        json.dump(output_data, f, indent=2, ensure_ascii=False)
-    print(f"\n[BENCHMARK] Saved summary statistics to {summary_path}")
-
-    # Print overall aggregated statistics if multiple references were processed
-    if agg_stats:
-        print(f"\n" + "=" * 70)
-        print("### OVERALL AGGREGATED BENCHMARK SUMMARY (ALL REFERENCES)")
-        print("=" * 70)
-
-        print(
+        table_lines = []
+        table_lines.append("=" * 70)
+        table_lines.append("### OVERALL AGGREGATED BENCHMARK SUMMARY (ALL REFERENCES)")
+        table_lines.append("=" * 70)
+        table_lines.append(
             f"| {'Strategy/Parameter':<25} | {'Columns':<8} | {'Consensus':<9} | {'Variants':<8} | {'Gaps (Total)':<12} | {'Density':<8} | {'Time':<7} |"
         )
-        print(
+        table_lines.append(
             f"|{'-' * 27}|{'-' * 10}|{'-' * 11}|{'-' * 10}|{'-' * 14}|{'-' * 10}|{'-' * 9}|"
         )
         for cfg_name, stats in agg_stats.items():
             density = stats["density"]
             mock_label = "*" if stats["is_mocked"] else ""
-            print(
+            table_lines.append(
                 f"| {cfg_name + mock_label:<25} "
                 f"| {stats['total_columns']:<8d} "
                 f"| {stats['consensus_columns']:<9d} "
@@ -493,7 +482,32 @@ async def run_benchmark():
                 f"| {density * 100:<7.1f}% "
                 f"| {stats['total_time']:<6.2f}s |"
             )
-        print("* indicates fallback mock aligner was used for at least one reference.")
+        table_lines.append("* indicates fallback mock aligner was used for at least one reference.")
+        stdout_table = "\n".join(table_lines)
+
+    # Assemble JSON structure containing ONLY aggregated data and text summary
+    output_data = {}
+    if agg_stats:
+        output_data["aggregated"] = agg_stats
+        output_data["text_summary"] = stdout_table
+
+    # Save overall summary statistics to file
+    summary_path = Path(args.output_dir) / "benchmark_summary.json"
+    os.makedirs(Path(args.output_dir), exist_ok=True)
+    with open(summary_path, "w", encoding="utf-8") as f:
+        json.dump(output_data, f, indent=2, ensure_ascii=False)
+    print(f"\n[BENCHMARK] Saved summary statistics to {summary_path}")
+
+    # Also save markdown summary for direct preview as a table
+    md_summary_path = Path(args.output_dir) / "benchmark_summary.md"
+    if stdout_table:
+        with open(md_summary_path, "w", encoding="utf-8") as f:
+            f.write(stdout_table + "\n")
+        print(f"[BENCHMARK] Saved markdown table to {md_summary_path}")
+
+    # Print overall aggregated statistics
+    if stdout_table:
+        print(f"\n{stdout_table}")
 
 
 if __name__ == "__main__":
