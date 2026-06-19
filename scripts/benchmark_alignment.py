@@ -197,12 +197,12 @@ async def run_benchmark():
     parser = argparse.ArgumentParser(description="Benchmark s-bridge Alignment Quality")
     parser.add_argument(
         "--collection-url",
-        default="http://ftsr-dev.unil.ch:8000/api/dts/v1/collection?id=2",
+        default="http://ftsr-dev.unil.ch:8000/api/dts/v1/collection?id=sb-mp",
         help="DTS collection endpoint URL",
     )
     parser.add_argument(
         "--refs",
-        default="111,112,113,114,115,116,117,118,119,120",
+        default="107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,146,147,148",
         help="Comma-separated list of DTS references to benchmark",
     )
     parser.add_argument(
