@@ -11,6 +11,21 @@ class RawStrategyConverter:
     def run(
         self, data: str, normalization: str = "text", filter_del: bool = False
     ) -> List[Token]:
+        import xml.etree.ElementTree as ET
+
+        try:
+            # Attempt to parse as XML to isolate body and avoid header noise
+            root = ET.fromstring(data)
+            ns = {"tei": "http://www.tei-c.org/ns/1.0"}
+            body = root.find(".//tei:body", namespaces=ns)
+            if body is None:
+                body = root.find(".//body")
+            if body is not None:
+                data = "".join(body.itertext())
+        except Exception:
+            # If not valid XML or parsing fails, fall back to raw input text
+            pass
+
         return self.processor.process(data, normalization=normalization)
 
 
