@@ -13,6 +13,7 @@ dependencies = [
     "greenlet>=3.3.2",
     "httpx>=0.28.1",
     "lxml>=6.0.2",
+    "networkx>=3.0",
     "pydantic-settings>=2.13.1",
     "pytest>=9.0.2",
     "python-multipart>=0.0.27",
