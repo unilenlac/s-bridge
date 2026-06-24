@@ -1,5 +1,6 @@
 from logging import Logger
 import os
+import re
 from typing import AsyncGenerator
 from httpx import AsyncClient, RequestError, HTTPStatusError
 
@@ -43,3 +44,24 @@ async def get_xml_from_dts_url(
         msg = f"DTS server unreachable at {url}: {e}"
         logger.error(msg)
         raise DtsError(msg) from e
+
+
+def extract_body_content(data: str) -> str:
+    """
+    Extracts the inner content of the <body> element from an XML/TEI string.
+    This helps isolate the content to be parsed and bypasses any malformed or
+    incomplete outer/ancestor elements in DTS XML fragments.
+    """
+    body_start_match = re.search(r'<([a-zA-Z0-9_-]+:)?body\b[^>]*>', data, re.IGNORECASE)
+    if not body_start_match:
+        return data
+
+    start_idx = body_start_match.end()
+
+    body_end_match = re.search(r'</([a-zA-Z0-9_-]+:)?body\s*>', data, re.IGNORECASE)
+    if body_end_match:
+        end_idx = body_end_match.start()
+        return data[start_idx:end_idx]
+
+    return data[start_idx:]
+

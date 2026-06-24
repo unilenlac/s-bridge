@@ -1,7 +1,9 @@
 from typing import List
+import re
 
 from core.interfaces import Processor, Parser
 from models.tokenization import Token
+from helpers.helpers import extract_body_content
 
 
 class RawStrategyConverter:
@@ -13,18 +15,17 @@ class RawStrategyConverter:
     ) -> List[Token]:
         import xml.etree.ElementTree as ET
 
+        body_content = extract_body_content(data)
+
         try:
             # Attempt to parse as XML to isolate body and avoid header noise
-            root = ET.fromstring(data)
-            ns = {"tei": "http://www.tei-c.org/ns/1.0"}
-            body = root.find(".//tei:body", namespaces=ns)
-            if body is None:
-                body = root.find(".//body")
-            if body is not None:
-                data = "".join(body.itertext())
+            root = ET.fromstring(body_content)
+            data = "".join(root.itertext())
         except Exception:
-            # If not valid XML or parsing fails, fall back to raw input text
-            pass
+            # If parsing fails, fall back to regex tag-stripping to strip any XML remains
+            clean_text = re.sub(r'<[^>]*>', '', body_content)
+            # Strip any trailing unclosed tag at the very end of the string
+            data = re.sub(r'<[^>]*$', '', clean_text)
 
         return self.processor.process(data, normalization=normalization)
 

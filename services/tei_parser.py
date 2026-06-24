@@ -5,6 +5,8 @@ from typing import List, Dict, Tuple, Any, Optional
 
 import xml.etree.ElementTree as ET
 
+from helpers.helpers import extract_body_content
+
 logger = logging.getLogger(__name__)
 
 # Type Aliases for clearer signatures
@@ -46,11 +48,17 @@ class TEIParser:
 
     def parse(self, data: str) -> Tuple[str, MetadataMap]:
         """Process TEI element to extract both metadata map and clean text."""
+        body_content = extract_body_content(data)
+
         try:
-            element = ET.fromstring(data)
+            element = ET.fromstring(body_content)
         except ET.ParseError as e:
-            logger.error(f"Failed to parse XML: {e}")
-            raise ValueError(f"Invalid XML data provided to TEIParser: {e}")
+            # Try root wrapping if the XML content inside the body doesn't have a single root
+            try:
+                element = ET.fromstring(f"<root>{body_content}</root>")
+            except ET.ParseError as e2:
+                logger.error(f"Failed to parse XML: {e2}")
+                raise ValueError(f"Invalid XML data provided to TEIParser: {e2}")
 
         # Step 0: Ensure we are only extracting from the body
         element = self._extract_body(element)

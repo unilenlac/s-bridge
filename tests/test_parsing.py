@@ -471,3 +471,46 @@ def test_load_tag_dictionary_invalid_json(tmp_path):
 
     with pytest.raises(ValidationError, match="invalid JSON"):
         Settings(tag_config=str(bad_file))
+
+
+def test_extract_body_content_and_fallback():
+    from helpers.helpers import extract_body_content
+    from services.converters import RawStrategyConverter
+    from services.processors import RawProcessor
+    from services.tei_parser import TEIParser
+
+    malformed_xml = (
+        '</ref  sDecl>  </encodin  gDesc>  <revisio  nDesc  status="transcription-finished">'
+        '  <change/>  </revisio  nDesc>  </te  iHeader>  <text>  '
+        '<body><dts:wrapper xmlns:dts="https://w3id.org/dts/api#">Hello world</dts:wrapper></body>  </text>'
+    )
+
+    # 1. Test helper
+    extracted = extract_body_content(malformed_xml)
+    assert '<dts:wrapper' in extracted
+    assert '</dts:wrapper>' in extracted
+    assert '</te  iHeader>' not in extracted
+
+    # 2. Test RawStrategyConverter behavior
+    converter = RawStrategyConverter(proc=RawProcessor())
+    tokens = converter.run(malformed_xml)
+    assert len(tokens) == 2
+    assert tokens[0].normalization == "Hello"
+    assert tokens[1].normalization == "world"
+
+    # 3. Test TEIParser behavior
+    parser = TEIParser()
+    clean_text, meta = parser.parse(malformed_xml)
+    assert clean_text == "Hello world"
+
+    # 4. Test regex fallback when body content is completely invalid XML (e.g. cut off)
+    completely_broken_xml = (
+        '</teiHeader> <body>Hello world <dts:wrapper>broken text <milestone'
+    )
+    tokens = converter.run(completely_broken_xml)
+    assert len(tokens) == 4
+    assert tokens[0].normalization == "Hello"
+    assert tokens[1].normalization == "world"
+    assert tokens[2].normalization == "broken"
+    assert tokens[3].normalization == "text"
+
