@@ -162,3 +162,23 @@ class ModernProcessor:
                 tokens.append(my_token)
 
         return tokens
+
+
+class RawProcessor:
+    def __init__(self, pipeline: Any = None):
+        pass
+
+    def process(self, data: str, normalization: str = "text") -> list[Token]:
+        words = data.split()
+        tokens = []
+        for word in words:
+            tokens.append(
+                Token(
+                    text=word + " ",
+                    normalization=word,
+                    original=word,
+                    lemma="",
+                )
+            )
+        return tokens
+

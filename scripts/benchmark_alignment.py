@@ -18,7 +18,7 @@ from cltk import NLP
 from core.config import Settings
 from api.dependencies import ProcessingOptions
 from services.tei_parser import TEIParser
-from services.processors import ClassicalProcessor, ModernProcessor
+from services.processors import ClassicalProcessor, ModernProcessor, RawProcessor
 from services.converters import EnrichedStrategyConverter, RawStrategyConverter
 from services.preparators import DtsPreparator
 from helpers.helpers import get_xml_from_dts_url
@@ -309,7 +309,7 @@ async def run_benchmark():
 
                 # Setup the strategy's converter
                 if config["strategy"] == "raw":
-                    converter = RawStrategyConverter(proc=proc)
+                    converter = RawStrategyConverter(proc=RawProcessor())
                 else:
                     tag_dict = settings.load_tag_dictionary()
                     utils_dir = Path(__file__).parent.parent / "utils"

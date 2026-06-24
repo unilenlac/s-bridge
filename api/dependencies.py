@@ -7,6 +7,7 @@ from pydantic import BaseModel
 from core.interfaces import Converter
 from services.tei_parser import TEIParser
 from services.converters import EnrichedStrategyConverter, RawStrategyConverter
+from services.processors import RawProcessor
 from core.config import Settings
 
 settings = Settings()
@@ -45,7 +46,7 @@ def converter_dep(
     proc = request.app.state.proc
 
     if strategy == "raw":
-        return RawStrategyConverter(proc=proc)
+        return RawStrategyConverter(proc=RawProcessor())
 
     elif strategy == "enriched":
         match format:
