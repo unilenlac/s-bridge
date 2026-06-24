@@ -235,7 +235,6 @@ async def main():
                 # Variation Points: nodes where paths split (out_degree > 1)
                 variation_points = sum(1 for node in G.nodes() if G.out_degree(node) > 1)
                 
-                density = nx.density(G)
                 elapsed_time = time.time() - start_time
 
                 ref_results.append({
@@ -245,7 +244,6 @@ async def main():
                     "edges": num_edges,
                     "merge_ratio": round(merge_ratio, 3),
                     "variation_points": variation_points,
-                    "density": round(density, 4),
                     "time": round(elapsed_time, 2),
                 })
 
@@ -257,7 +255,6 @@ async def main():
                         "nodes": 0,
                         "edges": 0,
                         "variation_points": 0,
-                        "total_density": 0.0,
                         "count": 0,
                         "time": 0.0,
                     }
@@ -265,17 +262,16 @@ async def main():
                 aggregated_results[cfg_name]["nodes"] += num_nodes
                 aggregated_results[cfg_name]["edges"] += num_edges
                 aggregated_results[cfg_name]["variation_points"] += variation_points
-                aggregated_results[cfg_name]["total_density"] += density
                 aggregated_results[cfg_name]["count"] += 1
                 aggregated_results[cfg_name]["time"] += elapsed_time
 
             # Print comparison table for this ref
             print(f"\nVariant Graph Analysis Summary for Reference {ref}:")
             print(
-                f"| {'Strategy/Parameter':<25} | {'Tokens':<8} | {'Nodes (V)':<10} | {'Edges (E)':<10} | {'Merge Ratio':<12} | {'Var Points':<11} | {'Density':<8} |"
+                f"| {'Strategy/Parameter':<25} | {'Tokens':<8} | {'Nodes (V)':<10} | {'Edges (E)':<10} | {'Merge Ratio':<12} | {'Var Points':<11} |"
             )
             print(
-                f"|{'-' * 27}|{'-' * 10}|{'-' * 12}|{'-' * 12}|{'-' * 14}|{'-' * 13}|{'-' * 10}|"
+                f"|{'-' * 27}|{'-' * 10}|{'-' * 12}|{'-' * 12}|{'-' * 14}|{'-' * 13}|"
             )
             for res in ref_results:
                 print(
@@ -284,8 +280,7 @@ async def main():
                     f"| {res['nodes']:<10d} "
                     f"| {res['edges']:<10d} "
                     f"| {res['merge_ratio']:<12.3f} "
-                    f"| {res['variation_points']:<11d} "
-                    f"| {res['density']:<8.4f} |"
+                    f"| {res['variation_points']:<11d} |"
                 )
             print("-" * 80)
 
@@ -298,16 +293,15 @@ async def main():
             summary_lines.append("### OVERALL AGGREGATED VARIANT GRAPH SUMMARY (ALL REFERENCES)")
             summary_lines.append("======================================================================")
             summary_lines.append(
-                f"| {'Strategy/Parameter':<25} | {'Tokens':<8} | {'Nodes (V)':<10} | {'Edges (E)':<10} | {'Merge Ratio':<12} | {'Var Points':<11} | {'Avg Density':<11} | {'Time':<8} |"
+                f"| {'Strategy/Parameter':<25} | {'Tokens':<8} | {'Nodes (V)':<10} | {'Edges (E)':<10} | {'Merge Ratio':<12} | {'Var Points':<11} | {'Time':<8} |"
             )
             summary_lines.append(
-                f"|{'-' * 27}|{'-' * 10}|{'-' * 12}|{'-' * 12}|{'-' * 14}|{'-' * 13}|{'-' * 13}|{'-' * 10}|"
+                f"|{'-' * 27}|{'-' * 10}|{'-' * 12}|{'-' * 12}|{'-' * 14}|{'-' * 13}|{'-' * 10}|"
             )
             for cfg_name, stats in aggregated_results.items():
                 tot_tokens = stats["total_tokens"]
                 tot_nodes = stats["nodes"]
                 merge_ratio = tot_tokens / tot_nodes if tot_nodes > 0 else 0
-                avg_density = stats["total_density"] / stats["count"] if stats["count"] > 0 else 0
                 tot_time = stats["time"]
                 summary_lines.append(
                     f"| {cfg_name:<25} "
@@ -316,7 +310,6 @@ async def main():
                     f"| {stats['edges']:<10d} "
                     f"| {merge_ratio:<12.3f} "
                     f"| {stats['variation_points']:<11d} "
-                    f"| {avg_density:<11.4f} "
                     f"| {tot_time:<7.2f}s |"
                 )
 

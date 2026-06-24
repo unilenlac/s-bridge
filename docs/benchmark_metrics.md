@@ -37,12 +37,6 @@ These metrics analyze the mathematical topology of the **Variant Graph** directl
 * **Definition**: Nodes in the graph with an out-degree greater than 1 ($out\_degree(v) > 1$).
 * **Interpretation**: Represents branching points where the witnesses disagree on the following reading, creating a variant "bubble". Fewer variation points mean a cleaner, more linear graph with less text divergence.
 
-### Graph Density
-* **Definition**: The ratio of actual edges relative to the maximum possible edges in a directed graph.
-* **Calculation**:
-  $$\text{Density} = \frac{|E|}{|V|(|V|-1)}$$
-* **Interpretation**: Measures connectivity. In variant graphs (which are primarily linear DAG chains), density remains very low.
-
 ---
 
 ## 2. Secondary Collation Matrix Metrics (Optional / Table-based)
