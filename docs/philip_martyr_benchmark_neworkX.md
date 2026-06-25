@@ -12,3 +12,5 @@
 
 #Merge Ratio = Token total / Node Total
 #Variation Points = Node total that posess more than one Edge
+#A node is **A unique normalized display text (`t`) value within a single column.**
+#or also **a group of tokens in the same column that share the exact same display spelling (`t`).**

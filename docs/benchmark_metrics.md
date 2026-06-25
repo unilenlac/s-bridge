@@ -17,7 +17,7 @@ This document defines the metrics computed by the variant graph analysis (`scrip
 These metrics analyze the mathematical topology of the **Variant Graph** directly, making them the most layout-independent, precise, and statistically relevant indicators of alignment quality.
 
 ### Nodes ($|V|$)
-* **Definition**: The total number of unique nodes in the collation variant graph.
+* **Definition**: The total number of unique nodes in the collation variant graph. It is a unique normalized display text (t) value within a single column.
 * **Interpretation**: Fewer nodes indicate a more compressed and aligned graph. Note that variant readings (different transcribed texts, e.g. `λόγον` vs `λόγῳ`) must remain as separate parallel nodes to represent the variance. However, a better alignment strategy reduces the overall node count by:
   1. Standardizing surface-level differences (e.g. expanding abbreviations like `κς` $\rightarrow$ `κύριος` and stripping punctuation) so identical readings successfully merge into single nodes.
   2. Maintaining alignment synchronization, preventing CollateX from getting out-of-sync and creating duplicate separate nodes for identical words in the surrounding context.
