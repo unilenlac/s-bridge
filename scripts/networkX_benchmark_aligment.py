@@ -233,7 +233,10 @@ async def main():
                 merge_ratio = total_tokens / num_nodes if num_nodes > 0 else 0
                 
                 # Variation Points: nodes where paths split (out_degree > 1)
-                variation_points = sum(1 for node in G.nodes() if G.out_degree(node) > 1)
+                variation_points = 0
+                for node in G.nodes():
+                    if G.out_degree(node) > 1:
+                        variation_points += 1
                 
                 elapsed_time = time.time() - start_time
 
