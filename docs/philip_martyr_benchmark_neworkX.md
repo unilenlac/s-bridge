@@ -1,4 +1,4 @@
-# Overall Aggregated Variant Graph Summary
+# Overall Aggregated Variant Graph Summary with dekker (default) collatex algorithm
 
 ======================================================================
 ### OVERALL AGGREGATED VARIANT GRAPH SUMMARY (ALL REFERENCES)
@@ -35,3 +35,31 @@ PAIRWISE POST-HOC COMPARISONS (WILCOXON SIGNED-RANK TEST WITH HOLM CORRECTION)
 ================================================================================
 
 #We compare the node count between each ref for each strategy. A enriched strategy ref has an average of 105 nodes.
+
+
+##EXTRA summaries with different collatex algorithms:
+
+# Overall Aggregated Variant Graph Summary with Needleman_wunsch collatex algorithm
+
+======================================================================
+### OVERALL AGGREGATED VARIANT GRAPH SUMMARY (ALL REFERENCES)
+======================================================================
+| Strategy/Parameter        | Tokens   | Nodes (V)  | Edges (E)  | Merge Ratio  | Var Points  | Time     |
+|---------------------------|----------|------------|------------|--------------|-------------|----------|
+| Enriched (lemma+pos)      | 13212    | 4482       | 6224       | 2.948        | 1574        | 19.47  s |
+| Enriched (lemma)          | 13212    | 4280       | 5949       | 3.087        | 1521        | 17.43  s |
+| Enriched (text)           | 13212    | 4573       | 6334       | 2.889        | 1591        | 17.70  s |
+| Raw (text)                | 13879    | 4979       | 6902       | 2.788        | 1665        | 2.02   s |
+
+
+# Overall Aggregated Variant Graph Summary with Medite collatex algorithm
+
+======================================================================
+### OVERALL AGGREGATED VARIANT GRAPH SUMMARY (ALL REFERENCES)
+======================================================================
+| Strategy/Parameter        | Tokens   | Nodes (V)  | Edges (E)  | Merge Ratio  | Var Points  | Time     |
+|---------------------------|----------|------------|------------|--------------|-------------|----------|
+| Enriched (lemma+pos)      | 13212    | 5516       | 8006       | 2.395        | 2234        | 28.54  s |
+| Enriched (lemma)          | 13212    | 5184       | 7514       | 2.549        | 2088        | 27.70  s |
+| Enriched (text)           | 13212    | 5359       | 7592       | 2.465        | 1990        | 26.23  s |
+| Raw (text)                | 13879    | 6057       | 8533       | 2.291        | 2157        | 5.11   s |

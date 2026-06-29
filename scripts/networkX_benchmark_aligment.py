@@ -88,6 +88,12 @@ async def main():
         default=None,
         help="Override CollateX server URL",
     )
+    parser.add_argument(
+        "--algorithm",
+        default=None,
+        choices=["dekker", "needleman-wunsch", "medite"],
+        help="CollateX alignment algorithm to use (e.g. dekker, needleman-wunsch, medite)",
+    )
 
     args = parser.parse_args()
     settings = Settings()
@@ -103,6 +109,7 @@ async def main():
     print(f"Pipeline Type:  {settings.pipeline.value}")
     print(f"Language:       {settings.language.value}")
     print(f"CollateX URL:   {collatex_base_url}")
+    print(f"Algorithm:      {args.algorithm or 'default (collatex default)'}")
     print("=" * 80)
 
     # Initialize NLP models
@@ -212,7 +219,9 @@ async def main():
 
                 try:
                     graphml_data = await collatex_client.collate(
-                        payload=payload, output_format="application/graphml+xml"
+                        payload=payload,
+                        output_format="application/graphml+xml",
+                        algorithm=args.algorithm,
                     )
                 except Exception as e:
                     print(f"  ❌ Collatex alignment error: {e}")
