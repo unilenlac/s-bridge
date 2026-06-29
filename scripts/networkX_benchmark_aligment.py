@@ -147,6 +147,7 @@ async def main():
     ]
 
     aggregated_results = {}
+    all_reference_results = []
 
     async with httpx.AsyncClient(timeout=300.0) as http_client:
         collatex_client = CollatexClient(
@@ -240,7 +241,8 @@ async def main():
                 
                 elapsed_time = time.time() - start_time
 
-                ref_results.append({
+                res_dict = {
+                    "reference": ref,
                     "config_name": config["name"],
                     "total_tokens": total_tokens,
                     "nodes": num_nodes,
@@ -248,7 +250,9 @@ async def main():
                     "merge_ratio": round(merge_ratio, 3),
                     "variation_points": variation_points,
                     "time": round(elapsed_time, 2),
-                })
+                }
+                ref_results.append(res_dict)
+                all_reference_results.append(res_dict)
 
                 # Accumulate for overall aggregated statistics
                 cfg_name = config["name"]
@@ -327,6 +331,33 @@ async def main():
             with open(output_file, "w", encoding="utf-8") as f:
                 f.write("\n".join(summary_lines) + "\n")
             print(f"\n[INFO] Saved overall aggregated summary to {output_file}")
+
+        # Save all reference-level results to CSV if any were generated
+        if all_reference_results:
+            docs_dir = Path(__file__).parent.parent / "docs"
+            os.makedirs(docs_dir, exist_ok=True)
+            csv_output_file = docs_dir / "variant_graph_reference_metrics.csv"
+            import csv
+            try:
+                with open(csv_output_file, "w", newline="", encoding="utf-8") as f:
+                    writer = csv.DictWriter(
+                        f,
+                        fieldnames=[
+                            "reference",
+                            "config_name",
+                            "total_tokens",
+                            "nodes",
+                            "edges",
+                            "merge_ratio",
+                            "variation_points",
+                            "time",
+                        ],
+                    )
+                    writer.writeheader()
+                    writer.writerows(all_reference_results)
+                print(f"\n[INFO] Saved reference-level metrics to {csv_output_file}")
+            except Exception as e:
+                print(f"\n❌ Error writing CSV file: {e}")
 
 
 if __name__ == "__main__":

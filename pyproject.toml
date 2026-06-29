@@ -25,6 +25,8 @@ dependencies = [
     "uvicorn>=0.41.0",
     "torch",
     "transformers>=5.9.0",
+    "scipy>=1.18.0",
+    "statsmodels>=0.14.6",
 ]
 
 [tool.pytest.ini_options]
