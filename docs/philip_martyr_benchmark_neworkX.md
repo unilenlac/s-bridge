@@ -33,3 +33,5 @@ PAIRWISE POST-HOC COMPARISONS (WILCOXON SIGNED-RANK TEST WITH HOLM CORRECTION)
 | Enriched (lemma+pos) vs Enriched (text)    | -4.05             | 9.7454e-03   | 9.7454e-03       | YES          |
 | Enriched (lemma) vs Enriched (text)        | -9.38             | 2.1094e-04   | 4.2187e-04       | YES          |
 ================================================================================
+
+#We compare the node count between each ref for each strategy. A enriched strategy ref has an average of 105 nodes.

@@ -138,3 +138,19 @@ def test_get_all_jobs():
     data = response.json()
     assert len(data) == 1
     assert data[0]["collection_url"] == "http://testdts.com/col"
+
+
+def test_processing_options_algorithm():
+    with TestClient(app) as client:
+        # 1. Test default value parsing (should succeed with 200)
+        resp = client.post("/convert", json={"text": "hello"}, params={})
+        assert resp.status_code == 200
+
+        # 2. Test valid custom algorithm (should succeed with 200)
+        resp = client.post("/convert", json={"text": "hello"}, params={"algorithm": "needleman-wunsch"})
+        assert resp.status_code == 200
+
+        # 3. Test invalid algorithm (should fail with 422 Unprocessable Entity)
+        resp = client.post("/convert", json={"text": "hello"}, params={"algorithm": "invalid-algo"})
+        assert resp.status_code == 422
+

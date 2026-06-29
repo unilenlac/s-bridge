@@ -31,7 +31,10 @@ class CollatexClient:
         self.http_client = http_client
 
     async def collate(
-        self, payload: Dict[str, Any], output_format: str = FORMAT_JSON
+        self,
+        payload: Dict[str, Any],
+        output_format: str = FORMAT_JSON,
+        algorithm: Optional[str] = None,
     ) -> Union[Dict[str, Any], str]:
         """
         Sends a JSON payload to the CollateX service for collation.
@@ -40,6 +43,7 @@ class CollatexClient:
                         See: https://collatex.net/doc/#json-input
         :param output_format: The desired output format (via the Accept header).
                               Defaults to 'application/json'.
+        :param algorithm: Optional alignment algorithm (e.g. 'dekker', 'needleman-wunsch', 'medite').
         :return: If output_format is JSON, returns the parsed Dict.
                  Otherwise, returns the raw string response (XML, DOT, SVG, etc).
         :raises httpx.HTTPError: If the HTTP request fails.
@@ -47,7 +51,10 @@ class CollatexClient:
         url = f"{self.base_url}/collate"
         headers = {"Content-Type": "application/json", "Accept": output_format}
 
-        logger.info(f"Sending collation request to {url} (format: {output_format})")
+        if algorithm:
+            payload["algorithm"] = algorithm
+
+        logger.info(f"Sending collation request to {url} (format: {output_format}, algorithm: {algorithm})")
 
         try:
             response = await self.http_client.post(

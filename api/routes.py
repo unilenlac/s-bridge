@@ -203,6 +203,7 @@ async def collate_to_file(
         result = await collatex_client.collate(
             payload=ready_data.model_dump(by_alias=True, exclude_none=True),
             output_format=output_format,
+            algorithm=options.algorithm,
         )
 
         local_job_dir_name = f"{collection_name}_{temp_job_id}"

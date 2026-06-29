@@ -83,6 +83,7 @@ async def run_collate_job(
                 result = await collatex_client.collate(
                     payload=ready_data.model_dump(by_alias=True, exclude_none=True),
                     output_format=output_format,
+                    algorithm=options.algorithm,
                 )
                 saved_path = witness_service.save_collation_result(
                     collection_name=local_job_dir_name,

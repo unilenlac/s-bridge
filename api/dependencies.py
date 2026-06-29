@@ -22,6 +22,7 @@ _tag_dict = settings.load_tag_dictionary()
 class ProcessingOptions(BaseModel):
     normalization: str
     filter_del: bool
+    algorithm: Literal["dekker", "needleman-wunsch", "medite"] = "dekker"
 
 
 async def get_processing_options(
@@ -32,8 +33,16 @@ async def get_processing_options(
     filter_del: bool = Query(
         True, description="Filter out tokens that are marked as deleted"
     ),
+    algorithm: Literal["dekker", "needleman-wunsch", "medite"] = Query(
+        "dekker",
+        description="CollateX alignment algorithm to use.",
+    ),
 ) -> ProcessingOptions:
-    return ProcessingOptions(normalization=normalization, filter_del=filter_del)
+    return ProcessingOptions(
+        normalization=normalization,
+        filter_del=filter_del,
+        algorithm=algorithm,
+    )
 
 
 def converter_dep(
