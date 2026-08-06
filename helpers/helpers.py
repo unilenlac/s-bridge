@@ -1,12 +1,36 @@
 from logging import Logger
 import os
 import re
-from typing import AsyncGenerator
-from httpx import AsyncClient, RequestError, HTTPStatusError
+from typing import AsyncGenerator, Optional
+from httpx import AsyncClient, RequestError, HTTPStatusError, Response
 
 from core.exceptions import DtsError
 
 from core.config import Settings
+
+
+def extract_dts_error_detail(response: Optional[Response]) -> str:
+    """
+    Extracts detail information from a DTS API error JSON payload.
+    Returns a string formatted as ' — type: message: details' if present, or an empty string.
+    """
+    if response is None:
+        return ""
+    try:
+        payload = response.json()
+        if isinstance(payload, dict):
+            err = payload.get("error", {})
+            if isinstance(err, dict):
+                parts = [
+                    str(p)
+                    for p in (err.get("type"), err.get("message"), err.get("details"))
+                    if p
+                ]
+                if parts:
+                    return " — " + ": ".join(parts)
+    except Exception:
+        pass
+    return ""
 
 
 async def ServerId(url: str, logger: Logger, client: AsyncClient) -> str:
@@ -37,7 +61,8 @@ async def get_xml_from_dts_url(
         response.raise_for_status()
         return response.text
     except HTTPStatusError as e:
-        msg = f"DTS server returned HTTP {e.response.status_code} for {url}"
+        detail = extract_dts_error_detail(e.response)
+        msg = f"DTS server returned HTTP {e.response.status_code} for {url}{detail}"
         logger.error(msg)
         raise DtsError(msg) from e
     except RequestError as e:

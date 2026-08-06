@@ -9,7 +9,7 @@ from copy import deepcopy
 from typing import Optional
 
 from core.exceptions import DtsError
-from helpers.helpers import get_section_filepath
+from helpers.helpers import extract_dts_error_detail, get_section_filepath
 from core.config import Settings
 
 logger = logging.getLogger("s-bridge")
@@ -34,17 +34,7 @@ class DtsPreparator:
 
         res = await http_client.get(url, follow_redirects=True)
         if res.status_code != 200:
-            detail = ""
-            try:
-                payload = res.json()
-                err = payload.get("error", {})
-                parts = [p for p in (err.get("type"), err.get("message"), err.get("details")) if p]
-                if parts:
-                    detail = " — " + ": ".join(parts)
-            except ValueError:
-                # response body wasn't valid JSON (or was empty)
-                pass
-
+            detail = extract_dts_error_detail(res)
             raise DtsError(
                 f"DTS collection endpoint returned HTTP {res.status_code} for {url}{detail}"
             )
@@ -83,17 +73,7 @@ class DtsPreparator:
                     res = await http_client.get(expanded_nav, follow_redirects=True)
                     res.raise_for_status()
                 except HTTPStatusError as e:
-                    detail = ""
-                    try:
-                        payload = e.response.json()
-                        err = payload.get("error", {})
-                        parts = [p for p in (err.get("type"), err.get("message"), err.get("details")) if p]
-                        if parts:
-                            detail = " — " + ": ".join(parts)
-                    except ValueError:
-                        # response body wasn't valid JSON (or was empty)
-                        pass
-
+                    detail = extract_dts_error_detail(e.response)
                     raise DtsError(
                         f"DTS navigation request failed — HTTP {e.response.status_code} for {expanded_nav}{detail}"
                     ) from e
