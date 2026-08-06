@@ -34,8 +34,19 @@ class DtsPreparator:
 
         res = await http_client.get(url, follow_redirects=True)
         if res.status_code != 200:
+            detail = ""
+            try:
+                payload = res.json()
+                err = payload.get("error", {})
+                parts = [p for p in (err.get("type"), err.get("message"), err.get("details")) if p]
+                if parts:
+                    detail = " — " + ": ".join(parts)
+            except ValueError:
+                # response body wasn't valid JSON (or was empty)
+                pass
+
             raise DtsError(
-                f"DTS collection endpoint returned HTTP {res.status_code} for {url}"
+                f"DTS collection endpoint returned HTTP {res.status_code} for {url}{detail}"
             )
         col = res.json()
         collection_title = (
@@ -72,8 +83,19 @@ class DtsPreparator:
                     res = await http_client.get(expanded_nav, follow_redirects=True)
                     res.raise_for_status()
                 except HTTPStatusError as e:
+                    detail = ""
+                    try:
+                        payload = e.response.json()
+                        err = payload.get("error", {})
+                        parts = [p for p in (err.get("type"), err.get("message"), err.get("details")) if p]
+                        if parts:
+                            detail = " — " + ": ".join(parts)
+                    except ValueError:
+                        # response body wasn't valid JSON (or was empty)
+                        pass
+
                     raise DtsError(
-                        f"DTS navigation request failed — HTTP {e.response.status_code} for {expanded_nav}"
+                        f"DTS navigation request failed — HTTP {e.response.status_code} for {expanded_nav}{detail}"
                     ) from e
                 data = res.json()
                 document_url = URITemplate(data.get("resource").get("document"))
