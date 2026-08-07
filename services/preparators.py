@@ -53,7 +53,7 @@ class DtsPreparator:
         ]
 
         if not resource_members:
-            raise DtsError("DTS Error: not a single resource found")
+            raise DtsError("Not a single resource found")
 
         navigation_urls = [
             URITemplate(item.get("navigation")) for item in resource_members
