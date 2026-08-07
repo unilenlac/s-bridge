@@ -15,6 +15,8 @@ class StemmarestClient:
     async def _make_request(self, method: str, endpoint: str, **kwargs) -> dict | str:
         """Helper to handle HTTP requests, error parsing, and JSON decoding."""
         url = f"{self.base_url}{endpoint}"
+        if "timeout" not in kwargs:
+            kwargs["timeout"] = 120.0
         try:
             resp = await self.http_client.request(method, url, **kwargs)
             resp.raise_for_status()

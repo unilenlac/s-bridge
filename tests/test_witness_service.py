@@ -113,7 +113,7 @@ async def test_dts_preparator_collection_member_error():
     }
     mock_client.get.return_value = mock_response
 
-    with pytest.raises(DtsError, match="DTS Error: not a single resource found"):
+    with pytest.raises(DtsError, match="Not a single resource found"):
         await DtsPreparator.run(
             url="http://ftsr-dev.unil.ch:8000/api/dts/v1/collection?id=s-bridge",
             target_ref=None,

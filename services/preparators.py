@@ -32,17 +32,40 @@ class DtsPreparator:
         collation_model = {"witnesses": []}
         paths = []
 
-        res = await http_client.get(url, follow_redirects=True)
-        if res.status_code != 200:
-            detail = extract_dts_error_detail(res)
-            raise DtsError(
-                f"DTS collection endpoint returned HTTP {res.status_code} for {url}{detail}"
-            )
-        col = res.json()
-        collection_title = (
-            col.get("@id") if col.get("title") == "" else col.get("title")
-        )
-        members = col.get("member") or []
+        current_url = url
+        visited_urls = set()
+        members = []
+        collection_title = None
+        collection_id = None
+
+        while current_url and current_url not in visited_urls:
+            visited_urls.add(current_url)
+            res = await http_client.get(current_url, follow_redirects=True)
+            if res.status_code != 200:
+                detail = extract_dts_error_detail(res)
+                raise DtsError(
+                    f"DTS collection endpoint returned HTTP {res.status_code} for {current_url}{detail}"
+                )
+            col = res.json()
+            if collection_title is None:
+                collection_title = (
+                    col.get("@id") if col.get("title") == "" else col.get("title")
+                )
+            if collection_id is None:
+                collection_id = col.get("@id")
+
+            page_members = col.get("member") or []
+            members.extend(page_members)
+
+            view = col.get("view") or {}
+            view_id = view.get("@id")
+            if view_id:
+                visited_urls.add(view_id)
+
+            next_url = view.get("next")
+            if not next_url or next_url in visited_urls:
+                break
+            current_url = next_url
 
         # Select only members of type "resource"
         resource_members = [
@@ -104,7 +127,11 @@ class DtsPreparator:
                 return False, [], collection_title, resources
 
         for ref in refs_list:
-            document_url = list(filter(lambda url: f"ref={ref}" in url, document_urls))
+            document_url = [
+                u
+                for u in document_urls
+                if parse_qs(urlparse(u).query).get("ref", [None])[0] == str(ref)
+            ]
             collation = deepcopy(collation_model)
             if len(document_url):
                 while len(document_url):
@@ -119,7 +146,7 @@ class DtsPreparator:
             collation["ref_id"] = ref
             filepath = get_section_filepath(
                 settings,
-                collection_name=f"{col.get('@id')}_{job_id}",
+                collection_name=f"{collection_id}_{job_id}",
                 ref_id=ref,
                 ext="json",
             )

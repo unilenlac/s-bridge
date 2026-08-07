@@ -31,7 +31,9 @@ async def lifespan(app: FastAPI):
             NLP(settings.language, backend="stanza", suppress_banner=True)
         )
     app.state.proc = proc
-    app.state.http_client = httpx.AsyncClient()
+    app.state.http_client = httpx.AsyncClient(
+        timeout=httpx.Timeout(120.0, connect=10.0)
+    )
     logger.info("CLTK NLP engine initialized successfully.")
 
     yield
