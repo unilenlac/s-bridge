@@ -109,8 +109,7 @@ class DtsPreparator:
 
                 view = data.get("view", {})
                 next_url = view.get("next", "")
-                last_url = view.get("last", "")
-                if not next_url or next_url == last_url:
+                if not next_url or next_url == expanded_nav:
                     break
                 page += 1
 
@@ -133,16 +132,14 @@ class DtsPreparator:
                 if parse_qs(urlparse(u).query).get("ref", [None])[0] == str(ref)
             ]
             collation = deepcopy(collation_model)
-            if len(document_url):
-                while len(document_url):
-                    doc = document_url.pop()
-                    params = parse_qs(urlparse(doc).query)
-                    witness = {
-                        "id": params.get("resource", [None])[0],
-                        "content": doc,
-                        "type": "dts",
-                    }
-                    collation["witnesses"].append(witness)
+            for doc in document_url:
+                params = parse_qs(urlparse(doc).query)
+                witness = {
+                    "id": params.get("resource", [None])[0],
+                    "content": doc,
+                    "type": "dts",
+                }
+                collation["witnesses"].append(witness)
             collation["ref_id"] = ref
             filepath = get_section_filepath(
                 settings,
