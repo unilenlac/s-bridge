@@ -69,8 +69,8 @@ class Settings(BaseSettings):
     # openapi metadata
     oa_app_name: str = "σ-Bridge NLP Server"
     oa_app_description: str = "Remote NLP parsing service using CLTK/Stanza"
-    oa_app_author: str = None
-    oa_app_author_email: str = None
+    oa_app_author: str = ""
+    oa_app_author_email: str = ""
     oa_app_url: list = [{"url": "http://localhost:8000", "description": "Localhost"}]
 
     @property
