@@ -4,7 +4,7 @@ import logging
 
 from httpx import AsyncClient, HTTPStatusError
 from uritemplate import URITemplate
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import urlparse, parse_qs, urljoin
 from copy import deepcopy
 from typing import Optional
 
@@ -63,7 +63,10 @@ class DtsPreparator:
                 visited_urls.add(view_id)
 
             next_url = view.get("next")
-            if not next_url or next_url in visited_urls:
+            if not next_url:
+                break
+            next_url = urljoin(str(res.url), next_url)
+            if next_url in visited_urls:
                 break
             current_url = next_url
 
@@ -84,34 +87,38 @@ class DtsPreparator:
         resources = [item.get("@id") for item in resource_members]
 
         for nav in navigation_urls:
-            page = 1
+            current_url = nav.expand(down=1, page=1)
+            visited_urls = set()
 
-            while True:
-                params = {
-                    "down": 1,
-                    "page": page,
-                }
-                expanded_nav = nav.expand(**params)
+            while current_url and current_url not in visited_urls:
+                visited_urls.add(current_url)
                 try:
-                    res = await http_client.get(expanded_nav, follow_redirects=True)
+                    res = await http_client.get(current_url, follow_redirects=True)
                     res.raise_for_status()
                 except HTTPStatusError as e:
                     detail = extract_dts_error_detail(e.response)
                     raise DtsError(
-                        f"DTS navigation request failed — HTTP {e.response.status_code} for {expanded_nav}{detail}"
+                        f"DTS navigation request failed — HTTP {e.response.status_code} for {current_url}{detail}"
                     ) from e
                 data = res.json()
-                document_url = URITemplate(data.get("resource").get("document"))
+                document_url = URITemplate(data.get("resource", {}).get("document", ""))
 
                 for ref in data.get("member", []):
                     refs_list.append(ref.get("identifier"))
                     document_urls.append(document_url.expand(ref=ref.get("identifier")))
 
-                view = data.get("view", {})
-                next_url = view.get("next", "")
-                if not next_url or next_url == expanded_nav:
+                view = data.get("view") or {}
+                view_id = view.get("@id")
+                if view_id:
+                    visited_urls.add(view_id)
+
+                next_url = view.get("next")
+                if not next_url:
                     break
-                page += 1
+                next_url = urljoin(str(res.url), next_url)
+                if next_url in visited_urls:
+                    break
+                current_url = next_url
 
         refs_list = list(dict.fromkeys(refs_list))
 
