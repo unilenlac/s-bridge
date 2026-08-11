@@ -1,7 +1,8 @@
 import logging
 import httpx
-from typing import Dict, Any, Union
+from typing import Dict, Any, Union, Optional
 
+from core.config import Settings
 from core.exceptions import CollatexError
 
 logger = logging.getLogger(__name__)
@@ -20,14 +21,22 @@ class CollatexClient:
     FORMAT_DOT = "text/plain"
     FORMAT_SVG = "image/svg+xml"
 
-    def __init__(self, base_url: str, http_client: httpx.AsyncClient):
+    def __init__(
+        self,
+        base_url: str,
+        http_client: httpx.AsyncClient,
+        timeout: Optional[float] = None,
+    ):
         """
         Initializes the CollateX Client.
         :param base_url: The base URL of the CollateX API (e.g., "http://localhost:7369")
+        :param http_client: Shared httpx.AsyncClient instance
+        :param timeout: Custom timeout in seconds. Defaults to Settings().collatex_timeout (300s).
         """
-        self.base_url = base_url.rstrip("/")
-        # Using a longer timeout as collation of large texts can be slow
-        self.timeout = httpx.Timeout(60.0, connect=10.0)
+        self.base_url = base_url.rstrip("/") if base_url else ""
+        if timeout is None:
+            timeout = Settings().collatex_timeout
+        self.timeout = httpx.Timeout(timeout, connect=10.0)
         self.http_client = http_client
 
     async def collate(
@@ -70,6 +79,13 @@ class CollatexClient:
 
         except httpx.HTTPStatusError as e:
             msg = f"CollateX returned HTTP {e.response.status_code}: {e.response.text[:200]}"
+            logger.error(msg)
+            raise CollatexError(msg) from e
+        except httpx.TimeoutException as e:
+            msg = (
+                f"CollateX request timed out after {self.timeout.read}s at {url}. "
+                f"The server may still be processing a heavy workload: {e}"
+            )
             logger.error(msg)
             raise CollatexError(msg) from e
         except httpx.RequestError as e:

@@ -32,7 +32,7 @@ async def lifespan(app: FastAPI):
         )
     app.state.proc = proc
     app.state.http_client = httpx.AsyncClient(
-        timeout=httpx.Timeout(120.0, connect=10.0)
+        timeout=httpx.Timeout(settings.collatex_timeout, connect=10.0)
     )
     logger.info("CLTK NLP engine initialized successfully.")
 
