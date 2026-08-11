@@ -54,8 +54,8 @@ class Settings(BaseSettings):
     pipeline: PipelineEnum = PipelineEnum.classical
     language: LanguageEnum = LanguageEnum.anci1242
     tag_config: Optional[str] = None  # Path to a JSON tag dictionary file
-    collatex_api_base_url: str = None
-    stemmarest_api_base_url: str = None
+    collatex_api_base_url: Optional[str] = None
+    stemmarest_api_base_url: Optional[str] = None
     collatex_timeout: float = 300.0
     nlp_analysis_dir: Path = Path("/tmp/s-bridge/pre_collation")
     collation_dir: Path = Path("/tmp/s-bridge/post_collation")
@@ -127,7 +127,7 @@ class Settings(BaseSettings):
             raw = json.loads(path.read_text(encoding="utf-8"))
         except json.JSONDecodeError as exc:
             raise ValueError(
-                f"Tag config file '{self.tag_config}' contains invalid JSON: {exc}"
+                f"Tag config file '{path_str}' contains invalid JSON: {exc}"
             ) from exc
 
         _validate_tag_dictionary(raw, str(path))

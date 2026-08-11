@@ -69,4 +69,4 @@ app.include_router(router)
 app.openapi = custom_openapi
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", root_path=f"{settings.app_root_path}", port=f"{settings.app_port}", log_level="info", access_log=True)
+    uvicorn.run(app, host="0.0.0.0", root_path=f"{settings.app_root_path}", port=settings.app_port, log_level="info", access_log=True)
