@@ -5,6 +5,7 @@ import stanza
 import uvicorn
 import httpx
 from contextlib import asynccontextmanager
+from fastapi.openapi.utils import get_openapi
 
 from core.logging import setup_logging
 
@@ -46,9 +47,26 @@ app = FastAPI(
     description="Remote NLP parsing service using CLTK/Stanza",
     lifespan=lifespan,
 )
+
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    openapi_schema = get_openapi(
+        title=settings.oa_app_name,
+        description=settings.oa_app_description,
+        version="0.1",
+        servers=settings.oa_app_url,
+        contact={"name": settings.oa_app_author, "email": settings.oa_app_author_email},
+        routes=app.routes
+    )
+    [openapi_schema["components"]["schemas"].pop(model, None) for model in ["UrlComponent", "CollectionParams", "DocumentParams", "NavigationParams", "IndexMetadataModel"]]
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
 logger = logging.getLogger("nlp_server")
 
 app.include_router(router)
+app.openapi = custom_openapi
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", root_path=f"{settings.app_root_path}", port=f"{settings.app_port}", log_level="info", access_log=True)

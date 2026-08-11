@@ -63,6 +63,16 @@ class Settings(BaseSettings):
     log_file: Optional[Path] = Path("/var/log/s-bridge/s-bridge.log")
     timezone: TimezoneEnum | str = TimezoneEnum.zurich
 
+    app_root_path: str = ""  # For reverse proxy setups, e.g., "/s-bridge"
+    app_port: int = 8000
+
+    # openapi metadata
+    oa_app_name: str = "σ-Bridge NLP Server"
+    oa_app_description: str = "Remote NLP parsing service using CLTK/Stanza"
+    oa_app_author: str = None
+    oa_app_author_email: str = None
+    oa_app_url: list = [{"url": "http://localhost:8000", "description": "Localhost"}]
+
     @property
     def database_url(self) -> str:
         return "sqlite+aiosqlite:///data/s_bridge.db"
