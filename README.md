@@ -22,7 +22,7 @@ cp .env.example .env
 Ensure that `COLLATEX_API_BASE_URL` and `STEMMAREST_API_BASE_URL` point to your running CollateX and Stemmarest instances.
 
 > [!NOTE]
-> **Network Binding & Ports**: By default, the service binds to the local loopback interface (`127.0.0.1:8500`) in [docker-compose.yml]. For production server deployment, adapt the `ports` configuration in [docker-compose.yml] to bind to your specific host IP (e.g., `"192.168.1.50:8500:8500"`) or expose it publicly (e.g., `"0.0.0.0:8500:8500"`).
+> **Network Binding & Ports**: By default, the service binds to the local loopback interface (`127.0.0.1:8000`) in [docker-compose.yml]. For production server deployment, adapt the `ports` configuration in [docker-compose.yml] to bind to your specific host IP (e.g., `"192.168.1.50:8000:8000"`) or expose it publicly (e.g., `"0.0.0.0:8000:8000"`).
 
 ### 3. Start the Application
 Build and run the stack:
@@ -32,8 +32,8 @@ docker compose up --build -d
 *(Or if you have `make` installed—which can be installed via `sudo apt install make` on Debian/Ubuntu—run `make build && make up`)*
 
 The service will automatically run database migrations on start and listen on port `8500`.
-- **API Documentation (Swagger UI)**: [http://yourhost:8500/docs]
-- **API ReDoc**: [http://yourhost:8500/redoc]
+- **API Documentation (Swagger UI)**: [http://yourhost:8000/docs]
+- **API ReDoc**: [http://yourhost:8000/redoc]
 
 ---
 
@@ -66,7 +66,7 @@ uv run alembic upgrade head
 
 ### 4. Start the Development Server
 ```bash
-uv run uvicorn main:app --reload --host 127.0.0.1 --port 8500
+uv run uvicorn main:app --reload --host 127.0.0.1 --port 8000
 ```
 *(Or use `make dev`)*
 
