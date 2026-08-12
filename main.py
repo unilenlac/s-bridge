@@ -63,7 +63,14 @@ def custom_openapi():
         contact={"name": settings.oa_app_author, "email": settings.oa_app_author_email},
         routes=app.routes
     )
-    [openapi_schema["components"]["schemas"].pop(model, None) for model in ["UrlComponent", "CollectionParams", "DocumentParams", "NavigationParams", "IndexMetadataModel"]]
+    for model in [
+        "UrlComponent",
+        "CollectionParams",
+        "DocumentParams",
+        "NavigationParams",
+        "IndexMetadataModel",
+    ]:
+        openapi_schema["components"]["schemas"].pop(model, None)
     app.openapi_schema = openapi_schema
     return app.openapi_schema
 
@@ -73,4 +80,11 @@ app.include_router(router)
 app.openapi = custom_openapi
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", root_path=f"{settings.app_root_path}", port=int(f"{settings.app_port}"), log_level="info", access_log=True)
+    uvicorn.run(
+        app,
+        host="0.0.0.0",
+        root_path=settings.app_root_path,
+        port=settings.app_port,
+        log_level="info",
+        access_log=True,
+    )
