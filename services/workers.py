@@ -80,8 +80,27 @@ async def run_collate_job(
                     converter, options, http_client, path
                 )
                 ready_data = witness_service.load_prepared_section(path)
+
+                job.current_ref = ready_data.ref_id
+                session.add(job)
+                await session.commit()
+
+                # Optimized lightweight payload for CollateX (strips heavy unused metadata)
+                #THIS IS TO REDUCE LOAD ON COLLATEX. SOLVED TIMEOUT PROD ISSUE
+                collatex_payload = {
+                    "witnesses": [
+                        {
+                            "id": w.id,
+                            "tokens": [
+                                {"t": t.text, "n": t.normalization} for t in w.tokens
+                            ],
+                        }
+                        for w in ready_data.witnesses
+                    ]
+                }
+
                 result = await collatex_client.collate(
-                    payload=ready_data.model_dump(by_alias=True, exclude_none=True),
+                    payload=collatex_payload,
                     output_format=output_format,
                     algorithm=options.algorithm,
                 )
@@ -154,6 +173,7 @@ async def run_collate_job(
             else:
                 error_prefix = "Internal Error"
 
-            job.error_message = f"{error_prefix}: {str(e)}"[:500]
+            failed_ref_info = f" (at ref '{job.current_ref}')" if job.current_ref else ""
+            job.error_message = f"{error_prefix}{failed_ref_info}: {str(e)}"[:500]
             session.add(job)
             await session.commit()

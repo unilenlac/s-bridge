@@ -45,6 +45,7 @@ class Job(SQLModel, table=True):
     # collections do not map to SQLite/Postgres JSON fields natively without this mapping.
     resources: List[str] = Field(default_factory=list, sa_column=Column(JSON))
     ref: Optional[str] = None
+    current_ref: Optional[str] = None
     status: JobStatus = Field(default=JobStatus.PENDING)
     error_message: Optional[str] = None
 

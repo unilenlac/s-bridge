@@ -33,6 +33,7 @@ def setup_logging(settings: "Settings | None" = None) -> logging.Logger:
 
     logger = logging.getLogger("s-bridge")
     logger.setLevel(logging.DEBUG)
+    logger.propagate = False
 
     if logger.hasHandlers():
         return logger
