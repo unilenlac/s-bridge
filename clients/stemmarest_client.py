@@ -1,16 +1,27 @@
 import logging
+from typing import Optional
 from httpx import AsyncClient, HTTPStatusError, RequestError
 from json import JSONDecodeError
 
+from core.config import Settings
 from core.exceptions import StemmarestError
 
 logger = logging.getLogger("s-bridge")
 
 
 class StemmarestClient:
-    def __init__(self, base_url: str, http_client: AsyncClient):
-        self.base_url = base_url.rstrip("/")
+    def __init__(
+        self,
+        base_url: str,
+        http_client: AsyncClient,
+        user: Optional[str] = None,
+        password: Optional[str] = None,
+    ):
+        self.base_url = base_url.rstrip("/") if base_url else ""
         self.http_client = http_client
+        settings = Settings()
+        self.user = user if user is not None else settings.stemmarest_user
+        self.password = password if password is not None else settings.stemmarest_password
 
     async def _make_request(self, method: str, endpoint: str, **kwargs) -> dict | str:
         """Helper to handle HTTP requests, error parsing, and JSON decoding."""
@@ -56,7 +67,7 @@ class StemmarestClient:
             "language": language,
             "direction": direction,
             "public": str(is_public).lower(),
-            "userId": "user",
+            "userId": self.user,
             "filetype": "graphml",
         }
         empty_graphml = b"""<?xml version="1.0" encoding="UTF-8"?><graphml xmlns="[http://graphml.graphdrawing.org/xmlns](http://graphml.graphdrawing.org/xmlns)" xmlns:xsi="http://www.w3.```org/2001/XMLSchema-instance" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd"><graph id="G" edgedefault="directed"></graph></graphml>"""
@@ -69,7 +80,7 @@ class StemmarestClient:
             "/tradition",
             data={"name": name},
             files=files,
-            auth=("user", "userpass"),
+            auth=(self.user, self.password),
         )
 
         if isinstance(trad_dict, str):
@@ -103,7 +114,7 @@ class StemmarestClient:
                     f"/tradition/{trad_id}/section",
                     data=data,
                     files=files,
-                    auth=("user", "userpass"),
+                    auth=(self.user, self.password),
                 )
 
                 logger.info(

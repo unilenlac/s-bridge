@@ -108,7 +108,10 @@ async def process_and_collate_resources(
             base_url=settings.collatex_api_base_url, http_client=http_client
         )
         stemmarest_client = StemmarestClient(
-            base_url=settings.stemmarest_api_base_url, http_client=http_client
+            base_url=settings.stemmarest_api_base_url,
+            http_client=http_client,
+            user=settings.stemmarest_user,
+            password=settings.stemmarest_password,
         )
 
         # Create Job

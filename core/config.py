@@ -56,6 +56,8 @@ class Settings(BaseSettings):
     tag_config: Optional[str] = None  # Path to a JSON tag dictionary file
     collatex_api_base_url: Optional[str] = None
     stemmarest_api_base_url: Optional[str] = None
+    stemmarest_user: str = "user"
+    stemmarest_password: str = "userpass"
     collatex_timeout: float = 300.0
     nlp_analysis_dir: Path = Path("/tmp/s-bridge/pre_collation")
     collation_dir: Path = Path("/tmp/s-bridge/post_collation")
