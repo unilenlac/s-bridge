@@ -35,7 +35,7 @@ COPY . .
 ENV PATH="/app/.venv/bin:$PATH"
 
 
-EXPOSE 8500
+EXPOSE 8000
 
 ENTRYPOINT ["/app/entrypoint.sh"]
 
