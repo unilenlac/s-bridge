@@ -1,5 +1,5 @@
 from cltk import NLP
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 import logging
 import stanza
 import uvicorn
@@ -48,6 +48,10 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+@app.get("/app")
+def read_main(request: Request):
+    return {"message": "Hello World", "root_path": request.scope.get("root_path")}
+
 def custom_openapi():
     if app.openapi_schema:
         return app.openapi_schema
@@ -69,4 +73,4 @@ app.include_router(router)
 app.openapi = custom_openapi
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", root_path=f"{settings.app_root_path}", port=f"{settings.app_port}", log_level="info", access_log=True)
+    uvicorn.run(app, host="0.0.0.0", root_path=f"{settings.app_root_path}", port=int(f"{settings.app_port}"), log_level="info", access_log=True)
