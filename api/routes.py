@@ -115,7 +115,13 @@ async def process_and_collate_resources(
         )
 
         # Create Job
-        job = Job(collection_url=req.collection_url, resources=[], ref=req.ref)
+        job = Job(
+            collection_url=req.collection_url,
+            resources=[],
+            ref=req.ref,
+            algorithm=options.algorithm,
+            normalization=options.normalization,
+        )
         session.add(job)
         await session.commit()
         await session.refresh(job)

@@ -46,6 +46,8 @@ class Job(SQLModel, table=True):
     resources: List[str] = Field(default_factory=list, sa_column=Column(JSON))
     ref: Optional[str] = None
     current_ref: Optional[str] = None
+    algorithm: Optional[str] = Field(default="dekker")
+    normalization: Optional[str] = Field(default="lemma")
     status: JobStatus = Field(default=JobStatus.PENDING)
     error_message: Optional[str] = None
 
