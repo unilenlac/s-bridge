@@ -8,7 +8,7 @@ class ClassicalProcessor:
         # Initialize any necessary resources for processing Greek text
         self.pipeline = pipeline
 
-    def process(self, data, normalization="lemma"):
+    def process(self, data, normalization="lemma", smart_det=True):
         # Run the NLP pipeline
         cltk_doc = self.pipeline.analyze(data)
 
@@ -53,7 +53,10 @@ class ClassicalProcessor:
             )
 
             if normalization == "lemma":
-                norm_str = lemma_raw
+                if smart_det and pos_tag == "DET":
+                    norm_str = word.string
+                else:
+                    norm_str = lemma_raw
             elif normalization == "text":
                 norm_str = word.string
             else:
@@ -84,7 +87,7 @@ class ModernProcessor:
         # Initialize any necessary resources for processing modern text
         self.pipeline = pipeline
 
-    def process(self, data, normalization="lemma"):
+    def process(self, data, normalization="lemma", smart_det=True):
         stanza_doc = self.pipeline(data)
         tokens = []
         for sentence in stanza_doc.sentences:
@@ -138,7 +141,10 @@ class ModernProcessor:
                 )
 
                 if normalization == "lemma":
-                    norm_str = lemma_raw
+                    if smart_det and pos_tag == "DET":
+                        norm_str = word.text
+                    else:
+                        norm_str = lemma_raw
                 elif normalization == "text":
                     norm_str = word.text
                 else:
@@ -168,7 +174,7 @@ class RawProcessor:
     def __init__(self, pipeline: Any = None):
         pass
 
-    def process(self, data: str, normalization: str = "text") -> list[Token]:
+    def process(self, data: str, normalization: str = "text", smart_det: bool = True) -> list[Token]:
         words = data.split()
         tokens = []
         for word in words:

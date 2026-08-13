@@ -23,6 +23,7 @@ class ProcessingOptions(BaseModel):
     normalization: str
     filter_del: bool
     algorithm: Literal["dekker", "needleman-wunsch", "medite"] = "dekker"
+    smart_det: bool = True
 
 
 async def get_processing_options(
@@ -37,11 +38,16 @@ async def get_processing_options(
         "dekker",
         description="CollateX alignment algorithm to use.",
     ),
+    smart_det: bool = Query(
+        True,
+        description="Disambiguate determinants (articles) by preserving surface forms (pure text) when lemmatizing to prevent Collatex alignment collapse with Dekker algorithm.",
+    ),
 ) -> ProcessingOptions:
     return ProcessingOptions(
         normalization=normalization,
         filter_del=filter_del,
         algorithm=algorithm,
+        smart_det=smart_det,
     )
 
 

@@ -13,7 +13,7 @@ client = TestClient(app)
 
 def get_mock_converter():
     class MockConverter:
-        def run(self, data, normalization="lemma", filter_del=True):
+        def run(self, data, normalization="lemma", filter_del=True, smart_det=True):
             return []
 
     return MockConverter()
@@ -153,4 +153,77 @@ def test_processing_options_algorithm():
         # 3. Test invalid algorithm (should fail with 422 Unprocessable Entity)
         resp = client.post("/convert", json={"text": "hello"}, params={"algorithm": "invalid-algo"})
         assert resp.status_code == 422
+
+
+def test_processing_options_smart_det():
+    with TestClient(app) as client:
+        # 1. Default smart_det should be True (200 OK)
+        resp = client.post("/convert", json={"text": "hello"}, params={})
+        assert resp.status_code == 200
+
+        # 2. Explicit smart_det=false
+        resp = client.post("/convert", json={"text": "hello"}, params={"smart_det": "false"})
+        assert resp.status_code == 200
+
+        # 3. Explicit smart_det=true
+        resp = client.post("/convert", json={"text": "hello"}, params={"smart_det": "true"})
+        assert resp.status_code == 200
+
+
+def test_prepare_to_file(monkeypatch, tmp_path):
+    from api import routes
+
+    mock_ws = MockWitnessService()
+    # Create a temporary JSON file to simulate section output
+    dummy_json_path = tmp_path / "mock_142.json"
+    dummy_json_path.write_text('{"ref_id": "142", "witnesses": []}', encoding="utf-8")
+
+    mock_ws.preprocess_sections = AsyncMock(
+        return_value=(True, [str(dummy_json_path)], "MockCollection", ["w1", "w2"])
+    )
+    mock_ws.analyse_section = AsyncMock(return_value=str(dummy_json_path))
+    monkeypatch.setattr(routes, "WitnessService", MagicMock(return_value=mock_ws))
+
+    from api.dependencies import http_client
+    app.dependency_overrides[http_client] = lambda: AsyncMock()
+
+    with TestClient(app) as client:
+        resp = client.post(
+            "/prepare-to-file",
+            json={
+                "collection_url": "http://testdts.com/api/dts/v1/collection?id=test_col",
+                "ref": "142",
+            },
+        )
+    assert resp.status_code == 200
+    assert resp.headers["content-type"] == "application/json"
+
+
+def test_prepare(monkeypatch, tmp_path):
+    from api import routes
+
+    mock_ws = MockWitnessService()
+    dummy_json_path = tmp_path / "mock_142.json"
+    dummy_json_path.write_text('{"ref_id": "142", "witnesses": []}', encoding="utf-8")
+
+    mock_ws.preprocess_sections = AsyncMock(
+        return_value=(True, [str(dummy_json_path)], "MockCollection", ["w1", "w2"])
+    )
+    mock_ws.analyse_section = AsyncMock(return_value=str(dummy_json_path))
+    monkeypatch.setattr(routes, "WitnessService", MagicMock(return_value=mock_ws))
+
+    from api.dependencies import http_client
+    app.dependency_overrides[http_client] = lambda: AsyncMock()
+
+    with TestClient(app) as client:
+        resp = client.post(
+            "/prepare",
+            json={
+                "collection_url": "http://testdts.com/api/dts/v1/collection?id=test_col",
+                "ref": "142",
+            },
+        )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "witnesses" in data
 

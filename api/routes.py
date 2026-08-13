@@ -2,11 +2,13 @@ import os
 import shutil
 import uuid
 import logging
-
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, Query
+
+from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import select
 
 from core.interfaces import Converter
 from api.dependencies import (
@@ -15,17 +17,14 @@ from api.dependencies import (
     ProcessingOptions,
     http_client,
 )
-from models.tokenization import Token
+from models.tokenization import Token, CollatexResponse
 from clients.collatex_client import CollatexClient
 from clients.stemmarest_client import StemmarestClient
 from services.witness_service import WitnessService
 from services.workers import run_collate_job
 from core.database import get_session
-from sqlalchemy.ext.asyncio import AsyncSession
 from models.schema import Job, JobStatus, Tradition
-from fastapi import BackgroundTasks
 from core.config import Settings
-from sqlmodel import select
 
 logger = logging.getLogger("s-bridge")
 
@@ -34,11 +33,19 @@ router = APIRouter()
 
 settings = Settings()
 
-# collatex_client and stemmarest_client are instantiated per-route to utilize the global http_client pool
-
 
 class ConvertRequest(BaseModel):
     text: str
+
+
+class CollatexWitnessRequest(BaseModel):
+    collection_url: str
+    ref: Optional[str] = ""
+
+
+class CollatexWitnessFileRequest(BaseModel):
+    collection_url: str
+    ref: str  # Required for this route
 
 
 @router.post(
@@ -54,23 +61,148 @@ async def convert(
     converter: Converter = Depends(converter_dep),
 ):
     return converter.run(
-        req.text, normalization=options.normalization, filter_del=options.filter_del
+        req.text,
+        normalization=options.normalization,
+        filter_del=options.filter_del,
+        smart_det=options.smart_det,
     )
 
 
 # ---------------------------------------------------------------------------
-# Witness endpoint — fetch multiple witnesses for Collatex (optional ref)
+# Prepare endpoint — fetch from DTS and generate Collatex input JSON file
 # ---------------------------------------------------------------------------
 
 
-class CollatexWitnessRequest(BaseModel):
-    collection_url: str
-    ref: Optional[str] = ""
+@router.post(
+    "/prepare-to-file",
+    response_class=FileResponse,
+    description=(
+        "Synchronous DTS Fetching and NLP Tokenization Pipeline. Fetches XML resources from the DTS service for a specific reference, "
+        "processes them through a CLTK/Stanza NLP engine to convert text into deep-normalized token lists, "
+        "and returns the resulting Collatex input JSON file (e.g. 142.json) as a downloadable file."
+    ),
+)
+async def prepare_to_file(
+    *,
+    req: CollatexWitnessFileRequest,
+    background_tasks: BackgroundTasks,
+    options: ProcessingOptions = Depends(get_processing_options),
+    converter: Converter = Depends(converter_dep),
+    http_client: http_client,
+):
+    try:
+        logger.info(
+            f"Received synchronous file preparation request for collection URL: {req.collection_url} with ref: {req.ref}"
+        )
+
+        witness_service = WitnessService()
+        temp_job_id = str(uuid.uuid4())
+
+        # 1. Preprocess section manifest from DTS
+        (
+            res,
+            paths,
+            collection_name,
+            resources,
+        ) = await witness_service.preprocess_sections(
+            req.collection_url, req.ref, temp_job_id, http_client, settings
+        )
+
+        if not res or not paths:
+            raise HTTPException(
+                status_code=400,
+                detail="Failed to preprocess the specified reference. It might not exist in the collection.",
+            )
+
+        path = paths[0]
+
+        # 2. Fetch XML witness content from DTS and run NLP analysis/tokenization
+        await witness_service.analyse_section(converter, options, http_client, path)
+
+        # 3. Schedule cleanup of temp directory after response is sent
+        def cleanup_temp_dirs():
+            try:
+                pre_collation_dir = os.path.join(
+                    settings.nlp_analysis_dir, f"{collection_name}_{temp_job_id}"
+                )
+                if os.path.exists(pre_collation_dir):
+                    shutil.rmtree(pre_collation_dir)
+                    logger.info(f"Cleanup: Deleted temp directory at {pre_collation_dir}")
+            except Exception as e:
+                logger.warning(f"Error cleaning up temp directory: {e}")
+
+        background_tasks.add_task(cleanup_temp_dirs)
+
+        filename = f"{req.ref}.json" if req.ref else "collatex_input.json"
+
+        return FileResponse(
+            path=path,
+            media_type="application/json",
+            filename=filename,
+        )
+
+    except Exception as e:
+        logger.error(f"Error during synchronous file preparation: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
 
 
-class CollatexWitnessFileRequest(BaseModel):
-    collection_url: str
-    ref: str  # Required for this route
+@router.post(
+    "/prepare",
+    response_model=CollatexResponse,
+    description=(
+        "Synchronous DTS Fetching and NLP Tokenization. Fetches XML resources from the DTS service for a specific reference, "
+        "processes them through a CLTK/Stanza NLP engine, and returns the Collatex JSON payload directly."
+    ),
+)
+async def prepare(
+    *,
+    req: CollatexWitnessFileRequest,
+    options: ProcessingOptions = Depends(get_processing_options),
+    converter: Converter = Depends(converter_dep),
+    http_client: http_client,
+):
+    try:
+        logger.info(
+            f"Received synchronous preparation request for collection URL: {req.collection_url} with ref: {req.ref}"
+        )
+
+        witness_service = WitnessService()
+        temp_job_id = str(uuid.uuid4())
+
+        # 1. Preprocess section manifest from DTS
+        (
+            res,
+            paths,
+            collection_name,
+            resources,
+        ) = await witness_service.preprocess_sections(
+            req.collection_url, req.ref, temp_job_id, http_client, settings
+        )
+
+        if not res or not paths:
+            raise HTTPException(
+                status_code=400,
+                detail="Failed to preprocess the specified reference. It might not exist in the collection.",
+            )
+
+        path = paths[0]
+
+        # 2. Fetch XML witness content from DTS and run NLP analysis/tokenization
+        await witness_service.analyse_section(converter, options, http_client, path)
+        ready_data = witness_service.load_prepared_section(path)
+
+        # Cleanup temp directory
+        pre_collation_dir = os.path.join(
+            settings.nlp_analysis_dir, f"{collection_name}_{temp_job_id}"
+        )
+        if os.path.exists(pre_collation_dir):
+            shutil.rmtree(pre_collation_dir)
+
+        return ready_data
+
+    except Exception as e:
+        logger.error(f"Error during synchronous preparation: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # ---------------------------------------------------------------------------
@@ -121,6 +253,7 @@ async def process_and_collate_resources(
             ref=req.ref,
             algorithm=options.algorithm,
             normalization=options.normalization,
+            smart_det=options.smart_det,
         )
         session.add(job)
         await session.commit()

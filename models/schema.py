@@ -48,6 +48,7 @@ class Job(SQLModel, table=True):
     current_ref: Optional[str] = None
     algorithm: Optional[str] = Field(default="dekker")
     normalization: Optional[str] = Field(default="lemma")
+    smart_det: Optional[bool] = Field(default=True)
     status: JobStatus = Field(default=JobStatus.PENDING)
     error_message: Optional[str] = None
 

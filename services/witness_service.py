@@ -83,6 +83,7 @@ class WitnessService:
                 xml_data,
                 normalization=options.normalization,
                 filter_del=options.filter_del,
+                smart_det=options.smart_det,
             )
 
             # 3. Return the populated witness
