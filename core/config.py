@@ -59,6 +59,7 @@ class Settings(BaseSettings):
     stemmarest_user: str = "user"
     stemmarest_password: str = "userpass"
     collatex_timeout: float = 300.0
+    collatex_dekker_timeout: float = 5.0
     nlp_analysis_dir: Path = Path("/tmp/s-bridge/pre_collation")
     collation_dir: Path = Path("/tmp/s-bridge/post_collation")
     environment: EnvironmentEnum = EnvironmentEnum.dev

@@ -342,10 +342,11 @@ async def collate_to_file(
         ready_data = witness_service.load_prepared_section(path)
 
         # 3. Collate
-        result = await collatex_client.collate(
+        result, used_algo, fell_back = await collatex_client.collate_with_fallback(
             payload=ready_data.model_dump(by_alias=True, exclude_none=True),
             output_format=output_format,
             algorithm=options.algorithm,
+            ref_id=ready_data.ref_id,
         )
 
         local_job_dir_name = f"{collection_name}_{temp_job_id}"

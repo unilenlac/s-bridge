@@ -99,11 +99,24 @@ async def run_collate_job(
                     ]
                 }
 
-                result = await collatex_client.collate(
-                    payload=collatex_payload,
-                    output_format=output_format,
-                    algorithm=options.algorithm,
+                result, used_algo, fell_back = (
+                    await collatex_client.collate_with_fallback(
+                        payload=collatex_payload,
+                        output_format=output_format,
+                        algorithm=options.algorithm,
+                        ref_id=ready_data.ref_id,
+                    )
                 )
+
+                if fell_back:
+                    if job.fallback_refs is None:
+                        job.fallback_refs = []
+                    if ready_data.ref_id not in job.fallback_refs:
+                        job.fallback_refs.append(ready_data.ref_id)
+                        flag_modified(job, "fallback_refs")
+                        session.add(job)
+                        await session.commit()
+
                 saved_path = witness_service.save_collation_result(
                     collection_name=local_job_dir_name,
                     ref_id=ready_data.ref_id,
