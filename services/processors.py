@@ -48,11 +48,24 @@ class ClassicalProcessor:
                 for tag in word.features.features:
                     feats_dict[tag.key] = tag.value
 
+            # Safely extract lemma and stem (falling back to lemma or surface string if None)
             lemma_raw = (
-                word.lemma if getattr(word, "lemma", None) is not None else word.string
+                getattr(word, "lemma", None)
+                if getattr(word, "lemma", None) is not None
+                else word.string
+            )
+            stem_raw = (
+                getattr(word, "stem", None)
+                if getattr(word, "stem", None) is not None
+                else lemma_raw
             )
 
-            if normalization == "lemma":
+            if normalization == "stem":
+                if smart_det and pos_tag == "DET":
+                    norm_str = word.string
+                else:
+                    norm_str = stem_raw
+            elif normalization == "lemma":
                 if smart_det and pos_tag == "DET":
                     norm_str = word.string
                 else:
@@ -134,13 +147,24 @@ class ModernProcessor:
                             key, value = feat.split("=", 1)
                             feats_dict[key] = value
 
+                # Safely extract lemma and stem (falling back to lemma or surface text if None)
                 lemma_raw = (
-                    word.lemma
+                    getattr(word, "lemma", None)
                     if getattr(word, "lemma", None) is not None
                     else word.text
                 )
+                stem_raw = (
+                    getattr(word, "stem", None)
+                    if getattr(word, "stem", None) is not None
+                    else lemma_raw
+                )
 
-                if normalization == "lemma":
+                if normalization == "stem":
+                    if smart_det and pos_tag == "DET":
+                        norm_str = word.text
+                    else:
+                        norm_str = stem_raw
+                elif normalization == "lemma":
                     if smart_det and pos_tag == "DET":
                         norm_str = word.text
                     else:
