@@ -31,11 +31,15 @@ async def lifespan(app: FastAPI):
         proc = ClassicalProcessor(
             NLP(settings.language, backend="stanza", suppress_banner=True)
         )
+
+    logger.info("Warming up NLP pipeline and downloading required models...")
+    proc.process("warmup")
+
     app.state.proc = proc
     app.state.http_client = httpx.AsyncClient(
         timeout=httpx.Timeout(settings.collatex_timeout, connect=10.0)
     )
-    logger.info("CLTK NLP engine initialized successfully.")
+    logger.info("CLTK NLP engine initialized and ready.")
 
     yield
 
