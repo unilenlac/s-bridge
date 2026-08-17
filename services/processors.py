@@ -1,6 +1,7 @@
 from typing import Any
 from stanza import Pipeline
 from models.tokenization import Token
+from helpers.helpers import strip_accents
 
 
 class ClassicalProcessor:
@@ -72,6 +73,8 @@ class ClassicalProcessor:
                     norm_str = lemma_raw
             elif normalization == "text":
                 norm_str = word.string
+            elif normalization == "unaccented_text":
+                norm_str = strip_accents(word.string)
             else:
                 norm_str = f"{lemma_raw}+{pos_tag}"
 
@@ -171,6 +174,8 @@ class ModernProcessor:
                         norm_str = lemma_raw
                 elif normalization == "text":
                     norm_str = word.text
+                elif normalization == "unaccented_text":
+                    norm_str = strip_accents(word.text)
                 else:
                     norm_str = f"{lemma_raw}+{pos_tag}"
 
@@ -202,13 +207,18 @@ class RawProcessor:
         words = data.split()
         tokens = []
         for word in words:
+            if normalization == "unaccented_text":
+                norm_str = strip_accents(word)
+            else:
+                norm_str = word
             tokens.append(
                 Token(
                     text=word + " ",
-                    normalization=word,
+                    normalization=norm_str,
                     original=word,
                     lemma="",
                 )
             )
         return tokens
+
 

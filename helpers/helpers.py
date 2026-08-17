@@ -90,3 +90,35 @@ def extract_body_content(data: str) -> str:
 
     return data[start_idx:]
 
+
+def strip_accents(text: str) -> str:
+    """
+    Normalizes a token/word string to its unaccented, lowercased base form
+    matching historical xml2stemmarest normal_form behavior.
+
+    1. Removes punctuation characters (both ASCII and Greek specific like ·, ·, ;).
+    2. Decomposes Unicode characters to NFD (Canonical Decomposition).
+    3. Strips all combining diacritical marks (Unicode category 'Mn': acute, grave,
+       perispomeni/circumflex, rough/smooth breathing, diaeresis, iota subscript, etc.).
+    4. Converts to lowercase and strips whitespace.
+    """
+    import unicodedata
+    import string
+
+    if not text:
+        return ""
+
+    # Remove standard and Greek-specific punctuation
+    extra_punct = "··;’'\"«»—–,.;:!?()[]{}"
+    punct_set = set(string.punctuation).union(set(extra_punct))
+    cleaned = "".join(c for c in text if c not in punct_set)
+
+    # Decompose to NFD
+    nfd_text = unicodedata.normalize("NFD", cleaned)
+
+    # Filter out combining marks
+    unaccented = "".join(c for c in nfd_text if unicodedata.category(c) != "Mn")
+
+    return unaccented.lower().strip()
+
+

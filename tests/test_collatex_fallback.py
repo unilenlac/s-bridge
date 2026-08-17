@@ -1,0 +1,82 @@
+import pytest
+import httpx
+from unittest.mock import AsyncMock, MagicMock
+from clients.collatex_client import CollatexClient
+from models.schema import Job
+
+
+@pytest.mark.anyio
+async def test_collatex_dekker_success():
+    mock_http = AsyncMock()
+    mock_resp = MagicMock()
+    mock_resp.json.return_value = {"table": [["a", "a"]]}
+    mock_resp.raise_for_status.return_value = None
+    mock_http.post.return_value = mock_resp
+
+    client = CollatexClient(base_url="http://localhost:7369", http_client=mock_http)
+    payload = {"witnesses": [{"id": "w1", "tokens": [{"t": "a", "n": "a"}]}]}
+
+    result, algo, fell_back = await client.collate_with_fallback(
+        payload=payload, algorithm="dekker", dekker_timeout=5.0, ref_id="101"
+    )
+
+    assert algo == "dekker"
+    assert fell_back is False
+    assert result == {"table": [["a", "a"]]}
+    assert mock_http.post.call_count == 1
+
+
+@pytest.mark.anyio
+async def test_collatex_dekker_timeout_fallback_to_needleman():
+    mock_http = AsyncMock()
+
+    # First call (dekker) raises TimeoutException, second call (needleman-wunsch) succeeds
+    mock_success_resp = MagicMock()
+    mock_success_resp.json.return_value = {"table": [["a", "a"]]}
+    mock_success_resp.raise_for_status.return_value = None
+
+    mock_http.post.side_effect = [
+        httpx.TimeoutException("Read timed out"),
+        mock_success_resp,
+    ]
+
+    client = CollatexClient(base_url="http://localhost:7369", http_client=mock_http)
+    payload = {"witnesses": [{"id": "w1", "tokens": [{"t": "a", "n": "a"}]}]}
+
+    result, algo, fell_back = await client.collate_with_fallback(
+        payload=payload, algorithm="dekker", dekker_timeout=5.0, ref_id="142"
+    )
+
+    assert algo == "needleman-wunsch"
+    assert fell_back is True
+    assert result == {"table": [["a", "a"]]}
+    assert mock_http.post.call_count == 2
+
+
+@pytest.mark.anyio
+async def test_collatex_explicit_algorithm_no_fallback():
+    mock_http = AsyncMock()
+    mock_resp = MagicMock()
+    mock_resp.json.return_value = {"table": [["a", "a"]]}
+    mock_resp.raise_for_status.return_value = None
+    mock_http.post.return_value = mock_resp
+
+    client = CollatexClient(base_url="http://localhost:7369", http_client=mock_http)
+    payload = {"witnesses": [{"id": "w1", "tokens": [{"t": "a", "n": "a"}]}]}
+
+    result, algo, fell_back = await client.collate_with_fallback(
+        payload=payload, algorithm="medite", ref_id="101"
+    )
+
+    assert algo == "medite"
+    assert fell_back is False
+    assert mock_http.post.call_count == 1
+
+
+def test_job_model_fallback_refs():
+    job = Job(
+        collection_url="http://test.com/dts",
+        fallback_refs=["142"],
+    )
+    assert job.fallback_refs == ["142"]
+    assert job.algorithm == "dekker"

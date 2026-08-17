@@ -56,7 +56,11 @@ class Job(SQLModel, table=True):
         ),
         schema_extra={"example": "dekker"},
     )
-    normalization: Optional[str] = Field(default="lemma")
+    normalization: Optional[str] = Field(
+        default="lemma",
+        description="Token normalization strategy ('lemma', 'lemma+pos', 'stem', 'text', 'unaccented_text').",
+        schema_extra={"example": "lemma"},
+    )
     smart_det: Optional[bool] = Field(default=True)
     fallback_refs: List[str] = Field(default_factory=list, sa_column=Column(JSON))
     status: JobStatus = Field(default=JobStatus.PENDING)

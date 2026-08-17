@@ -29,7 +29,7 @@ class ProcessingOptions(BaseModel):
 async def get_processing_options(
     normalization: str = Query(
         "lemma",
-        description="Token normalization string. Options: lemma+pos, lemma, stem, text",
+        description="Token normalization string. Options: lemma+pos, lemma, stem, text, unaccented_text",
     ),
     filter_del: bool = Query(
         True, description="Filter out tokens that are marked as deleted"
