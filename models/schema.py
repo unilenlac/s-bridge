@@ -46,7 +46,16 @@ class Job(SQLModel, table=True):
     resources: List[str] = Field(default_factory=list, sa_column=Column(JSON))
     ref: Optional[str] = None
     current_ref: Optional[str] = None
-    algorithm: Optional[str] = Field(default="dekker")
+    algorithm: Optional[str] = Field(
+        default="dekker",
+        description=(
+            "Alignment algorithm to use ('dekker', 'needleman-wunsch', 'medite'). "
+            "**Resilience note:** When 'dekker' is selected, if a section exceeds the "
+            "5.0s timeout budget, s-bridge automatically falls back to 'needleman-wunsch' "
+            "for that specific section to ensure job completion."
+        ),
+        schema_extra={"example": "dekker"},
+    )
     normalization: Optional[str] = Field(default="lemma")
     smart_det: Optional[bool] = Field(default=True)
     fallback_refs: List[str] = Field(default_factory=list, sa_column=Column(JSON))

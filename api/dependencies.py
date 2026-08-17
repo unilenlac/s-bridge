@@ -36,7 +36,12 @@ async def get_processing_options(
     ),
     algorithm: Literal["dekker", "needleman-wunsch", "medite"] = Query(
         "dekker",
-        description="CollateX alignment algorithm to use.",
+        description=(
+            "CollateX alignment algorithm to use ('dekker', 'needleman-wunsch', 'medite'). "
+            "**Resilience note:** When 'dekker' is selected, if a section exceeds the "
+            "5.0s timeout budget, s-bridge automatically falls back to 'needleman-wunsch' "
+            "for that specific section to ensure job completion."
+        ),
     ),
     smart_det: bool = Query(
         True,
