@@ -513,6 +513,7 @@ async def get_traditions(session: AsyncSession = Depends(get_session)):
 @router.delete(
     "/traditions/{tradition_id}",
     description="Safely delete a Tradition's database record and physical disk directory.",
+    include_in_schema=False,
 )
 async def delete_tradition(
     tradition_id: int, session: AsyncSession = Depends(get_session)
