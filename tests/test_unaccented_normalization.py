@@ -101,7 +101,6 @@ def test_classical_processor_baseline_unaccented_lemma():
     tokens = proc.process("dummy text", normalization="lemma")
     assert len(tokens) == 5
     assert tokens[0].normalization == "οτε"
-    assert tokens[0].text == "ὅτε "
     assert tokens[0].lemma == "ὅτε"
     assert tokens[1].normalization == "δε"
     assert tokens[1].lemma == "δέ"

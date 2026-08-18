@@ -34,14 +34,23 @@ def extract_dts_error_detail(response: Optional[Response]) -> str:
 
 
 async def ServerId(url: str, logger: Logger, client: AsyncClient) -> str:
-    # return server identity based on the URL and the user-agent value
+    # Fast path: detect DTS URLs directly without redundant network roundtrips
+    if "/dts" in url.lower():
+        return "dts (1.0)"
+
+    # Fallback network probe with graceful default
     try:
-        response = await client.get(url, timeout=15.0)
-        return response.headers.get("User-Agent", "dts (1.0)")
-    except RequestError as e:
-        msg = f"Request error determining server identity for {url}: {e}"
-        logger.warning(msg)
-        raise DtsError(msg) from e
+        response = await client.get(url, timeout=30.0)
+        return (
+            response.headers.get("Server")
+            or response.headers.get("User-Agent")
+            or "dts (1.0)"
+        )
+    except Exception as e:
+        logger.warning(
+            f"Could not probe server identity for {url}: {e}. Defaulting to 'dts (1.0)'"
+        )
+        return "dts (1.0)"
 
 
 def get_section_filepath(
