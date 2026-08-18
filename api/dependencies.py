@@ -23,13 +23,12 @@ class ProcessingOptions(BaseModel):
     normalization: str
     filter_del: bool
     algorithm: Literal["dekker", "needleman-wunsch", "medite"] = "dekker"
-    smart_det: bool = True
 
 
 async def get_processing_options(
     normalization: str = Query(
         "lemma",
-        description="Token normalization string. Options: lemma, lemma+pos, text. (Accents and diacritics are automatically stripped from alignment keys).",
+        description="Token normalization string. Options: lemma, lemma+pos, text.",
     ),
     filter_del: bool = Query(
         True, description="Filter out tokens that are marked as deleted"
@@ -43,16 +42,11 @@ async def get_processing_options(
             "for that specific section to ensure job completion."
         ),
     ),
-    smart_det: bool = Query(
-        True,
-        description="Disambiguate determinants (articles) by preserving surface forms (pure text) when lemmatizing to prevent Collatex alignment collapse with Dekker algorithm.",
-    ),
 ) -> ProcessingOptions:
     return ProcessingOptions(
         normalization=normalization,
         filter_del=filter_del,
         algorithm=algorithm,
-        smart_det=smart_det,
     )
 
 

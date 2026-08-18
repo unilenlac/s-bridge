@@ -61,7 +61,6 @@ class Job(SQLModel, table=True):
         description="Token normalization strategy ('lemma', 'lemma+pos', 'text'). Accents and diacritics are automatically stripped from alignment keys.",
         schema_extra={"example": "lemma"},
     )
-    smart_det: Optional[bool] = Field(default=True)
     fallback_refs: List[str] = Field(default_factory=list, sa_column=Column(JSON))
     status: JobStatus = Field(default=JobStatus.PENDING)
     error_message: Optional[str] = None

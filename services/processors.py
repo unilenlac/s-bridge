@@ -9,7 +9,7 @@ class ClassicalProcessor:
         # Initialize any necessary resources for processing Greek text
         self.pipeline = pipeline
 
-    def process(self, data, normalization="lemma", smart_det=True):
+    def process(self, data, normalization="lemma"):
         # Run the NLP pipeline
         cltk_doc = self.pipeline.analyze(data)
 
@@ -62,8 +62,7 @@ class ClassicalProcessor:
                 unacc_lemma = strip_accents(lemma_raw) or lemma_raw.strip() or lemma_raw
                 norm_str = f"{unacc_lemma}+{pos_tag}"
             else:  # default is "lemma"
-                raw_target = word.string if (smart_det and pos_tag == "DET") else lemma_raw
-                norm_str = strip_accents(raw_target) or raw_target.strip() or raw_target
+                norm_str = strip_accents(lemma_raw) or lemma_raw.strip() or lemma_raw
 
             # Build our clean data model (NO string formatting!)
             # NOTE: We add a trailing space to 'text' (t) for better display in CollateX graphs,
@@ -90,7 +89,7 @@ class ModernProcessor:
         # Initialize any necessary resources for processing modern text
         self.pipeline = pipeline
 
-    def process(self, data, normalization="lemma", smart_det=True):
+    def process(self, data, normalization="lemma"):
         stanza_doc = self.pipeline(data)
         tokens = []
         for sentence in stanza_doc.sentences:
@@ -150,8 +149,7 @@ class ModernProcessor:
                     unacc_lemma = strip_accents(lemma_raw) or lemma_raw.strip() or lemma_raw
                     norm_str = f"{unacc_lemma}+{pos_tag}"
                 else:  # default is "lemma"
-                    raw_target = word.text if (smart_det and pos_tag == "DET") else lemma_raw
-                    norm_str = strip_accents(raw_target) or raw_target.strip() or raw_target
+                    norm_str = strip_accents(lemma_raw) or lemma_raw.strip() or lemma_raw
 
                 # Build our clean data model (NO string formatting!)
                 # NOTE: We add a trailing space to 'text' (t) for better display in CollateX graphs,
@@ -177,7 +175,7 @@ class RawProcessor:
     def __init__(self, pipeline: Any = None):
         pass
 
-    def process(self, data: str, normalization: str = "text", smart_det: bool = True) -> list[Token]:
+    def process(self, data: str, normalization: str = "text") -> list[Token]:
         words = data.split()
         tokens = []
         for word in words:

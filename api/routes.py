@@ -64,7 +64,6 @@ async def convert(
         req.text,
         normalization=options.normalization,
         filter_del=options.filter_del,
-        smart_det=options.smart_det,
     )
 
 
@@ -253,7 +252,6 @@ async def process_and_collate_resources(
             ref=req.ref,
             algorithm=options.algorithm,
             normalization=options.normalization,
-            smart_det=options.smart_det,
         )
         session.add(job)
         await session.commit()

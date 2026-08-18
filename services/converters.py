@@ -15,7 +15,6 @@ class RawStrategyConverter:
         data: str,
         normalization: str = "text",
         filter_del: bool = False,
-        smart_det: bool = True,
     ) -> List[Token]:
         import xml.etree.ElementTree as ET
 
@@ -32,7 +31,7 @@ class RawStrategyConverter:
             data = re.sub(r'<[^>]*$', '', clean_text)
 
         return self.processor.process(
-            data, normalization=normalization, smart_det=smart_det
+            data, normalization=normalization
         )
 
 
@@ -46,14 +45,13 @@ class EnrichedStrategyConverter:
         data: str,
         normalization: str = "lemma",
         filter_del: bool = True,
-        smart_det: bool = True,
     ) -> List[Token]:
         # 1. Extract clean text and offset metadata using the TEI Parser
         clean_text, metadata_map = self.parser.parse(data)
 
         # 2. Process the raw string into tokens using our generic Processor
         raw_tokens: List[Token] = self.processor.process(
-            clean_text, normalization=normalization, smart_det=smart_det
+            clean_text, normalization=normalization
         )
 
         # 3. Marry the TEI Metadata with the NLP Tokens based on character offsets

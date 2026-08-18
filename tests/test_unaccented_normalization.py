@@ -97,16 +97,16 @@ def test_classical_processor_baseline_unaccented_lemma():
 
     proc = ClassicalProcessor(pipeline=DummyPipeline())
 
-    # 1. Default (lemma normalization with smart_det=True)
-    tokens = proc.process("dummy text", normalization="lemma", smart_det=True)
+    # 1. Default (lemma normalization)
+    tokens = proc.process("dummy text", normalization="lemma")
     assert len(tokens) == 5
     assert tokens[0].normalization == "οτε"
     assert tokens[0].text == "ὅτε "
     assert tokens[0].lemma == "ὅτε"
     assert tokens[1].normalization == "δε"
     assert tokens[1].lemma == "δέ"
-    # DET with smart_det=True uses surface string "τὴν" -> "την"
-    assert tokens[2].normalization == "την"
+    # Determinant/article "τὴν" normalizes to its unaccented lemma "ὁ" -> "ο"
+    assert tokens[2].normalization == "ο"
     assert tokens[2].lemma == "ὁ"
     assert tokens[3].normalization == "επαγγελια"
     assert tokens[3].lemma == "ἐπαγγελία"

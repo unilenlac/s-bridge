@@ -13,7 +13,7 @@ client = TestClient(app)
 
 def get_mock_converter():
     class MockConverter:
-        def run(self, data, normalization="lemma", filter_del=True, smart_det=True):
+        def run(self, data, normalization="lemma", filter_del=True):
             return []
 
     return MockConverter()
@@ -155,19 +155,7 @@ def test_processing_options_algorithm():
         assert resp.status_code == 422
 
 
-def test_processing_options_smart_det():
-    with TestClient(app) as client:
-        # 1. Default smart_det should be True (200 OK)
-        resp = client.post("/convert", json={"text": "hello"}, params={})
-        assert resp.status_code == 200
 
-        # 2. Explicit smart_det=false
-        resp = client.post("/convert", json={"text": "hello"}, params={"smart_det": "false"})
-        assert resp.status_code == 200
-
-        # 3. Explicit smart_det=true
-        resp = client.post("/convert", json={"text": "hello"}, params={"smart_det": "true"})
-        assert resp.status_code == 200
 
 
 def test_prepare_to_file(monkeypatch, tmp_path):
