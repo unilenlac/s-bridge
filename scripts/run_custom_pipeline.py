@@ -219,7 +219,7 @@ def main():
                         help="NLP Processor type: 'raw' (fast split), 'classical' (CLTK/Stanza), 'modern' (Stanza).")
     parser.add_argument("--language", default="lati1261",
                         help="Language code (e.g. 'lati1261', 'anci1242').")
-    parser.add_argument("--normalization", choices=["lemma", "stem", "text", "lemma+pos"], default="lemma",
+    parser.add_argument("--normalization", choices=["lemma", "text", "lemma+pos"], default="lemma",
                         help="Token normalization strategy.")
     parser.add_argument("--format", default="application/json",
                         choices=["application/json", "application/tei+xml", "image/svg+xml", "text/plain", "application/graphml+xml"],

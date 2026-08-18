@@ -49,29 +49,21 @@ class ClassicalProcessor:
                 for tag in word.features.features:
                     feats_dict[tag.key] = tag.value
 
-            # Safely extract lemma and stem (falling back to lemma or surface string if None)
+            # Safely extract lemma (falling back to surface string if None)
             lemma_raw = (
                 getattr(word, "lemma", None)
                 if getattr(word, "lemma", None) is not None
                 else word.string
             )
-            stem_raw = (
-                getattr(word, "stem", None)
-                if getattr(word, "stem", None) is not None
-                else lemma_raw
-            )
 
-            if normalization == "stem":
-                raw_target = word.string if (smart_det and pos_tag == "DET") else stem_raw
-                norm_str = strip_accents(raw_target) or raw_target.strip() or raw_target
-            elif normalization == "lemma":
-                raw_target = word.string if (smart_det and pos_tag == "DET") else lemma_raw
-                norm_str = strip_accents(raw_target) or raw_target.strip() or raw_target
-            elif normalization == "text":
+            if normalization == "text":
                 norm_str = strip_accents(word.string) or word.string.strip() or word.string
-            else:
+            elif normalization == "lemma+pos":
                 unacc_lemma = strip_accents(lemma_raw) or lemma_raw.strip() or lemma_raw
                 norm_str = f"{unacc_lemma}+{pos_tag}"
+            else:  # default is "lemma"
+                raw_target = word.string if (smart_det and pos_tag == "DET") else lemma_raw
+                norm_str = strip_accents(raw_target) or raw_target.strip() or raw_target
 
             # Build our clean data model (NO string formatting!)
             # NOTE: We add a trailing space to 'text' (t) for better display in CollateX graphs,
@@ -145,29 +137,21 @@ class ModernProcessor:
                             key, value = feat.split("=", 1)
                             feats_dict[key] = value
 
-                # Safely extract lemma and stem (falling back to lemma or surface text if None)
+                # Safely extract lemma (falling back to surface text if None)
                 lemma_raw = (
                     getattr(word, "lemma", None)
                     if getattr(word, "lemma", None) is not None
                     else word.text
                 )
-                stem_raw = (
-                    getattr(word, "stem", None)
-                    if getattr(word, "stem", None) is not None
-                    else lemma_raw
-                )
 
-                if normalization == "stem":
-                    raw_target = word.text if (smart_det and pos_tag == "DET") else stem_raw
-                    norm_str = strip_accents(raw_target) or raw_target.strip() or raw_target
-                elif normalization == "lemma":
-                    raw_target = word.text if (smart_det and pos_tag == "DET") else lemma_raw
-                    norm_str = strip_accents(raw_target) or raw_target.strip() or raw_target
-                elif normalization == "text":
+                if normalization == "text":
                     norm_str = strip_accents(word.text) or word.text.strip() or word.text
-                else:
+                elif normalization == "lemma+pos":
                     unacc_lemma = strip_accents(lemma_raw) or lemma_raw.strip() or lemma_raw
                     norm_str = f"{unacc_lemma}+{pos_tag}"
+                else:  # default is "lemma"
+                    raw_target = word.text if (smart_det and pos_tag == "DET") else lemma_raw
+                    norm_str = strip_accents(raw_target) or raw_target.strip() or raw_target
 
                 # Build our clean data model (NO string formatting!)
                 # NOTE: We add a trailing space to 'text' (t) for better display in CollateX graphs,
