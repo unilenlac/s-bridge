@@ -36,7 +36,7 @@ def extract_dts_error_detail(response: Optional[Response]) -> str:
 async def ServerId(url: str, logger: Logger, client: AsyncClient) -> str:
     # return server identity based on the URL and the user-agent value
     try:
-        response = await client.get(url, timeout=5.0)
+        response = await client.get(url, timeout=15.0)
         return response.headers.get("User-Agent", "dts (1.0)")
     except RequestError as e:
         msg = f"Request error determining server identity for {url}: {e}"
