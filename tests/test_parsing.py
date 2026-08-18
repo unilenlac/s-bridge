@@ -495,7 +495,7 @@ def test_extract_body_content_and_fallback():
     converter = RawStrategyConverter(proc=RawProcessor())
     tokens = converter.run(malformed_xml)
     assert len(tokens) == 2
-    assert tokens[0].normalization == "Hello"
+    assert tokens[0].normalization == "hello"
     assert tokens[1].normalization == "world"
 
     # 3. Test TEIParser behavior
@@ -509,7 +509,7 @@ def test_extract_body_content_and_fallback():
     )
     tokens = converter.run(completely_broken_xml)
     assert len(tokens) == 4
-    assert tokens[0].normalization == "Hello"
+    assert tokens[0].normalization == "hello"
     assert tokens[1].normalization == "world"
     assert tokens[2].normalization == "broken"
     assert tokens[3].normalization == "text"

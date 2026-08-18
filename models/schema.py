@@ -58,7 +58,7 @@ class Job(SQLModel, table=True):
     )
     normalization: Optional[str] = Field(
         default="lemma",
-        description="Token normalization strategy ('lemma', 'lemma+pos', 'stem', 'text', 'unaccented_text').",
+        description="Token normalization strategy ('lemma', 'lemma+pos', 'stem', 'text'). Accents and diacritics are automatically stripped from alignment keys.",
         schema_extra={"example": "lemma"},
     )
     smart_det: Optional[bool] = Field(default=True)

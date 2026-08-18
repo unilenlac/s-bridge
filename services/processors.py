@@ -62,25 +62,16 @@ class ClassicalProcessor:
             )
 
             if normalization == "stem":
-                if smart_det and pos_tag == "DET":
-                    norm_str = word.string
-                else:
-                    norm_str = stem_raw
+                raw_target = word.string if (smart_det and pos_tag == "DET") else stem_raw
+                norm_str = strip_accents(raw_target) or raw_target.strip() or raw_target
             elif normalization == "lemma":
-                if smart_det and pos_tag == "DET":
-                    norm_str = word.string
-                else:
-                    norm_str = lemma_raw
+                raw_target = word.string if (smart_det and pos_tag == "DET") else lemma_raw
+                norm_str = strip_accents(raw_target) or raw_target.strip() or raw_target
             elif normalization == "text":
-                norm_str = word.string
-            elif normalization == "unaccented_text":
-                norm_str = (
-                    strip_accents(word.string)
-                    or word.string.strip()
-                    or word.string
-                )
+                norm_str = strip_accents(word.string) or word.string.strip() or word.string
             else:
-                norm_str = f"{lemma_raw}+{pos_tag}"
+                unacc_lemma = strip_accents(lemma_raw) or lemma_raw.strip() or lemma_raw
+                norm_str = f"{unacc_lemma}+{pos_tag}"
 
             # Build our clean data model (NO string formatting!)
             # NOTE: We add a trailing space to 'text' (t) for better display in CollateX graphs,
@@ -167,25 +158,16 @@ class ModernProcessor:
                 )
 
                 if normalization == "stem":
-                    if smart_det and pos_tag == "DET":
-                        norm_str = word.text
-                    else:
-                        norm_str = stem_raw
+                    raw_target = word.text if (smart_det and pos_tag == "DET") else stem_raw
+                    norm_str = strip_accents(raw_target) or raw_target.strip() or raw_target
                 elif normalization == "lemma":
-                    if smart_det and pos_tag == "DET":
-                        norm_str = word.text
-                    else:
-                        norm_str = lemma_raw
+                    raw_target = word.text if (smart_det and pos_tag == "DET") else lemma_raw
+                    norm_str = strip_accents(raw_target) or raw_target.strip() or raw_target
                 elif normalization == "text":
-                    norm_str = word.text
-                elif normalization == "unaccented_text":
-                    norm_str = (
-                        strip_accents(word.text)
-                        or word.text.strip()
-                        or word.text
-                    )
+                    norm_str = strip_accents(word.text) or word.text.strip() or word.text
                 else:
-                    norm_str = f"{lemma_raw}+{pos_tag}"
+                    unacc_lemma = strip_accents(lemma_raw) or lemma_raw.strip() or lemma_raw
+                    norm_str = f"{unacc_lemma}+{pos_tag}"
 
                 # Build our clean data model (NO string formatting!)
                 # NOTE: We add a trailing space to 'text' (t) for better display in CollateX graphs,
@@ -215,10 +197,7 @@ class RawProcessor:
         words = data.split()
         tokens = []
         for word in words:
-            if normalization == "unaccented_text":
-                norm_str = strip_accents(word) or word.strip() or word
-            else:
-                norm_str = word
+            norm_str = strip_accents(word) or word.strip() or word
             tokens.append(
                 Token(
                     text=word + " ",

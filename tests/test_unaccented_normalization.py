@@ -46,14 +46,15 @@ def test_strip_accents_empty_and_whitespace():
     assert strip_accents("   ") == ""
 
 
-def test_raw_processor_unaccented_text():
+def test_raw_processor_baseline_unaccented():
     proc = RawProcessor()
     text = "ὅτε δὲ ἐπλήρωσεν τὴν ἐπαγγελίαν ταύτην ὁ φίλιππος"
-    tokens = proc.process(text, normalization="unaccented_text")
+    tokens = proc.process(text)
 
     assert len(tokens) == 8
     assert tokens[0].normalization == "οτε"
     assert tokens[0].text == "ὅτε "
+    assert tokens[0].original == "ὅτε"
     assert tokens[1].normalization == "δε"
     assert tokens[2].normalization == "επληρωσεν"
     assert tokens[3].normalization == "την"
@@ -63,16 +64,17 @@ def test_raw_processor_unaccented_text():
     assert tokens[7].normalization == "φιλιππος"
 
 
-def test_classical_processor_unaccented_text_mocked():
+def test_classical_processor_baseline_unaccented_lemma():
     class DummyUpos:
         def __init__(self, tag):
             self.tag = tag
 
     class DummyWord:
-        def __init__(self, string, upos="NOUN", lemma="dummy"):
+        def __init__(self, string, upos="NOUN", lemma="dummy", stem=None):
             self.string = string
             self.upos = DummyUpos(upos)
             self.lemma = lemma
+            self.stem = stem or lemma
             self.index_char_start = 0
             self.index_char_stop = len(string)
             self.features = None
@@ -94,24 +96,42 @@ def test_classical_processor_unaccented_text_mocked():
             )
 
     proc = ClassicalProcessor(pipeline=DummyPipeline())
-    tokens = proc.process("dummy text", normalization="unaccented_text")
 
+    # 1. Default (lemma normalization with smart_det=True)
+    tokens = proc.process("dummy text", normalization="lemma", smart_det=True)
     assert len(tokens) == 5
     assert tokens[0].normalization == "οτε"
+    assert tokens[0].text == "ὅτε "
+    assert tokens[0].lemma == "ὅτε"
     assert tokens[1].normalization == "δε"
-    # Crucially, τὴν normalizes to "την" (not "ὁ" lemma!)
+    assert tokens[1].lemma == "δέ"
+    # DET with smart_det=True uses surface string "τὴν" -> "την"
     assert tokens[2].normalization == "την"
     assert tokens[2].lemma == "ὁ"
-    assert tokens[3].normalization == "επαγγελιαν"
-    assert tokens[4].normalization == "βαρθολομαιον"
+    assert tokens[3].normalization == "επαγγελια"
+    assert tokens[3].lemma == "ἐπαγγελία"
+    assert tokens[4].normalization == "βαρθολομαιος"
+    assert tokens[4].lemma == "βαρθολομαῖος"
+
+    # 2. Text normalization
+    tokens_text = proc.process("dummy text", normalization="text")
+    assert tokens_text[0].normalization == "οτε"
+    assert tokens_text[3].normalization == "επαγγελιαν"
+    assert tokens_text[4].normalization == "βαρθολομαιον"
+
+    # 3. Lemma+pos normalization
+    tokens_pos = proc.process("dummy text", normalization="lemma+pos")
+    assert tokens_pos[0].normalization == "οτε+SCONJ"
+    assert tokens_pos[3].normalization == "επαγγελια+NOUN"
 
 
-def test_modern_processor_unaccented_text_mocked():
+def test_modern_processor_baseline_unaccented():
     class DummyWord:
-        def __init__(self, text, upos="NOUN", lemma="dummy"):
+        def __init__(self, text, upos="NOUN", lemma="dummy", stem=None):
             self.text = text
             self.upos = upos
             self.lemma = lemma
+            self.stem = stem or lemma
             self.feats = ""
             self.start_char = 0
             self.end_char = len(text)
@@ -139,9 +159,11 @@ def test_modern_processor_unaccented_text_mocked():
             )
 
     proc = ModernProcessor(pipeline=DummyPipeline())
-    tokens = proc.process("dummy text", normalization="unaccented_text")
+    tokens = proc.process("dummy text", normalization="lemma")
 
     assert len(tokens) == 3
     assert tokens[0].normalization == "elephant"
+    assert tokens[0].text == "Éléphant "
+    assert tokens[0].lemma == "éléphant"
     assert tokens[1].normalization == "tres"
     assert tokens[2].normalization == "age"
