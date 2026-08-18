@@ -85,23 +85,9 @@ async def run_collate_job(
                 session.add(job)
                 await session.commit()
 
-                # Optimized lightweight payload for CollateX (strips heavy unused metadata)
-                #THIS IS TO REDUCE LOAD ON COLLATEX. SOLVED TIMEOUT PROD ISSUE
-                collatex_payload = {
-                    "witnesses": [
-                        {
-                            "id": w.id,
-                            "tokens": [
-                                {"t": t.text, "n": t.normalization} for t in w.tokens
-                            ],
-                        }
-                        for w in ready_data.witnesses
-                    ]
-                }
-
                 result, used_algo, fell_back = (
                     await collatex_client.collate_with_fallback(
-                        payload=collatex_payload,
+                        payload=ready_data.model_dump(by_alias=True, exclude_none=True),
                         output_format=output_format,
                         algorithm=options.algorithm,
                         ref_id=ready_data.ref_id,
