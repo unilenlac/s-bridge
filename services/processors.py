@@ -74,7 +74,11 @@ class ClassicalProcessor:
             elif normalization == "text":
                 norm_str = word.string
             elif normalization == "unaccented_text":
-                norm_str = strip_accents(word.string)
+                norm_str = (
+                    strip_accents(word.string)
+                    or word.string.strip()
+                    or word.string
+                )
             else:
                 norm_str = f"{lemma_raw}+{pos_tag}"
 
@@ -175,7 +179,11 @@ class ModernProcessor:
                 elif normalization == "text":
                     norm_str = word.text
                 elif normalization == "unaccented_text":
-                    norm_str = strip_accents(word.text)
+                    norm_str = (
+                        strip_accents(word.text)
+                        or word.text.strip()
+                        or word.text
+                    )
                 else:
                     norm_str = f"{lemma_raw}+{pos_tag}"
 
@@ -208,7 +216,7 @@ class RawProcessor:
         tokens = []
         for word in words:
             if normalization == "unaccented_text":
-                norm_str = strip_accents(word)
+                norm_str = strip_accents(word) or word.strip() or word
             else:
                 norm_str = word
             tokens.append(
