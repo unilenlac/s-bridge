@@ -101,15 +101,20 @@ def test_classical_processor_baseline_unaccented_lemma():
     tokens = proc.process("dummy text", normalization="lemma")
     assert len(tokens) == 5
     assert tokens[0].normalization == "οτε"
+    assert tokens[0].normal_form == "οτε"
     assert tokens[0].lemma == "ὅτε"
     assert tokens[1].normalization == "δε"
+    assert tokens[1].normal_form == "δε"
     assert tokens[1].lemma == "δέ"
     # Determinant/article "τὴν" normalizes to its unaccented lemma "ὁ" -> "ο"
     assert tokens[2].normalization == "ο"
+    assert tokens[2].normal_form == "ο"
     assert tokens[2].lemma == "ὁ"
     assert tokens[3].normalization == "επαγγελια"
+    assert tokens[3].normal_form == "επαγγελια"
     assert tokens[3].lemma == "ἐπαγγελία"
     assert tokens[4].normalization == "βαρθολομαιος"
+    assert tokens[4].normal_form == "βαρθολομαιος"
     assert tokens[4].lemma == "βαρθολομαῖος"
 
     # 2. Text normalization

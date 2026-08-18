@@ -69,6 +69,7 @@ class ClassicalProcessor:
                 normalization=norm_str,
                 original=word.string,
                 lemma=lemma_raw,
+                normal_form=norm_str,
                 pos=pos_tag,
                 cs=feats_dict.get("Case"),
                 gender=feats_dict.get("Gender"),
@@ -154,6 +155,7 @@ class ModernProcessor:
                 my_token = Token(
                     text=word.text + " ",
                     normalization=norm_str,
+                    normal_form=norm_str,
                     original=word.text,
                     lemma=lemma_raw,
                     pos=pos_tag,
@@ -181,6 +183,7 @@ class RawProcessor:
                 Token(
                     text=word + " ",
                     normalization=norm_str,
+                    normal_form=norm_str,
                     original=word,
                     lemma="",
                 )

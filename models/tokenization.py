@@ -10,6 +10,12 @@ class Token(BaseModel):
     normalization: str = Field(
         description="The normalization of the text", alias="n", serialization_alias="n"
     )
+    normal_form: Optional[str] = Field(
+        default=None,
+        description="The normal form of the token (for display on Stemmaweb)",
+        alias="normal_form",
+        serialization_alias="normal_form",
+    )
     original: str = Field(
         default=None,
         description="The original token text",
@@ -134,6 +140,10 @@ class Token(BaseModel):
         description="Whether the token is a substitution",
         serialization_alias="subst",
     )
+
+    def model_post_init(self, __context):
+        if self.normal_form is None and self.normalization is not None:
+            self.normal_form = self.normalization
 
 
 class CollatexWitness(BaseModel):
