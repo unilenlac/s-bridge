@@ -85,13 +85,17 @@ async def run_collate_job(
                 session.add(job)
                 await session.commit()
 
-                result, used_algo, fell_back = (
-                    await collatex_client.collate_with_fallback(
-                        payload=ready_data.model_dump(by_alias=True, exclude_none=True),
-                        output_format=output_format,
-                        algorithm=options.algorithm,
-                        ref_id=ready_data.ref_id,
-                    )
+                (
+                    result,
+                    used_algo,
+                    fell_back,
+                ) = await collatex_client.collate_with_fallback(
+                    payload=ready_data.model_dump(by_alias=True, exclude_none=True),
+                    output_format=output_format,
+                    algorithm=options.algorithm,
+                    joined=options.joined,
+                    transpositions=options.transpositions,
+                    ref_id=ready_data.ref_id,
                 )
 
                 if fell_back:
@@ -172,7 +176,9 @@ async def run_collate_job(
             else:
                 error_prefix = "Internal Error"
 
-            failed_ref_info = f" (at ref '{job.current_ref}')" if job.current_ref else ""
+            failed_ref_info = (
+                f" (at ref '{job.current_ref}')" if job.current_ref else ""
+            )
             job.error_message = f"{error_prefix}{failed_ref_info}: {str(e)}"[:500]
             session.add(job)
             await session.commit()

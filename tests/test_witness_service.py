@@ -115,7 +115,7 @@ async def test_dts_preparator_collection_member_error():
 
     with pytest.raises(DtsError, match="Not a single resource found"):
         await DtsPreparator.run(
-            url="http://ftsr-dev.unil.ch:8000/api/dts/v1/collection?id=s-bridge",
+            url="http://ftsr-dev.unil.ch:8000/api/dts/v1/collection?id=sb-mp",
             target_ref=None,
             job_id="test_job",
             http_client=mock_client,
@@ -174,7 +174,7 @@ async def test_dts_preparator_mixed_members():
         settings.nlp_analysis_dir = temp_dir
 
         success, paths, title, resources = await DtsPreparator.run(
-            url="http://ftsr-dev.unil.ch:8000/api/dts/v1/collection?id=s-bridge",
+            url="http://ftsr-dev.unil.ch:8000/api/dts/v1/collection?id=sb-mp",
             target_ref=None,
             job_id="test_job",
             http_client=mock_client,

@@ -23,6 +23,8 @@ class ProcessingOptions(BaseModel):
     normalization: str
     filter_del: bool
     algorithm: Literal["dekker", "needleman-wunsch", "medite"] = "dekker"
+    joined: bool = True
+    transpositions: bool = True
 
 
 async def get_processing_options(
@@ -42,11 +44,21 @@ async def get_processing_options(
             "for that specific section to ensure job completion."
         ),
     ),
+    joined: bool = Query(
+        True,
+        description="Whether consecutive matching tokens should be joined into single segments in CollateX.",
+    ),
+    transpositions: bool = Query(
+        True,
+        description="Whether CollateX should detect transpositions/permutations (for supported algorithms like dekker/medite).",
+    ),
 ) -> ProcessingOptions:
     return ProcessingOptions(
         normalization=normalization,
         filter_del=filter_del,
         algorithm=algorithm,
+        joined=joined,
+        transpositions=transpositions,
     )
 
 

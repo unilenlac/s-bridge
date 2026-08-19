@@ -1,7 +1,5 @@
-import pytest
 from helpers.helpers import strip_accents
 from services.processors import RawProcessor, ClassicalProcessor, ModernProcessor
-from models.tokenization import Token
 
 
 def test_strip_accents_polytonic_greek():
@@ -167,7 +165,7 @@ def test_modern_processor_baseline_unaccented():
 
     assert len(tokens) == 3
     assert tokens[0].normalization == "elephant"
-    assert tokens[0].text == "Éléphant "
+    assert tokens[0].text == "Éléphant"
     assert tokens[0].lemma == "éléphant"
     assert tokens[1].normalization == "tres"
     assert tokens[2].normalization == "age"

@@ -73,6 +73,34 @@ async def test_collatex_explicit_algorithm_no_fallback():
     assert mock_http.post.call_count == 1
 
 
+@pytest.mark.anyio
+async def test_collatex_joined_and_transpositions():
+    mock_http = AsyncMock()
+    mock_resp = MagicMock()
+    mock_resp.json.return_value = {"table": [["a", "a"]]}
+    mock_resp.raise_for_status.return_value = None
+    mock_http.post.return_value = mock_resp
+
+    client = CollatexClient(base_url="http://localhost:7369", http_client=mock_http)
+    payload = {"witnesses": [{"id": "w1", "tokens": [{"t": "a", "n": "a"}]}]}
+
+    result, algo, fell_back = await client.collate_with_fallback(
+        payload=payload,
+        algorithm="dekker",
+        joined=False,
+        transpositions=False,
+        ref_id="101",
+    )
+
+    assert algo == "dekker"
+    assert fell_back is False
+    # Verify post was called with joined=False and transpositions=False in json payload
+    called_json = mock_http.post.call_args[1]["json"]
+    assert called_json["joined"] is False
+    assert called_json["transpositions"] is False
+    assert called_json["algorithm"] == "dekker"
+
+
 def test_job_model_fallback_refs():
     job = Job(
         collection_url="http://test.com/dts",
@@ -80,3 +108,5 @@ def test_job_model_fallback_refs():
     )
     assert job.fallback_refs == ["142"]
     assert job.algorithm == "dekker"
+    assert job.joined is True
+    assert job.transpositions is True

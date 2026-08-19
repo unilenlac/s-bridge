@@ -126,7 +126,9 @@ async def prepare_to_file(
                 )
                 if os.path.exists(pre_collation_dir):
                     shutil.rmtree(pre_collation_dir)
-                    logger.info(f"Cleanup: Deleted temp directory at {pre_collation_dir}")
+                    logger.info(
+                        f"Cleanup: Deleted temp directory at {pre_collation_dir}"
+                    )
             except Exception as e:
                 logger.warning(f"Error cleaning up temp directory: {e}")
 
@@ -216,7 +218,7 @@ async def prepare(
         "processes them through a CLTK/Stanza NLP engine (or similar) to convert text into deep-normalized token lists, "
         "and finally aligns them all together using the CollateX service. "
         "Workloads are executed securely in an asynchronous background job thread. Returns a Job ID to track pipeline status. "
-        "Prototype route: http://ftsr-dev.unil.ch:8000/api/dts/v1/collection?id=s-bridge "
+        "Prototype route: http://ftsr-dev.unil.ch:8000/api/dts/v1/collection?id=sb-mp "
     ),
 )
 async def process_and_collate_resources(
@@ -252,6 +254,8 @@ async def process_and_collate_resources(
             ref=req.ref,
             algorithm=options.algorithm,
             normalization=options.normalization,
+            joined=options.joined,
+            transpositions=options.transpositions,
         )
         session.add(job)
         await session.commit()
@@ -289,7 +293,7 @@ async def process_and_collate_resources(
         "Synchronous Collation Pipeline for a single section. Fetches XML resources from the DTS service for a specific reference, "
         "processes them through a CLTK/Stanza NLP engine to convert text into tokens, "
         "and aligns them using the CollateX service. The result is returned as a downloadable file. "
-        "Example http://ftsr-dev.unil.ch:8000/api/dts/v1/collection?id=s-bridge"
+        "Example http://ftsr-dev.unil.ch:8000/api/dts/v1/collection?id=sb-mp"
     ),
 )
 async def collate_to_file(
@@ -344,6 +348,8 @@ async def collate_to_file(
             payload=ready_data.model_dump(by_alias=True, exclude_none=True),
             output_format=output_format,
             algorithm=options.algorithm,
+            joined=options.joined,
+            transpositions=options.transpositions,
             ref_id=ready_data.ref_id,
         )
 

@@ -94,6 +94,7 @@ def test_collate_returns_job_id(monkeypatch):
     monkeypatch.setattr(
         routes, "WitnessService", MagicMock(return_value=MockWitnessService())
     )
+    monkeypatch.setattr(routes, "run_collate_job", AsyncMock())
 
     app.dependency_overrides[get_session] = override_get_session
     from api.dependencies import http_client
@@ -147,15 +148,28 @@ def test_processing_options_algorithm():
         assert resp.status_code == 200
 
         # 2. Test valid custom algorithm (should succeed with 200)
-        resp = client.post("/convert", json={"text": "hello"}, params={"algorithm": "needleman-wunsch"})
+        resp = client.post(
+            "/convert",
+            json={"text": "hello"},
+            params={"algorithm": "needleman-wunsch"},
+        )
         assert resp.status_code == 200
 
         # 3. Test invalid algorithm (should fail with 422 Unprocessable Entity)
-        resp = client.post("/convert", json={"text": "hello"}, params={"algorithm": "invalid-algo"})
+        resp = client.post(
+            "/convert", json={"text": "hello"}, params={"algorithm": "invalid-algo"}
+        )
         assert resp.status_code == 422
 
 
-
+def test_processing_options_joined_and_transpositions():
+    with TestClient(app) as client:
+        resp = client.post(
+            "/convert",
+            json={"text": "hello"},
+            params={"joined": "false", "transpositions": "false"},
+        )
+        assert resp.status_code == 200
 
 
 def test_prepare_to_file(monkeypatch, tmp_path):
@@ -173,6 +187,7 @@ def test_prepare_to_file(monkeypatch, tmp_path):
     monkeypatch.setattr(routes, "WitnessService", MagicMock(return_value=mock_ws))
 
     from api.dependencies import http_client
+
     app.dependency_overrides[http_client] = lambda: AsyncMock()
 
     with TestClient(app) as client:
@@ -201,6 +216,7 @@ def test_prepare(monkeypatch, tmp_path):
     monkeypatch.setattr(routes, "WitnessService", MagicMock(return_value=mock_ws))
 
     from api.dependencies import http_client
+
     app.dependency_overrides[http_client] = lambda: AsyncMock()
 
     with TestClient(app) as client:
@@ -214,4 +230,3 @@ def test_prepare(monkeypatch, tmp_path):
     assert resp.status_code == 200
     data = resp.json()
     assert "witnesses" in data
-

@@ -61,6 +61,14 @@ class Job(SQLModel, table=True):
         description="Token normalization strategy ('lemma', 'lemma+pos', 'text'). Accents and diacritics are automatically stripped from alignment keys.",
         schema_extra={"example": "lemma"},
     )
+    joined: Optional[bool] = Field(
+        default=True,
+        description="Whether consecutive matching tokens are joined into single segments in CollateX.",
+    )
+    transpositions: Optional[bool] = Field(
+        default=True,
+        description="Whether CollateX detects transpositions (for supported algorithms like dekker/medite).",
+    )
     fallback_refs: List[str] = Field(default_factory=list, sa_column=Column(JSON))
     status: JobStatus = Field(default=JobStatus.PENDING)
     error_message: Optional[str] = None

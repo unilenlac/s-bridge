@@ -21,14 +21,15 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 import httpx
 
 from core.config import Settings
-from api.dependencies import ProcessingOptions
 from services.tei_parser import TEIParser
 from services.processors import ClassicalProcessor, ModernProcessor, RawProcessor
 from services.converters import EnrichedStrategyConverter, RawStrategyConverter
 from clients.collatex_client import CollatexClient
-from models.tokenization import CollatexResponse, CollatexWitness, Token
+from models.tokenization import CollatexResponse, CollatexWitness
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+)
 logger = logging.getLogger("custom_pipeline")
 
 
@@ -50,14 +51,22 @@ def get_processor(processor_type: str, language: str):
         logger.info("Using RawProcessor (whitespace splitting)")
         return RawProcessor()
     elif processor_type == "classical":
-        logger.info(f"Initializing ClassicalProcessor with CLTK for language: {language}...")
+        logger.info(
+            f"Initializing ClassicalProcessor with CLTK for language: {language}..."
+        )
         from cltk import NLP
+
         cltk_nlp = NLP(language, backend="stanza", suppress_banner=True)
         return ClassicalProcessor(cltk_nlp)
     elif processor_type == "modern":
-        logger.info(f"Initializing ModernProcessor with Stanza for language: {language}...")
+        logger.info(
+            f"Initializing ModernProcessor with Stanza for language: {language}..."
+        )
         import stanza
-        pipeline = stanza.Pipeline(language, processors="tokenize,pos,lemma", verbose=False)
+
+        pipeline = stanza.Pipeline(
+            language, processors="tokenize,pos,lemma", verbose=False
+        )
         return ModernProcessor(pipeline)
     else:
         raise ValueError(f"Unknown processor type: {processor_type}")
@@ -68,7 +77,7 @@ def tokenize_manuscript(
     text: str,
     processor,
     normalization: str = "lemma",
-    filter_del: bool = True
+    filter_del: bool = True,
 ) -> CollatexWitness:
     """Converts a single manuscript text (plain or TEI XML) into a CollatexWitness."""
     is_xml = "<" in text and ">" in text
@@ -94,12 +103,16 @@ async def run_pipeline(
     filter_del: bool = True,
     output_format: str = "application/json",
     algorithm: Optional[str] = None,
+    joined: Optional[bool] = None,
+    transpositions: Optional[bool] = None,
     collatex_url: Optional[str] = None,
     output_file: Optional[str] = None,
 ) -> Any:
     """Executes tokenization and collation for the provided manuscripts dictionary."""
     settings = Settings()
-    collatex_base_url = collatex_url or settings.collatex_api_base_url or "http://localhost:7369"
+    collatex_base_url = (
+        collatex_url or settings.collatex_api_base_url or "http://localhost:7369"
+    )
 
     # 1. Initialize Processor
     processor = get_processor(processor_type, language)
@@ -113,7 +126,7 @@ async def run_pipeline(
             text=text,
             processor=processor,
             normalization=normalization,
-            filter_del=filter_del
+            filter_del=filter_del,
         )
         witnesses.append(witness)
         print(f"  • Witness '{siglum}': {len(witness.tokens)} tokens generated")
@@ -124,17 +137,25 @@ async def run_pipeline(
     # 3. Collate via CollateX Web Service
     print(f"\n--- Aligning via CollateX ({collatex_base_url}) ---")
     async with httpx.AsyncClient() as http_client:
-        collatex_client = CollatexClient(base_url=collatex_base_url, http_client=http_client)
+        collatex_client = CollatexClient(
+            base_url=collatex_base_url, http_client=http_client
+        )
         try:
             result = await collatex_client.collate(
                 payload=payload,
                 output_format=output_format,
                 algorithm=algorithm,
+                joined=joined,
+                transpositions=transpositions,
             )
             print("Alignment completed successfully!")
         except Exception as e:
-            logger.warning(f"Could not connect to CollateX server at {collatex_base_url}: {e}")
-            print("\n[NOTE] CollateX service unreachable. Displaying tokenization summary instead:")
+            logger.warning(
+                f"Could not connect to CollateX server at {collatex_base_url}: {e}"
+            )
+            print(
+                "\n[NOTE] CollateX service unreachable. Displaying tokenization summary instead:"
+            )
             result = payload
 
     # 4. Display & Save Output
@@ -164,8 +185,7 @@ def print_alignment_table(collatex_json: Dict[str, Any]):
     """Pretty prints a CollateX JSON alignment table in the terminal."""
     raw_witnesses = collatex_json.get("witnesses", [])
     witnesses = [
-        w["id"] if isinstance(w, dict) and "id" in w else str(w)
-        for w in raw_witnesses
+        w["id"] if isinstance(w, dict) and "id" in w else str(w) for w in raw_witnesses
     ]
     table = collatex_json.get("table", [])
 
@@ -188,7 +208,9 @@ def print_alignment_table(collatex_json: Dict[str, Any]):
         col_widths.append(max_len + 2)
 
     # Print header
-    header = f"{'Witness':<12} | " + " | ".join(f"C{i+1:<{col_widths[i]-1}}" for i in range(len(table)))
+    header = f"{'Witness':<12} | " + " | ".join(
+        f"C{i + 1:<{col_widths[i] - 1}}" for i in range(len(table))
+    )
     print("-" * len(header))
     print(header)
     print("-" * len(header))
@@ -212,24 +234,65 @@ def print_alignment_table(collatex_json: Dict[str, Any]):
     print("-" * len(header))
 
 
-
 def main():
-    parser = argparse.ArgumentParser(description="Run s-bridge pipeline on custom inline manuscript inputs.")
-    parser.add_argument("--processor", choices=["raw", "classical", "modern"], default="raw",
-                        help="NLP Processor type: 'raw' (fast split), 'classical' (CLTK/Stanza), 'modern' (Stanza).")
-    parser.add_argument("--language", default="lati1261",
-                        help="Language code (e.g. 'lati1261', 'anci1242').")
-    parser.add_argument("--normalization", choices=["lemma", "text", "lemma+pos"], default="lemma",
-                        help="Token normalization strategy.")
-    parser.add_argument("--format", default="application/json",
-                        choices=["application/json", "application/tei+xml", "image/svg+xml", "text/plain", "application/graphml+xml"],
-                        help="Output format requested from CollateX.")
-    parser.add_argument("--algorithm", choices=["dekker", "needleman-wunsch", "medite"], default=None,
-                        help="CollateX alignment algorithm.")
-    parser.add_argument("--collatex-url", default=None,
-                        help="Custom CollateX API server URL.")
-    parser.add_argument("--output-file", default="custom_collation_result.json",
-                        help="Path to save collation output file.")
+    parser = argparse.ArgumentParser(
+        description="Run s-bridge pipeline on custom inline manuscript inputs."
+    )
+    parser.add_argument(
+        "--processor",
+        choices=["raw", "classical", "modern"],
+        default="raw",
+        help="NLP Processor type: 'raw' (fast split), 'classical' (CLTK/Stanza), 'modern' (Stanza).",
+    )
+    parser.add_argument(
+        "--language",
+        default="lati1261",
+        help="Language code (e.g. 'lati1261', 'anci1242').",
+    )
+    parser.add_argument(
+        "--normalization",
+        choices=["lemma", "text", "lemma+pos"],
+        default="lemma",
+        help="Token normalization strategy.",
+    )
+    parser.add_argument(
+        "--format",
+        default="application/json",
+        choices=[
+            "application/json",
+            "application/tei+xml",
+            "image/svg+xml",
+            "text/plain",
+            "application/graphml+xml",
+        ],
+        help="Output format requested from CollateX.",
+    )
+    parser.add_argument(
+        "--algorithm",
+        choices=["dekker", "needleman-wunsch", "medite"],
+        default=None,
+        help="CollateX alignment algorithm.",
+    )
+    parser.add_argument(
+        "--joined",
+        action=argparse.BooleanOptionalAction,
+        default=None,
+        help="Whether consecutive matching tokens should be joined into segments in CollateX.",
+    )
+    parser.add_argument(
+        "--transpositions",
+        action=argparse.BooleanOptionalAction,
+        default=None,
+        help="Whether CollateX should detect transpositions/permutations.",
+    )
+    parser.add_argument(
+        "--collatex-url", default=None, help="Custom CollateX API server URL."
+    )
+    parser.add_argument(
+        "--output-file",
+        default="custom_collation_result.json",
+        help="Path to save collation output file.",
+    )
 
     args = parser.parse_args()
 
@@ -241,6 +304,8 @@ def main():
             normalization=args.normalization,
             output_format=args.format,
             algorithm=args.algorithm,
+            joined=args.joined,
+            transpositions=args.transpositions,
             collatex_url=args.collatex_url,
             output_file=args.output_file,
         )

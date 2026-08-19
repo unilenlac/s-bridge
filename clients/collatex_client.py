@@ -44,6 +44,8 @@ class CollatexClient:
         payload: Dict[str, Any],
         output_format: str = FORMAT_JSON,
         algorithm: Optional[str] = None,
+        joined: Optional[bool] = None,
+        transpositions: Optional[bool] = None,
         timeout: Optional[float] = None,
     ) -> Union[Dict[str, Any], str]:
         """
@@ -54,6 +56,8 @@ class CollatexClient:
         :param output_format: The desired output format (via the Accept header).
                               Defaults to 'application/json'.
         :param algorithm: Optional alignment algorithm (e.g. 'dekker', 'needleman-wunsch', 'medite').
+        :param joined: Optional flag indicating whether consecutive matches should be joined into single segments.
+        :param transpositions: Optional flag indicating whether transpositions should be detected.
         :param timeout: Optional custom timeout in seconds for this request.
         :return: If output_format is JSON, returns the parsed Dict.
                  Otherwise, returns the raw string response (XML, DOT, SVG, etc).
@@ -62,15 +66,21 @@ class CollatexClient:
         url = f"{self.base_url}/collate"
         headers = {"Content-Type": "application/json", "Accept": output_format}
 
-        if algorithm:
+        if algorithm is not None:
             payload["algorithm"] = algorithm
+        if joined is not None:
+            payload["joined"] = joined
+        if transpositions is not None:
+            payload["transpositions"] = transpositions
 
         request_timeout = (
-            httpx.Timeout(timeout, connect=10.0) if timeout is not None else self.timeout
+            httpx.Timeout(timeout, connect=10.0)
+            if timeout is not None
+            else self.timeout
         )
 
         logger.info(
-            f"Sending collation request to {url} (format: {output_format}, algorithm: {algorithm}, timeout: {request_timeout.read}s)"
+            f"Sending collation request to {url} (format: {output_format}, algorithm: {algorithm}, joined: {joined}, transpositions: {transpositions}, timeout: {request_timeout.read}s)"
         )
 
         try:
@@ -106,6 +116,8 @@ class CollatexClient:
         payload: Dict[str, Any],
         output_format: str = FORMAT_JSON,
         algorithm: Optional[str] = None,
+        joined: Optional[bool] = None,
+        transpositions: Optional[bool] = None,
         dekker_timeout: Optional[float] = None,
         ref_id: Optional[str] = None,
     ) -> tuple[Union[Dict[str, Any], str], str, bool]:
@@ -129,10 +141,12 @@ class CollatexClient:
                     payload=payload,
                     output_format=output_format,
                     algorithm="dekker",
+                    joined=joined,
+                    transpositions=transpositions,
                     timeout=budget,
                 )
                 return result, "dekker", False
-            except (CollatexError, httpx.TimeoutException) as e:
+            except (CollatexError, httpx.TimeoutException):
                 ref_info = f" on ref '{ref_id}'" if ref_id else ""
                 logger.warning(
                     f"CollateX Dekker algorithm timed out after {budget}s{ref_info}. "
@@ -143,6 +157,8 @@ class CollatexClient:
                     payload=payload,
                     output_format=output_format,
                     algorithm="needleman-wunsch",
+                    joined=joined,
+                    transpositions=transpositions,
                 )
                 return result, "needleman-wunsch", True
 
@@ -151,5 +167,7 @@ class CollatexClient:
             payload=payload,
             output_format=output_format,
             algorithm=requested_algo,
+            joined=joined,
+            transpositions=transpositions,
         )
         return result, requested_algo, False
