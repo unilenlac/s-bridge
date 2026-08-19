@@ -149,11 +149,8 @@ class ModernProcessor:
                 else:  # default is "lemma"
                     norm_str = strip_accents(lemma_raw) or lemma_raw.strip() or lemma_raw
 
-                # Build our clean data model (NO string formatting!)
-                # NOTE: We add a trailing space to 'text' (t) for better display in CollateX graphs,
-                # while 'normalization' (n) remains clean for precise alignment.
                 my_token = Token(
-                    text=word.text + " ",
+                    text=word.text,
                     normalization=norm_str,
                     normal_form=norm_str,
                     original=word.text,
