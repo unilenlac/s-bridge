@@ -105,6 +105,7 @@ async def run_pipeline(
     algorithm: Optional[str] = None,
     joined: Optional[bool] = None,
     transpositions: Optional[bool] = None,
+    token_comparator: Optional[Dict[str, Any]] = None,
     collatex_url: Optional[str] = None,
     output_file: Optional[str] = None,
 ) -> Any:
@@ -147,6 +148,7 @@ async def run_pipeline(
                 algorithm=algorithm,
                 joined=joined,
                 transpositions=transpositions,
+                token_comparator=token_comparator,
             )
             print("Alignment completed successfully!")
         except Exception as e:
@@ -286,6 +288,18 @@ def main():
         help="Whether CollateX should detect transpositions/permutations.",
     )
     parser.add_argument(
+        "--token-comparator",
+        choices=["equality", "levenshtein"],
+        default="equality",
+        help="CollateX token comparator algorithm (default: 'equality').",
+    )
+    parser.add_argument(
+        "--distance",
+        type=int,
+        default=None,
+        help="Levenshtein distance threshold when --token-comparator is 'levenshtein' (default: 1).",
+    )
+    parser.add_argument(
         "--collatex-url", default=None, help="Custom CollateX API server URL."
     )
     parser.add_argument(
@@ -295,6 +309,12 @@ def main():
     )
 
     args = parser.parse_args()
+
+    comparator_payload = (
+        {"type": "levenshtein", "distance": args.distance or 1}
+        if args.token_comparator == "levenshtein"
+        else {"type": "equality"}
+    )
 
     asyncio.run(
         run_pipeline(
@@ -306,6 +326,7 @@ def main():
             algorithm=args.algorithm,
             joined=args.joined,
             transpositions=args.transpositions,
+            token_comparator=comparator_payload,
             collatex_url=args.collatex_url,
             output_file=args.output_file,
         )

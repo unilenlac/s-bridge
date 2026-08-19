@@ -25,6 +25,17 @@ class ProcessingOptions(BaseModel):
     algorithm: Literal["dekker", "needleman-wunsch", "medite"] = "dekker"
     joined: bool = True
     transpositions: bool = True
+    token_comparator_type: Literal["equality", "levenshtein"] = "equality"
+    token_comparator_distance: Optional[int] = None
+
+    @property
+    def token_comparator_payload(self) -> Dict[str, Any]:
+        if self.token_comparator_type == "levenshtein":
+            return {
+                "type": "levenshtein",
+                "distance": self.token_comparator_distance or 1,
+            }
+        return {"type": "equality"}
 
 
 async def get_processing_options(
@@ -52,6 +63,15 @@ async def get_processing_options(
         True,
         description="Whether CollateX should detect transpositions/permutations (for supported algorithms like dekker/medite).",
     ),
+    token_comparator_type: Literal["equality", "levenshtein"] = Query(
+        "equality",
+        description="CollateX token comparator algorithm ('equality', 'levenshtein').",
+    ),
+    token_comparator_distance: Optional[int] = Query(
+        None,
+        ge=1,
+        description="Levenshtein distance threshold when token_comparator_type is 'levenshtein' (default: 1).",
+    ),
 ) -> ProcessingOptions:
     return ProcessingOptions(
         normalization=normalization,
@@ -59,6 +79,8 @@ async def get_processing_options(
         algorithm=algorithm,
         joined=joined,
         transpositions=transpositions,
+        token_comparator_type=token_comparator_type,
+        token_comparator_distance=token_comparator_distance,
     )
 
 

@@ -172,6 +172,36 @@ def test_processing_options_joined_and_transpositions():
         assert resp.status_code == 200
 
 
+def test_processing_options_token_comparator():
+    with TestClient(app) as client:
+        # 1. Valid equality
+        resp = client.post(
+            "/convert",
+            json={"text": "hello"},
+            params={"token_comparator_type": "equality"},
+        )
+        assert resp.status_code == 200
+
+        # 2. Valid levenshtein with distance
+        resp = client.post(
+            "/convert",
+            json={"text": "hello"},
+            params={
+                "token_comparator_type": "levenshtein",
+                "token_comparator_distance": 2,
+            },
+        )
+        assert resp.status_code == 200
+
+        # 3. Invalid comparator type (422)
+        resp = client.post(
+            "/convert",
+            json={"text": "hello"},
+            params={"token_comparator_type": "invalid_type"},
+        )
+        assert resp.status_code == 422
+
+
 def test_prepare_to_file(monkeypatch, tmp_path):
     from api import routes
 

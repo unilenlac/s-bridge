@@ -256,6 +256,7 @@ async def process_and_collate_resources(
             normalization=options.normalization,
             joined=options.joined,
             transpositions=options.transpositions,
+            token_comparator=options.token_comparator_payload,
         )
         session.add(job)
         await session.commit()
@@ -350,6 +351,7 @@ async def collate_to_file(
             algorithm=options.algorithm,
             joined=options.joined,
             transpositions=options.transpositions,
+            token_comparator=options.token_comparator_payload,
             ref_id=ready_data.ref_id,
         )
 

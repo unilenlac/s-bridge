@@ -46,6 +46,7 @@ class CollatexClient:
         algorithm: Optional[str] = None,
         joined: Optional[bool] = None,
         transpositions: Optional[bool] = None,
+        token_comparator: Optional[Dict[str, Any]] = None,
         timeout: Optional[float] = None,
     ) -> Union[Dict[str, Any], str]:
         """
@@ -58,6 +59,7 @@ class CollatexClient:
         :param algorithm: Optional alignment algorithm (e.g. 'dekker', 'needleman-wunsch', 'medite').
         :param joined: Optional flag indicating whether consecutive matches should be joined into single segments.
         :param transpositions: Optional flag indicating whether transpositions should be detected.
+        :param token_comparator: Optional token comparator configuration (e.g. {'type': 'equality'} or {'type': 'levenshtein', 'distance': 1}).
         :param timeout: Optional custom timeout in seconds for this request.
         :return: If output_format is JSON, returns the parsed Dict.
                  Otherwise, returns the raw string response (XML, DOT, SVG, etc).
@@ -72,6 +74,8 @@ class CollatexClient:
             payload["joined"] = joined
         if transpositions is not None:
             payload["transpositions"] = transpositions
+        if token_comparator is not None:
+            payload["tokenComparator"] = token_comparator
 
         request_timeout = (
             httpx.Timeout(timeout, connect=10.0)
@@ -80,7 +84,7 @@ class CollatexClient:
         )
 
         logger.info(
-            f"Sending collation request to {url} (format: {output_format}, algorithm: {algorithm}, joined: {joined}, transpositions: {transpositions}, timeout: {request_timeout.read}s)"
+            f"Sending collation request to {url} (format: {output_format}, algorithm: {algorithm}, joined: {joined}, transpositions: {transpositions}, token_comparator: {token_comparator}, timeout: {request_timeout.read}s)"
         )
 
         try:
@@ -118,6 +122,7 @@ class CollatexClient:
         algorithm: Optional[str] = None,
         joined: Optional[bool] = None,
         transpositions: Optional[bool] = None,
+        token_comparator: Optional[Dict[str, Any]] = None,
         dekker_timeout: Optional[float] = None,
         ref_id: Optional[str] = None,
     ) -> tuple[Union[Dict[str, Any], str], str, bool]:
@@ -143,10 +148,11 @@ class CollatexClient:
                     algorithm="dekker",
                     joined=joined,
                     transpositions=transpositions,
+                    token_comparator=token_comparator,
                     timeout=budget,
                 )
                 return result, "dekker", False
-            except (CollatexError, httpx.TimeoutException):
+            except CollatexError, httpx.TimeoutException:
                 ref_info = f" on ref '{ref_id}'" if ref_id else ""
                 logger.warning(
                     f"CollateX Dekker algorithm timed out after {budget}s{ref_info}. "
@@ -159,6 +165,7 @@ class CollatexClient:
                     algorithm="needleman-wunsch",
                     joined=joined,
                     transpositions=transpositions,
+                    token_comparator=token_comparator,
                 )
                 return result, "needleman-wunsch", True
 
@@ -169,5 +176,6 @@ class CollatexClient:
             algorithm=requested_algo,
             joined=joined,
             transpositions=transpositions,
+            token_comparator=token_comparator,
         )
         return result, requested_algo, False

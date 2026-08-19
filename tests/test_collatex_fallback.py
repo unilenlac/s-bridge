@@ -101,6 +101,37 @@ async def test_collatex_joined_and_transpositions():
     assert called_json["algorithm"] == "dekker"
 
 
+@pytest.mark.anyio
+async def test_collatex_token_comparator():
+    mock_http = AsyncMock()
+    mock_resp = MagicMock()
+    mock_resp.json.return_value = {"table": [["a", "a"]]}
+    mock_resp.raise_for_status.return_value = None
+    mock_http.post.return_value = mock_resp
+
+    client = CollatexClient(base_url="http://localhost:7369", http_client=mock_http)
+    payload = {"witnesses": [{"id": "w1", "tokens": [{"t": "a", "n": "a"}]}]}
+
+    # 1. Test with default equality
+    result, algo, fell_back = await client.collate_with_fallback(
+        payload=payload,
+        token_comparator={"type": "equality"},
+        ref_id="101",
+    )
+    assert algo == "dekker"
+    called_json = mock_http.post.call_args[1]["json"]
+    assert called_json["tokenComparator"] == {"type": "equality"}
+
+    # 2. Test with levenshtein distance
+    result, algo, fell_back = await client.collate_with_fallback(
+        payload=payload,
+        token_comparator={"type": "levenshtein", "distance": 2},
+        ref_id="102",
+    )
+    called_json = mock_http.post.call_args[1]["json"]
+    assert called_json["tokenComparator"] == {"type": "levenshtein", "distance": 2}
+
+
 def test_job_model_fallback_refs():
     job = Job(
         collection_url="http://test.com/dts",
@@ -110,3 +141,4 @@ def test_job_model_fallback_refs():
     assert job.algorithm == "dekker"
     assert job.joined is True
     assert job.transpositions is True
+    assert job.token_comparator == {"type": "equality"}

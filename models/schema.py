@@ -69,6 +69,11 @@ class Job(SQLModel, table=True):
         default=True,
         description="Whether CollateX detects transpositions (for supported algorithms like dekker/medite).",
     )
+    token_comparator: Optional[dict] = Field(
+        default_factory=lambda: {"type": "equality"},
+        sa_column=Column(JSON),
+        description="Token comparator configuration for CollateX (e.g. {'type': 'equality'} or {'type': 'levenshtein', 'distance': 1}).",
+    )
     fallback_refs: List[str] = Field(default_factory=list, sa_column=Column(JSON))
     status: JobStatus = Field(default=JobStatus.PENDING)
     error_message: Optional[str] = None

@@ -95,6 +95,7 @@ async def run_collate_job(
                     algorithm=options.algorithm,
                     joined=options.joined,
                     transpositions=options.transpositions,
+                    token_comparator=options.token_comparator_payload,
                     ref_id=ready_data.ref_id,
                 )
 
