@@ -86,13 +86,15 @@ def extract_body_content(data: str) -> str:
     This helps isolate the content to be parsed and bypasses any malformed or
     incomplete outer/ancestor elements in DTS XML fragments.
     """
-    body_start_match = re.search(r'<([a-zA-Z0-9_-]+:)?body\b[^>]*>', data, re.IGNORECASE)
+    body_start_match = re.search(
+        r"<([a-zA-Z0-9_-]+:)?body\b[^>]*>", data, re.IGNORECASE
+    )
     if not body_start_match:
         return data
 
     start_idx = body_start_match.end()
 
-    body_end_match = re.search(r'</([a-zA-Z0-9_-]+:)?body\s*>', data, re.IGNORECASE)
+    body_end_match = re.search(r"</([a-zA-Z0-9_-]+:)?body\s*>", data, re.IGNORECASE)
     if body_end_match:
         end_idx = body_end_match.start()
         return data[start_idx:end_idx]
@@ -131,3 +133,57 @@ def strip_accents(text: str) -> str:
     return unaccented.lower().strip()
 
 
+def extract_tei_header_metadata(data: str) -> dict[str, Optional[str]]:
+    """
+    Extracts metadata from the <teiHeader> of an XML/TEI string.
+    Returns a dictionary with:
+      - "siglum": the manuscript/witness siglum (from msDesc/witness xml:id or @n)
+      - "doc_title": the document/text title (from titleStmt/title)
+    """
+    import xml.etree.ElementTree as ET
+
+    metadata: dict[str, Optional[str]] = {"siglum": None, "doc_title": None}
+    if not data or not isinstance(data, str):
+        return metadata
+
+    # 1. Try XML parsing
+    try:
+        root = ET.fromstring(data)
+    except ET.ParseError:
+        try:
+            root = ET.fromstring(f"<root>{data}</root>")
+        except ET.ParseError:
+            root = None
+
+    if root is not None:
+        # Search for title in titleStmt -> title
+        for elem in root.iter():
+            tag_name = elem.tag.split("}")[-1] if "}" in elem.tag else elem.tag
+            if tag_name == "titleStmt":
+                for child in elem.iter():
+                    child_tag = (
+                        child.tag.split("}")[-1] if "}" in child.tag else child.tag
+                    )
+                    if child_tag == "title":
+                        raw_title = "".join(child.itertext()).strip()
+                        if raw_title:
+                            metadata["doc_title"] = re.sub(r"\s+", " ", raw_title)
+                            break
+                if metadata["doc_title"]:
+                    break
+
+        # Search for siglum in msDesc or witness
+        for elem in root.iter():
+            tag_name = elem.tag.split("}")[-1] if "}" in elem.tag else elem.tag
+            if tag_name in ("msDesc", "witness"):
+                siglum = (
+                    elem.attrib.get("{http://www.w3.org/XML/1998/namespace}id")
+                    or elem.attrib.get("xml:id")
+                    or elem.attrib.get("id")
+                    or elem.attrib.get("n")
+                )
+                if siglum and siglum.strip():
+                    metadata["siglum"] = siglum.strip()
+                    break
+
+    return metadata

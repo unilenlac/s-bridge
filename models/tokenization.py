@@ -141,6 +141,13 @@ class Token(BaseModel):
         serialization_alias="subst",
     )
 
+    doc_title: Optional[str] = Field(
+        default=None,
+        description="The title of the text/witness (from tei:titleStmt)",
+        alias="doc_title",
+        serialization_alias="doc_title",
+    )
+
     def model_post_init(self, __context):
         if self.normal_form is None and self.normalization is not None:
             self.normal_form = self.normalization

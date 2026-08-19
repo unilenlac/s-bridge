@@ -6,9 +6,7 @@ from httpx import AsyncClient
 
 class Processor(Protocol):
     def __init__(self, pipeline: Any): ...
-    def process(
-        self, data: Any, normalization: str = "lemma"
-    ) -> Any: ...
+    def process(self, data: Any, normalization: str = "lemma") -> Any: ...
 
 
 class Converter(Protocol):
@@ -17,6 +15,7 @@ class Converter(Protocol):
         data: str,
         normalization: str = "lemma",
         filter_del: bool = True,
+        doc_title: Optional[str] = None,
     ) -> Any: ...
 
 

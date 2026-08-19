@@ -132,6 +132,12 @@ class DtsPreparator:
                 )
                 return False, [], collection_title, resources
 
+        resource_titles = {
+            item.get("@id"): item.get("title")
+            for item in resource_members
+            if item.get("@id")
+        }
+
         for ref in refs_list:
             document_url = [
                 u
@@ -141,8 +147,10 @@ class DtsPreparator:
             collation = deepcopy(collation_model)
             for doc in document_url:
                 params = parse_qs(urlparse(doc).query)
+                res_id = params.get("resource", [None])[0]
                 witness = {
-                    "id": params.get("resource", [None])[0],
+                    "id": res_id,
+                    "title": resource_titles.get(res_id),
                     "content": doc,
                     "type": "dts",
                 }

@@ -11,7 +11,11 @@ from core.exceptions import DtsError
 from api.dependencies import ProcessingOptions
 from models.tokenization import CollatexResponse, CollatexWitness
 from core.config import Settings
-from helpers.helpers import ServerId, get_xml_from_dts_url
+from helpers.helpers import (
+    ServerId,
+    get_xml_from_dts_url,
+    extract_tei_header_metadata,
+)
 from services.preparators import DtsPreparator
 
 logger = logging.getLogger("s-bridge")
@@ -63,7 +67,8 @@ class WitnessService:
         """Helper to process a single witness asynchronously.
         Returns (witness, None) on success or (None, error_message) on failure.
         """
-        witness_id = resource.get("id", "<unknown>")
+        resource_id = resource.get("id", "<unknown>")
+        resource_title = resource.get("title")
         try:
             # 1. Fetch XML sequence asynchronously
             content = resource.get("content", "")
@@ -77,12 +82,22 @@ class WitnessService:
 
             xml_data = await fetcher_func(content, http_client, logger)
 
+            # Extract TEI Header metadata (siglum and title)
+            meta = extract_tei_header_metadata(xml_data)
+            siglum = meta.get("siglum")
+            tei_title = meta.get("doc_title")
+
+            # Prioritize siglum over resource_id
+            witness_id = siglum if siglum else resource_id
+            doc_title = tei_title if tei_title else resource_title
+
             # 2. Run NLP/TEI conversion in a separate thread (it is heavily CPU-bound)
             tokens = await asyncio.to_thread(
                 converter.run,
                 xml_data,
                 normalization=options.normalization,
                 filter_del=options.filter_del,
+                doc_title=doc_title,
             )
 
             # 3. Return the populated witness
@@ -90,8 +105,10 @@ class WitnessService:
 
         except Exception as e:
             reason = str(e) or type(e).__name__
-            logger.warning(f"Skipping witness '{witness_id}' for ref '{ref}': {reason}")
-            return None, f"{witness_id}: {reason}"
+            logger.warning(
+                f"Skipping witness '{resource_id}' for ref '{ref}': {reason}"
+            )
+            return None, f"{resource_id}: {reason}"
 
     async def process_witnesses(
         self,
@@ -130,7 +147,25 @@ class WitnessService:
                 f"All witnesses failed for ref='{data.get('ref_id')}': {detail}"
             )
 
-        return CollatexResponse(ref_id=data.get("ref_id"), witnesses=valid_witnesses)
+        # Disambiguate witness IDs if any duplicates exist
+        seen_ids = set()
+        unique_witnesses = []
+        for w in valid_witnesses:
+            original_id = w.id
+            candidate_id = original_id
+            counter = 2
+            while candidate_id in seen_ids:
+                candidate_id = f"{original_id}_{counter}"
+                counter += 1
+            if candidate_id != original_id:
+                logger.warning(
+                    f"Duplicate witness ID '{original_id}' detected, renaming to '{candidate_id}'"
+                )
+                w.id = candidate_id
+            seen_ids.add(candidate_id)
+            unique_witnesses.append(w)
+
+        return CollatexResponse(ref_id=data.get("ref_id"), witnesses=unique_witnesses)
 
     def load_prepared_section(self, filepath: str) -> CollatexResponse:
         """Loads a prepared Collatex JSON file from disk."""

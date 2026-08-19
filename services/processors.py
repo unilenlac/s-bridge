@@ -146,7 +146,7 @@ class ModernProcessor:
                 elif normalization == "lemma+pos":
                     unacc_lemma = strip_accents(lemma_raw) or lemma_raw.strip() or lemma_raw
                     norm_str = f"{unacc_lemma}+{pos_tag}"
-                else:  # default is "lemma"
+                else:  # default is "lemma"  
                     norm_str = strip_accents(lemma_raw) or lemma_raw.strip() or lemma_raw
 
                 my_token = Token(
