@@ -31,7 +31,7 @@ docker compose up --build -d
 ```
 *(Or if you have `make` installed—which can be installed via `sudo apt install make` on Debian/Ubuntu—run `make build && make up`)*
 
-The service will automatically run database migrations on start and listen on port `8500`.
+The service will automatically run database migrations on start and listen on port `8000`.
 - **API Documentation (Swagger UI)**: [http://yourhost:8000/docs]
 - **API ReDoc**: [http://yourhost:8000/redoc]
 
@@ -81,7 +81,7 @@ uv run pytest
 
 ## Configuration
 
-Settings are managed via environment variables (defined in [core/config.py] and loaded from `.env`). Edit either or.
+Settings are managed via environment variables (defined in [core/config.py] and loaded from `.env`).
 
 Key parameters:
 
