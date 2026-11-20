@@ -97,13 +97,13 @@ Key parameters:
 
 ### Linguistic & XML Configuration
 - **Custom XML Tags**: The TEI XML parser maps custom tags based on [utils/enlac_tags.json]. You can customize this mapping by creating your own JSON file and passing its absolute path via the `TAG_CONFIG` environment variable.
-- **Classical Greek Abbreviations**: The parser expands Classical Greek abbreviations during token normalization using the static dictionary defined in [abbr_classical_greek.csv](file:///home/jbidaux/s-bridge/utils/abbr_classical_greek.csv).
+- **Classical Greek Abbreviations**: The parser expands Classical Greek abbreviations during token normalization using the static dictionary defined in [abbr_classical_greek.csv].
 
 ---
 
 ## Key Files & Directories
 
-- [Dockerfile](file:///home/jbidaux/s-bridge/Dockerfile): Multi-stage production Docker build configuration.
-- [docker-compose.yml](file:///home/jbidaux/s-bridge/docker-compose.yml): Docker Compose service definitions.
-- [.env.example](file:///home/jbidaux/s-bridge/.env.example): Template for environment configurations.
-- [Makefile](file:///home/jbidaux/s-bridge/Makefile): Target shortcuts for building, running, formatting, and database management.
+- [Dockerfile]: Multi-stage production Docker build configuration.
+- [docker-compose.yml]: Docker Compose service definitions.
+- [.env.example]: Template for environment configurations.
+- [Makefile]: Target shortcuts for building, running, formatting, and database management.
